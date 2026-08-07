@@ -15,6 +15,8 @@ change involves those concerns.
   to write it, request a scaffold, or ask for implementation.
 - Store plans and temporary working notes only in `.workspace/`.
 - Preserve unrelated user changes, including local IDE configuration.
+- Never create a Git commit or push changes without the user's explicit command
+  for that action.
 
 ## Project boundaries
 
