@@ -14,6 +14,9 @@ change involves those concerns.
   affected files, risks, and verification; wait for the user to choose whether
   to write it, request a scaffold, or ask for implementation.
 - Store plans and temporary working notes only in `.workspace/`.
+- Keep execution status in `.workspace/vaultnote-progress.md`. The detailed
+  implementation plan records decisions; mark a progress checkbox complete
+  only after its change is merged into `main`.
 - Preserve unrelated user changes, including local IDE configuration.
 - Never create a Git commit or push changes without the user's explicit command
   for that action.
