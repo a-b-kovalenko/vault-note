@@ -1,0 +1,40 @@
+= ADR 002: Antora for project documentation
+:status: accepted
+:date: 2026-08-07
+
+== Context
+
+VaultNote needs documentation that lives beside the code: setup instructions,
+architecture decision records, API-related guidance, and operational notes. The
+documentation must remain easy to review with application changes and later be
+published as a static site on GitHub Pages.
+
+== Decision
+
+Use Antora as the documentation generator and maintain a single versionless
+VaultNote component under `docs/`.
+
+Follow Antora's conventional content layout:
+
+* `docs/antora.yml` will describe the component;
+* `docs/modules/ROOT/pages/` will contain AsciiDoc pages;
+* `docs/modules/ROOT/pages/adr/` will contain numbered ADRs;
+* `docs/modules/ROOT/nav.adoc` will define site navigation.
+
+The initial documentation has no product-version branches. If versioned
+documentation becomes necessary later, introduce it deliberately rather than
+maintaining unused versions from the start.
+
+== Consequences
+
+* Documentation and code can evolve and be reviewed in the same repository.
+* Antora's standard layout gives pages and ADRs predictable locations and
+  supports a navigable static site.
+* Documentation is written in AsciiDoc, so contributors need to learn its
+  basic syntax and use the Antora build when documentation tooling is added.
+* GitHub Pages publishing will build an artifact from this directory; no
+  application runtime is required to serve the documentation.
+
+== Status
+
+Accepted.

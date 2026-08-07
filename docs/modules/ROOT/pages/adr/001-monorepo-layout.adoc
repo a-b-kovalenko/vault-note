@@ -1,0 +1,33 @@
+= ADR 001: Monorepo layout for VaultNote
+:status: accepted
+:date: 2026-08-07
+
+== Context
+
+VaultNote contains an Angular single-page application, a Spring Boot backend,
+and documentation. These parts evolve together and need shared visibility of
+their API contract, local development instructions, and architecture decisions.
+
+== Decision
+
+Maintain VaultNote in one repository with these top-level directories:
+
+* `backend/` for the Spring Boot application and its Gradle build;
+* `frontend/` for the Angular application;
+* `docs/` for the versionless Antora documentation component and ADRs.
+
+The OpenAPI definition will be the API source of truth between the backend and
+frontend. Each application remains independently buildable and testable from
+its own directory.
+
+== Consequences
+
+* Changes that cross the API boundary can be reviewed in one repository.
+* Developers clone and navigate a single project for the whole application.
+* Backend and frontend tooling stay isolated in their respective directories.
+* The repository needs clear root-level documentation and local agent guidance
+  to make the boundaries and commands discoverable.
+
+== Status
+
+Accepted.
