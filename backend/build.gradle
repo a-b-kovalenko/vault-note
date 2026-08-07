@@ -1,20 +1,73 @@
-plugins {
-    id 'java'
+buildscript {
+    repositories {
+        gradlePluginPortal()
+    }
+
+    dependencies {
+        classpath 'com.diffplug.spotless:com.diffplug.spotless.gradle.plugin:8.9.0'
+    }
 }
 
-group = 'com.andrii'
-version = '1.0-SNAPSHOT'
+allprojects {
+    group = 'com.andrii'
+    version = '0.1.0-SNAPSHOT'
 
-repositories {
-    mavenCentral()
+    repositories {
+        mavenCentral()
+    }
+
+    apply plugin: 'com.diffplug.spotless'
+
+    spotless {
+        java {
+            target 'src/*/java/**/*.java'
+            palantirJavaFormat('2.92.0')
+            removeUnusedImports()
+            forbidWildcardImports()
+        }
+    }
 }
 
-dependencies {
-    testImplementation platform('org.junit:junit-bom:6.0.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'jacoco'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+
+    plugins.withId('java') {
+        tasks.named('check') {
+            dependsOn(tasks.named('spotlessCheck'))
+            dependsOn(tasks.named('jacocoTestCoverageVerification'))
+        }
+    }
+
+    tasks.named('jacocoTestCoverageVerification') {
+        dependsOn(tasks.named('test'))
+        onlyIf {
+            file('src/main/java').exists()
+        }
+
+        violationRules {
+            rule {
+                limit {
+                    minimum = 0.80
+                }
+            }
+        }
+    }
 }
 
-test {
-    useJUnitPlatform()
+tasks.named('check') {
+    group = 'verification'
+    description = 'Runs the required verification tasks for every backend module.'
+    dependsOn(tasks.named('spotlessCheck'))
+    dependsOn(subprojects.collect { it.tasks.named('check') })
 }
