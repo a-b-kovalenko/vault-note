@@ -6,7 +6,8 @@ change has been merged into `main`.
 
 ## Current focus
 
-- Next small change: add local and Testcontainers-driven test profiles.
+- Next small change: add the local test profile; the Testcontainers integration
+  foundation is now in place.
 
 ## Phase 0 — Foundation
 
@@ -23,6 +24,9 @@ change has been merged into `main`.
 - [x] Add PostgreSQL dependencies and baseline local configuration.
 - [x] Create the Liquibase master changelog and `vaultnote` schema baseline.
 - [ ] Add local and Testcontainers-driven test profiles.
+  - [x] Add PostgreSQL Testcontainers, DBRider datasets, and HTTP integration
+    coverage for the health and registration flows.
+  - [ ] Add the local test profile.
 - [ ] Add Mailpit Compose setup and non-secret environment example.
 
 ## Phase 2 — Identity and security
@@ -30,6 +34,8 @@ change has been merged into `main`.
 - [ ] Model users, roles, and user-role assignments.
   - [x] Add `UserEntity` and `UserJpaRepository` for the users table.
 - [ ] Implement registration and email verification.
+  - [x] Add the registration endpoint and verify successful and duplicate-email
+    flows against PostgreSQL.
   - [ ] Add complete request validation: non-blank email/display name,
     email format, and the planned password policy.
   - [ ] Replace the temporary BCrypt encoder with Argon2id before registration
