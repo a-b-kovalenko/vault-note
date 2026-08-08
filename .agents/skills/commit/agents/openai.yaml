@@ -1,0 +1,8 @@
+interface:
+  display_name: "VaultNote Commit"
+  short_description: "Commit and push reviewed changes safely"
+  brand_color: "#2563EB"
+  default_prompt: "Use $commit to create one reviewed Conventional Commit and push it."
+
+policy:
+  allow_implicit_invocation: false

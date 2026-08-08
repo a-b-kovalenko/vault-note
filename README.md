@@ -50,8 +50,9 @@ cd backend
 It will include formatting, unit tests, PostgreSQL/Testcontainers integration
 tests, Liquibase validation, and an 80% JaCoCo coverage gate.
 
-## Planning notes
+## Planning and progress
 
-The working implementation plan and confirmed decisions are maintained in
-`.workspace/` and deliberately excluded from version control. They describe
-the intended build-out; they are not user-facing application documentation.
+The tracked [implementation plan](docs/project-plan.md) and
+[execution board](docs/project-progress.md) describe the intended build-out
+and current delivery status. Temporary handoffs and working notes remain in
+`.workspace/` and are excluded from version control.
