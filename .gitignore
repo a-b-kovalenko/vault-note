@@ -1,6 +1,7 @@
 .gradle
 build/
 .workspace/
+.mcp.json
 .idea/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
