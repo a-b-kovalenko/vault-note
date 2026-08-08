@@ -1,107 +1,138 @@
 plugins {
-    id 'org.springframework.boot' version '4.1.0' apply false
-    id 'io.spring.dependency-management' version '1.1.7' apply false
-    id 'com.diffplug.spotless' version '8.9.0' apply false
+  id 'org.springframework.boot' version '4.1.0'
+  id 'io.spring.dependency-management' version '1.1.7'
+  id 'com.diffplug.spotless' version '8.9.0'
+  id 'jacoco'
+  id 'java'
+}
+
+group = 'com.andrii'
+version = '0.1.0-SNAPSHOT'
+description = 'VaultNote Spring Boot application.'
+
+repositories {
+  mavenCentral()
 }
 
 ext {
-    lombokVersion = '1.18.46'
-    lombokMapstructBindingVersion = '0.2.0'
-    mapstructVersion = '1.6.3'
-    springdocVersion = '3.1.0'
+  lombokVersion = '1.18.46'
+  lombokMapstructBindingVersion = '0.2.0'
+  mapstructVersion = '1.6.3'
+  springdocVersion = '3.1.0'
 
-    jacocoExclusions = [
-        '**/*Application.class',
-        '**/*Configuration.class',
-        '**/*Controller.class',
-        '**/config/**',
-        '**/dto/**',
-        '**/entity/**',
-        '**/exception/**',
-        '**/mapper/**',
-        '**/generated/**'
-    ]
+  jacocoExclusions = [
+      '**/*Application.class',
+      '**/*Configuration.class',
+      '**/*Controller.class',
+      '**/config/**',
+      '**/dto/**',
+      '**/entity/**',
+      '**/exception/**',
+      '**/mapper/**',
+      '**/generated/**'
+  ]
 }
 
-allprojects {
-    group = 'com.andrii'
-    version = '0.1.0-SNAPSHOT'
+dependencies {
+  implementation platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
 
-    repositories {
-        mavenCentral()
-    }
+  implementation 'org.springframework.boot:spring-boot-starter-actuator'
+  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+  implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+  implementation 'org.springframework.boot:spring-boot-starter-liquibase'
+  implementation 'org.springframework.boot:spring-boot-starter-security'
 
-    apply plugin: 'com.diffplug.spotless'
+  implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
+  implementation "org.mapstruct:mapstruct:${mapstructVersion}"
 
-    spotless {
-        java {
-            target 'src/*/java/**/*.java'
-            eclipse().configFile(rootProject.file('config/formatter/eclipse-java-formatter.xml'))
-            removeUnusedImports()
-            forbidWildcardImports()
-        }
-    }
+  runtimeOnly 'org.postgresql:postgresql'
+
+  testImplementation 'org.springframework.boot:spring-boot-starter-test'
+  testImplementation 'org.testcontainers:testcontainers-postgresql'
+  testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+
+  compileOnly "org.projectlombok:lombok:${lombokVersion}"
+  annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+  annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+  annotationProcessor "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructBindingVersion}"
+
+  testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+  testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 }
 
-subprojects {
-    apply plugin: 'java-library'
-    apply plugin: 'jacoco'
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(25)
+  }
+}
 
-    dependencies {
-        implementation platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+sourceSets {
+  integrationTest {
+    java.srcDir 'src/integrationTest/java'
+    resources.srcDir 'src/integrationTest/resources'
+    compileClasspath += sourceSets.main.output
+    runtimeClasspath += sourceSets.main.output
+  }
+}
+
+configurations {
+  integrationTestImplementation.extendsFrom testImplementation
+  integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+tasks.named('test') {
+  useJUnitPlatform()
+}
+
+tasks.named('processIntegrationTestResources') {
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.register('integrationTest', Test) {
+  description = 'Runs JPA integration tests with Testcontainers.'
+  group = 'verification'
+  testClassesDirs = sourceSets.integrationTest.output.classesDirs
+  classpath = sourceSets.integrationTest.runtimeClasspath
+  shouldRunAfter tasks.named('test')
+  useJUnitPlatform()
+}
+
+spotless {
+  java {
+    target 'src/*/java/**/*.java'
+    eclipse().configFile(file('config/formatter/eclipse-java-formatter.xml'))
+    removeUnusedImports()
+    forbidWildcardImports()
+  }
+}
+
+tasks.named('jacocoTestReport') {
+  executionData.setFrom(tasks.named('test').map { it.extensions.jacoco.destinationFile })
+  classDirectories.setFrom(files(classDirectories.files.collect { directory ->
+    fileTree(dir: directory, exclude: jacocoExclusions)
+  }))
+}
+
+tasks.named('jacocoTestCoverageVerification') {
+  executionData.setFrom(tasks.named('test').map { it.extensions.jacoco.destinationFile })
+  classDirectories.setFrom(files(classDirectories.files.collect { directory ->
+    fileTree(dir: directory, exclude: jacocoExclusions)
+  }))
+
+  violationRules {
+    rule {
+      limit {
+        minimum = 0.80
+      }
     }
-
-    java {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(25)
-        }
-    }
-
-    tasks.named('test') {
-        useJUnitPlatform()
-    }
-
-    plugins.withId('java') {
-        tasks.named('check') {
-            dependsOn(tasks.named('spotlessCheck'))
-            dependsOn(tasks.named('jacocoTestReport'))
-            dependsOn(tasks.named('jacocoTestCoverageVerification'))
-        }
-    }
-
-    tasks.named('jacocoTestReport') {
-        onlyIf {
-            file('src/main/java').exists()
-        }
-        executionData.setFrom(tasks.named('test').map { it.extensions.jacoco.destinationFile })
-        classDirectories.setFrom(files(classDirectories.files.collect { directory ->
-            fileTree(dir: directory, exclude: jacocoExclusions)
-        }))
-    }
-
-    tasks.named('jacocoTestCoverageVerification') {
-        dependsOn(tasks.named('test'))
-        onlyIf {
-            file('src/main/java').exists()
-        }
-        executionData.setFrom(tasks.named('test').map { it.extensions.jacoco.destinationFile })
-        classDirectories.setFrom(files(classDirectories.files.collect { directory ->
-            fileTree(dir: directory, exclude: jacocoExclusions)
-        }))
-
-        violationRules {
-            rule {
-                limit {
-                    minimum = 0.80
-                }
-            }
-        }
-    }
+  }
 }
 
 tasks.named('check') {
-    group = 'verification'
-    description = 'Runs the required verification tasks for every backend module.'
-    dependsOn(tasks.named('spotlessCheck'))
-    dependsOn(subprojects.collect { it.tasks.named('check') })
+  group = 'verification'
+  description = 'Runs the required verification tasks for the backend.'
+  dependsOn tasks.named('spotlessCheck')
+  dependsOn tasks.named('integrationTest')
+  dependsOn tasks.named('jacocoTestReport')
+  dependsOn tasks.named('jacocoTestCoverageVerification')
 }

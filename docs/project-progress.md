@@ -11,9 +11,9 @@ change has been merged into `main`.
 ## Phase 0 — Foundation
 
 - [x] Establish the monorepo layout.
-- [x] Create the backend Gradle multi-module scaffold.
+- [x] Create the backend Gradle scaffold with package-level feature boundaries.
 - [x] Configure Java 25, Spotless, JaCoCo, and the aggregated quality gate.
-- [x] Bootstrap the Spring Boot application module.
+- [x] Bootstrap the Spring Boot application.
 - [x] Record the initial monorepo and Antora ADRs.
 - [x] Add and verify Spring Boot Actuator.
 - [x] Add a Bruno collection for the local health check.

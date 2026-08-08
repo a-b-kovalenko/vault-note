@@ -10,16 +10,15 @@ becoming the owner of domain persistence.
 
 == Decision
 
-Place the user persistence adapter in the `users` module under
+Place the user persistence adapter in the `users` package under
 `com.andrii.vaultnote.users.infrastructure.persistence`:
 
 * `UserEntity` maps the `vaultnote.users` table;
 * `UserJpaRepository` owns Spring Data access for `UserEntity`.
 
-The `app` module depends on `users` and explicitly scans the users entity and
-repository because the launcher package is a sibling of the domain packages.
-JPA entities remain internal persistence models and are not REST response
-types.
+The application layer uses the users persistence package while the launcher
+scans the shared `com.andrii.vaultnote` package tree. JPA entities remain
+internal persistence models and are not REST response types.
 
 Roles are not stored as a field on `UserEntity`. They will be modeled through
 separate `roles` and `user_roles` tables so one user can have multiple roles
@@ -27,9 +26,9 @@ and future role types can be added without changing the `users` table.
 
 == Consequences
 
-* User persistence changes remain localized to the `users` module.
+* User persistence changes remain localized to the `users` package.
 * Future application services can depend on a users-owned persistence boundary.
-* The application module contains wiring rather than user-specific persistence
+* The application package contains wiring rather than user-specific persistence
   behavior.
 * Role persistence will be introduced as a separate association model rather
   than as an enum column on `users`.

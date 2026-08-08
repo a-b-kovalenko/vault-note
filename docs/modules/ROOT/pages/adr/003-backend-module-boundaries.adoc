@@ -1,5 +1,5 @@
 = ADR 003: Backend module boundaries
-:status: accepted
+:status: superseded
 :date: 2026-08-08
 
 == Context
@@ -34,4 +34,5 @@ modules do not depend on `app`.
 
 == Status
 
-Accepted.
+Superseded by ADR 006, which keeps the same feature ownership as package
+boundaries inside a single Gradle project.
