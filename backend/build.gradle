@@ -21,6 +21,7 @@ ext {
   lombokMapstructBindingVersion = '0.2.0'
   mapstructVersion = '1.6.3'
   springdocVersion = '3.1.0'
+  bouncycastleVersion = '1.84'
   restAssuredVersion = '6.0.0'
   databaseRiderVersion = '1.44.0'
 
@@ -45,6 +46,7 @@ dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-webmvc'
   implementation 'org.springframework.boot:spring-boot-starter-liquibase'
   implementation 'org.springframework.boot:spring-boot-starter-security'
+  implementation "org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}"
 
   implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
   implementation "org.mapstruct:mapstruct:${mapstructVersion}"

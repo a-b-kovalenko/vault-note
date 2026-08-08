@@ -6,8 +6,9 @@ change has been merged into `main`.
 
 ## Current focus
 
-- Next small change: add the local test profile; the Testcontainers integration
-  foundation is now in place.
+- Next small change: add Mailpit Compose setup and a non-secret environment
+  example.
+- The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
 
@@ -23,10 +24,10 @@ change has been merged into `main`.
 
 - [x] Add PostgreSQL dependencies and baseline local configuration.
 - [x] Create the Liquibase master changelog and `vaultnote` schema baseline.
-- [ ] Add local and Testcontainers-driven test profiles.
+- [x] Add local and Testcontainers-driven test profiles.
   - [x] Add PostgreSQL Testcontainers, DBRider datasets, and HTTP integration
     coverage for the health and registration flows.
-  - [ ] Add the local test profile.
+  - [x] Add the local test profile.
 - [ ] Add Mailpit Compose setup and non-secret environment example.
 
 ## Phase 2 — Identity and security
@@ -38,7 +39,7 @@ change has been merged into `main`.
     flows against PostgreSQL.
   - [ ] Add complete request validation: non-blank email/display name,
     email format, and the planned password policy.
-  - [ ] Replace the temporary BCrypt encoder with Argon2id before registration
+  - [x] Replace the temporary BCrypt encoder with Argon2id before registration
     reaches a production-like baseline.
 - [ ] Implement login, short-lived access JWTs, and rotating refresh sessions.
 - [ ] Add CSRF, CORS, rate limiting, and refresh-token reuse handling.

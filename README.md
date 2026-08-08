@@ -50,6 +50,16 @@ cd backend
 It will include formatting, unit tests, PostgreSQL/Testcontainers integration
 tests, Liquibase validation, and an 80% JaCoCo coverage gate.
 
+## Local backend
+
+Start the backend with the `local` profile after the shared PostgreSQL instance
+is available:
+
+```shell
+cd backend
+SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
+```
+
 ## Planning and progress
 
 The tracked [implementation plan](docs/project-plan.md) and
