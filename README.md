@@ -4,22 +4,22 @@ VaultNote is a local learning project for private Markdown notes. It combines
 an Angular single-page application, a Spring Boot API, PostgreSQL, and a
 production-inspired authentication lifecycle.
 
-> **Project status:** bootstrap only. The repository currently contains a
-> Gradle skeleton; the backend, frontend, database migrations, and runtime
-> configuration have not been implemented yet.
+> **Project status:** backend foundation in progress. The repository contains
+> the initial registration slice, persistence baseline, and local quality gate;
+> the frontend and remaining authentication flows are still planned.
 
 ## Planned architecture
 
 ```text
 vault-note/
-├── backend/      Spring Boot, Java 25, Gradle multi-module build
+├── backend/      Spring Boot, Java 25, single Gradle project
 ├── frontend/     Angular standalone application
 └── docs/         Antora documentation and architecture decision records
 ```
 
-The planned backend modules are `common`, `users`, `notes`, `security`, and
-the runnable `app` module. OpenAPI will define the API contract and generate
-the frontend client.
+The backend uses package-level boundaries for `common`, `users`, `notes`,
+`security`, and the runnable `app` package. OpenAPI will define the API
+contract and generate the frontend client.
 
 ## Product scope
 

@@ -25,17 +25,21 @@ email/password sign-in, email verification, JWT access tokens, and roles.
 
 ## Backend structure
 
-Move the current Gradle build into `backend/` and make it a multi-module build.
+Keep the backend as a single Gradle project with package-level feature
+boundaries. Introduce a separate Gradle module only when a feature earns a
+stable dependency boundary that justifies the additional build and wiring
+complexity.
 
-| Module | Responsibility |
-| --- | --- |
-| `common` | Shared API pagination, error helpers, and stable utilities. |
-| `users` | Users, roles, profile updates, and user-facing persistence. |
-| `notes` | Notes, ownership checks, Markdown rules, and pagination. |
-| `security` | JWT, token lifecycle, CSRF, CORS, and authorization support. |
-| `app` | Spring Boot launcher, web wiring, configuration, and OpenAPI. |
+The package responsibilities are:
 
-Keep dependencies directed toward stable lower-level modules. Do not place
+- `common`: shared API pagination, error helpers, and stable utilities;
+- `users`: users, roles, profile updates, and user-facing persistence;
+- `notes`: notes, ownership checks, Markdown rules, and pagination;
+- `security`: JWT, token lifecycle, CSRF, CORS, and authorization support;
+- `app`: Spring Boot launcher, web wiring, configuration, and OpenAPI.
+
+Keep dependencies directed toward stable lower-level packages and enforce the
+rules with ArchUnit tests once cross-feature code exists. Do not place
 domain-specific code into `common`.
 
 Use Java 25 toolchains, Spring Data JPA/Hibernate, Liquibase, Lombok, MapStruct,
@@ -179,14 +183,15 @@ test order or arbitrary sleeps.
 
 ## ADR status
 
-Record decisions that would be expensive or confusing to rediscover. The first
-five ADRs now describe decisions that are implemented in the repository:
+Record decisions that would be expensive or confusing to rediscover. The
+initial ADRs now describe decisions that are implemented in the repository:
 
 1. [x] Monorepo layout (`001`).
 2. [x] Antora documentation (`002`).
-3. [x] Backend module boundaries (`003`).
+3. [x] Backend package boundaries (`003`, superseded by `006`).
 4. [x] PostgreSQL and Liquibase persistence baseline (`004`).
 5. [x] Users persistence ownership (`005`).
+6. [x] Single-module modular monolith (`006`).
 
 The following ADRs remain planned and must be created only when their decisions
 are implemented:

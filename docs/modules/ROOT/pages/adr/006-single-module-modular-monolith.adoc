@@ -1,0 +1,40 @@
+= ADR 006: Single-module modular monolith
+:status: accepted
+:date: 2026-08-08
+
+== Context
+
+The backend is a single deployable application. The initial Gradle modules
+contained mostly empty scaffolding, while the actual registration workflow and
+application wiring were concentrated in `app`. Maintaining separate Gradle
+modules added dependency, scanning, test, and build configuration overhead
+without yet providing meaningful independent boundaries.
+
+== Decision
+
+Use one Gradle project for the backend and preserve feature ownership through
+packages under `com.andrii.vaultnote`:
+
+* `app` contains the launcher, web wiring, configuration, and OpenAPI boundary;
+* `users` contains user accounts and user persistence;
+* `notes` contains notes and ownership rules;
+* `security` contains authentication and authorization support;
+* `common` contains only stable cross-cutting contracts and utilities.
+
+Keep dependencies directed toward stable lower-level packages. Add ArchUnit
+rules when cross-feature code is introduced to enforce the package boundaries.
+Extract a Gradle module only when a stable dependency boundary justifies the
+additional build complexity.
+
+== Consequences
+
+* Spring Boot uses the root package scan, without cross-module persistence
+  wiring.
+* Build, formatter, test, and coverage configuration has one owner.
+* Package boundaries are conventions until ArchUnit rules enforce them.
+* Extracting a module later remains possible, but requires an explicit API and
+  dependency decision rather than being a directory-only move.
+
+== Status
+
+Accepted. Supersedes ADR 003.
