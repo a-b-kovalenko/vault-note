@@ -1,16 +1,64 @@
 plugins {
-    id 'org.springframework.boot'
-    id 'io.spring.dependency-management'
+  id 'org.springframework.boot'
+  id 'io.spring.dependency-management'
 }
 
 description = 'Runnable Spring Boot application and web-layer wiring.'
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
-    implementation 'org.springframework.boot:spring-boot-starter-liquibase'
-    implementation project(':users')
-    runtimeOnly 'org.postgresql:postgresql'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+  implementation project(':users')
+
+  implementation 'org.springframework.boot:spring-boot-starter-actuator'
+  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+  implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+  implementation 'org.springframework.boot:spring-boot-starter-liquibase'
+  implementation 'org.springframework.boot:spring-boot-starter-security'
+
+  implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${rootProject.ext.springdocVersion}"
+  implementation "org.mapstruct:mapstruct:${rootProject.ext.mapstructVersion}"
+
+  runtimeOnly 'org.postgresql:postgresql'
+
+  testImplementation 'org.springframework.boot:spring-boot-starter-test'
+  testImplementation 'org.testcontainers:testcontainers-postgresql'
+  testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+
+  compileOnly "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
+  annotationProcessor "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
+  annotationProcessor "org.mapstruct:mapstruct-processor:${rootProject.ext.mapstructVersion}"
+  annotationProcessor "org.projectlombok:lombok-mapstruct-binding:${rootProject.ext.lombokMapstructBindingVersion}"
+
+  testCompileOnly "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
+  testAnnotationProcessor "org.projectlombok:lombok:${rootProject.ext.lombokVersion}"
+}
+
+sourceSets {
+  integrationTest {
+    java.srcDir 'src/integrationTest/java'
+    resources.srcDir 'src/integrationTest/resources'
+    compileClasspath += main.output
+    runtimeClasspath += main.output
+  }
+}
+
+configurations {
+  integrationTestImplementation.extendsFrom testImplementation
+  integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+tasks.named('processIntegrationTestResources') {
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.register('integrationTest', Test) {
+  description = 'Runs JPA integration tests with Testcontainers.'
+  group = 'verification'
+  testClassesDirs = sourceSets.integrationTest.output.classesDirs
+  classpath = sourceSets.integrationTest.runtimeClasspath
+  shouldRunAfter tasks.named('test')
+  useJUnitPlatform()
+}
+
+tasks.named('check') {
+  dependsOn tasks.named('integrationTest')
 }

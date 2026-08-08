@@ -1,20 +1,26 @@
-buildscript {
-    repositories {
-        gradlePluginPortal()
-    }
-
-    dependencies {
-        classpath 'com.diffplug.spotless:com.diffplug.spotless.gradle.plugin:8.9.0'
-    }
-}
-
 plugins {
     id 'org.springframework.boot' version '4.1.0' apply false
     id 'io.spring.dependency-management' version '1.1.7' apply false
+    id 'com.diffplug.spotless' version '8.9.0' apply false
 }
 
 ext {
     lombokVersion = '1.18.46'
+    lombokMapstructBindingVersion = '0.2.0'
+    mapstructVersion = '1.6.3'
+    springdocVersion = '3.1.0'
+
+    jacocoExclusions = [
+        '**/*Application.class',
+        '**/*Configuration.class',
+        '**/*Controller.class',
+        '**/config/**',
+        '**/dto/**',
+        '**/entity/**',
+        '**/exception/**',
+        '**/mapper/**',
+        '**/generated/**'
+    ]
 }
 
 allprojects {
@@ -30,7 +36,7 @@ allprojects {
     spotless {
         java {
             target 'src/*/java/**/*.java'
-            palantirJavaFormat('2.92.0')
+            eclipse().configFile(rootProject.file('config/formatter/eclipse-java-formatter.xml'))
             removeUnusedImports()
             forbidWildcardImports()
         }
@@ -58,8 +64,19 @@ subprojects {
     plugins.withId('java') {
         tasks.named('check') {
             dependsOn(tasks.named('spotlessCheck'))
+            dependsOn(tasks.named('jacocoTestReport'))
             dependsOn(tasks.named('jacocoTestCoverageVerification'))
         }
+    }
+
+    tasks.named('jacocoTestReport') {
+        onlyIf {
+            file('src/main/java').exists()
+        }
+        executionData.setFrom(tasks.named('test').map { it.extensions.jacoco.destinationFile })
+        classDirectories.setFrom(files(classDirectories.files.collect { directory ->
+            fileTree(dir: directory, exclude: jacocoExclusions)
+        }))
     }
 
     tasks.named('jacocoTestCoverageVerification') {
@@ -67,8 +84,9 @@ subprojects {
         onlyIf {
             file('src/main/java').exists()
         }
+        executionData.setFrom(tasks.named('test').map { it.extensions.jacoco.destinationFile })
         classDirectories.setFrom(files(classDirectories.files.collect { directory ->
-            fileTree(dir: directory, exclude: ['**/*Application.class'])
+            fileTree(dir: directory, exclude: jacocoExclusions)
         }))
 
         violationRules {

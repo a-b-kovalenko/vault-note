@@ -32,13 +32,16 @@ stage, commit, and push. Never invoke it proactively.
    execute. Never bypass hooks with `--no-verify`.
 7. Only after a successful commit, push the current branch with `git push` (or
    `git push -u origin <branch>` when no upstream exists). Do not force-push.
-8. If the commit succeeds but push fails, report the commit hash and exact push
+8. After a successful push, include a pull-request creation URL for the current
+   branch. Derive it from the `origin` GitHub remote when possible.
+9. If the commit succeeds but push fails, report the commit hash and exact push
    error without retrying blindly. Do not amend or create another commit unless
    the user explicitly asks.
 
 ## Completion report
 
 Report the branch, commit hash and message, files included, checks run, and
-whether the push succeeded. Keep the report concise and in Ukrainian when the
-conversation is in Ukrainian. Updating `docs/project-progress.md` is separate:
-do it only when the user explicitly asks to update progress.
+whether the push succeeded. When the push succeeds, include the pull-request
+creation link. Keep the report concise and in Ukrainian when the conversation
+is in Ukrainian. Updating `docs/project-progress.md` is separate: do it only
+when the user explicitly asks to update progress.

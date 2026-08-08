@@ -44,17 +44,20 @@ Testcontainers PostgreSQL for integration tests, including Liquibase migrations.
 `check` must enforce at least 80% JaCoCo coverage for production code, excluding
 generated code and configuration boilerplate.
 
-Apply Spotless with Palantir Java Format, as required by the global engineering
-standards, and make `check` depend on `spotlessCheck`, unit tests,
-`integrationTest`, Liquibase validation, and JaCoCo verification. Adopt the
-same formatter version specified in the shared standards directly in this build;
-this repository intentionally does not consume the standards as a submodule.
+Apply Spotless with the checked-in Eclipse Java formatter profile and make
+`check` depend on `spotlessCheck`, unit tests, `integrationTest`, Liquibase
+validation, and JaCoCo verification. The repository owns its formatter profile
+to keep IntelliJ IDEA, local Gradle checks, and CI aligned.
 
 Use explicit DTOs at REST boundaries and never expose JPA entities. Controllers
 perform binding, validation, mapping, and HTTP semantics only; services own
 workflows and persistence behavior. Use constructor injection and centralized
 `ProblemDetail` exception handling. Log safe operation context before writes,
 never credentials, JWTs, refresh tokens, or complete request payloads.
+
+Keep authentication workflows in dedicated controllers: registration, login,
+token refresh, and email verification are not user-resource operations.
+Reserve `UserController` for profile and administrator user-resource endpoints.
 
 When the first API DTOs are introduced, configure Jackson globally with
 `SNAKE_CASE` for JSON serialization and deserialization. Do not add JSON naming

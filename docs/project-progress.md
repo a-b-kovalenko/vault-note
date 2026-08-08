@@ -30,8 +30,16 @@ change has been merged into `main`.
 - [ ] Model users, roles, and user-role assignments.
   - [x] Add `UserEntity` and `UserJpaRepository` for the users table.
 - [ ] Implement registration and email verification.
+  - [ ] Add complete request validation: non-blank email/display name,
+    email format, and the planned password policy.
+  - [ ] Replace the temporary BCrypt encoder with Argon2id before registration
+    reaches a production-like baseline.
 - [ ] Implement login, short-lived access JWTs, and rotating refresh sessions.
 - [ ] Add CSRF, CORS, rate limiting, and refresh-token reuse handling.
+  - [ ] Start CSRF work after the registration vertical slice is implemented
+    and verified.
+  - [ ] Enable Spring Security SPA CSRF, expose `/csrf`, and require the token
+    for login, refresh, and logout requests.
 - [ ] Add authentication audit events and authorization rules.
 
 ## Phase 3 — Notes and profile

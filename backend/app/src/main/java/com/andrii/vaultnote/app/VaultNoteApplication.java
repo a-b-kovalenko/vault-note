@@ -12,7 +12,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableJpaRepositories(basePackageClasses = UserJpaRepository.class)
 public class VaultNoteApplication {
 
-    static void main(String[] args) {
-        SpringApplication.run(VaultNoteApplication.class, args);
-    }
+  static void main(String[] args) {
+    SpringApplication.run(VaultNoteApplication.class, args);
+  }
 }
