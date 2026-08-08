@@ -13,35 +13,39 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "users", schema = "vaultnote")
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  Long id;
 
-    @Column(nullable = false, length = 320)
-    String email;
+  @Column(nullable = false, length = 320, unique = true)
+  String email;
 
-    @Column(nullable = false, length = 100)
-    String displayName;
+  @Column(name = "display_name", nullable = false, length = 100)
+  String displayName;
 
-    @Column(nullable = false)
-    String passwordHash;
+  @Column(name = "password_hash", nullable = false)
+  String passwordHash;
 
-    @Column(nullable = false)
-    boolean emailVerified;
+  @Column(name = "email_verified", nullable = false)
+  boolean emailVerified;
 
-    @Column(nullable = false, updatable = false)
-    Instant createdAt;
+  @Column(name = "created_at", nullable = false, updatable = false)
+  @CreationTimestamp
+  Instant createdAt;
 
-    @Column(nullable = false)
-    Instant updatedAt;
+  @Column(name = "updated_at", nullable = false)
+  @UpdateTimestamp
+  Instant updatedAt;
 }
