@@ -1,0 +1,38 @@
+= ADR 004: PostgreSQL and Liquibase persistence baseline
+:status: accepted
+:date: 2026-08-08
+
+== Context
+
+VaultNote requires a relational persistence baseline for local development. The
+project already uses a shared PostgreSQL instance with database `vault_note` and
+schema `vaultnote`. Schema changes must be reviewable, ordered, and independent
+of application startup behavior.
+
+== Decision
+
+Use PostgreSQL database `vault_note` and schema `vaultnote` for the backend.
+
+Apply schema changes through forward-only Liquibase changesets stored under
+`backend/app/src/main/resources/db/changelog/`. Each migration contains one
+reviewable SQL changeset and is included by one master changelog. The current
+baseline creates `vaultnote.users`.
+
+Configure Hibernate with `ddl-auto: validate`; Hibernate must validate the
+Liquibase-created schema and must not create or evolve it. Database connection
+values are supplied through environment variables with local-development
+defaults.
+
+PostgreSQL remains an existing local service. Docker is reserved for Mailpit in
+the project development setup.
+
+== Consequences
+
+* Database evolution is explicit, ordered, and auditable.
+* Application startup detects drift between JPA mappings and the database.
+* Local development requires the shared PostgreSQL database to be available.
+* Testcontainers-based migration verification remains a planned follow-up.
+
+== Status
+
+Accepted.

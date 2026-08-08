@@ -13,10 +13,12 @@ change involves those concerns.
 - Work in small, reviewable changes. Before each change, explain its purpose,
   affected files, risks, and verification; wait for the user to choose whether
   to write it, request a scaffold, or ask for implementation.
-- Store plans and temporary working notes only in `.workspace/`.
-- Keep execution status in `.workspace/vaultnote-progress.md`. The detailed
-  implementation plan records decisions; mark a progress checkbox complete
-  only after its change is merged into `main`.
+- Keep the canonical implementation plan in `docs/project-plan.md` and the
+  execution board in `docs/project-progress.md`; both are tracked in Git.
+  Update progress when the user explicitly requests it after the relevant
+  scope has been implemented and verified; do not wait for a merge into
+  `main`.
+- Store only temporary plans, handoffs, and working notes in `.workspace/`.
 - Preserve unrelated user changes, including local IDE configuration.
 - Never create a Git commit or push changes without the user's explicit command
   for that action.

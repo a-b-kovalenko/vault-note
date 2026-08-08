@@ -1,0 +1,37 @@
+= ADR 003: Backend module boundaries
+:status: accepted
+:date: 2026-08-08
+
+== Context
+
+The backend contains application startup and several domain-oriented areas that
+will evolve at different speeds. Domain code must not be placed in a generic
+module or coupled directly to the runnable application.
+
+== Decision
+
+Use a Gradle multi-module backend with these boundaries:
+
+* `common/` contains only stable cross-cutting contracts and utilities;
+* `users/` owns user accounts, roles, profiles, and user persistence;
+* `notes/` owns notes, ownership rules, and Markdown behavior;
+* `security/` owns authentication, sessions, CSRF, CORS, and authorization;
+* `app/` is the runnable Spring Boot module and owns application wiring,
+  configuration, and the OpenAPI boundary.
+
+Dependencies point from the runnable application toward domain modules. Domain
+modules do not depend on `app`.
+
+== Consequences
+
+* Domain responsibilities have explicit ownership and review boundaries.
+* The runnable application can assemble the modules without owning their data
+  models.
+* Cross-module wiring must be explicit, including component and persistence
+  scanning.
+* New shared code must earn a place in `common` instead of becoming a dumping
+  ground for domain behavior.
+
+== Status
+
+Accepted.
