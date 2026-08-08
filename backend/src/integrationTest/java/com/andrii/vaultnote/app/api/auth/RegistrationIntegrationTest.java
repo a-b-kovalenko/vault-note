@@ -56,7 +56,8 @@ class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
     assertThat(savedUser.getDisplayName()).isEqualTo("Integration User");
     assertThat(savedUser.getPasswordHash())
         .isNotBlank()
-        .isNotEqualTo("password");
+        .isNotEqualTo("password")
+        .startsWith("$argon2id$");
     assertThat(savedUser.isEmailVerified()).isFalse();
     assertThat(savedUser.getCreatedAt()).isBetween(requestStartedAt, requestFinishedAt);
     assertThat(savedUser.getUpdatedAt()).isBetween(requestStartedAt, requestFinishedAt);

@@ -1,8 +1,4 @@
 spring:
-  datasource:
-    url: ${VAULTNOTE_DATABASE_URL:jdbc:postgresql://localhost:5432/vault_note}
-    username: ${VAULTNOTE_DATABASE_USERNAME:user}
-    password: ${VAULTNOTE_DATABASE_PASSWORD:password}
   jpa:
     hibernate:
       ddl-auto: validate
