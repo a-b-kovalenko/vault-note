@@ -6,9 +6,7 @@ change has been merged into `main`.
 
 ## Current focus
 
-- Next small change: add Mailpit Compose setup and a non-secret environment
-  example.
-- The local profile is implemented and verified locally.
+- Current focus: continue the registration and email-verification flow.
 
 ## Phase 0 — Foundation
 
@@ -37,8 +35,10 @@ change has been merged into `main`.
 - [ ] Implement registration and email verification.
   - [x] Add the registration endpoint and verify successful and duplicate-email
     flows against PostgreSQL.
-  - [ ] Add complete request validation: non-blank email/display name,
+  - [x] Add complete request validation: non-blank email/display name,
     email format, and the planned password policy.
+    - [x] Return `VALIDATION_FAILED` with field-level `violations` and stable
+      API error codes.
   - [x] Replace the temporary BCrypt encoder with Argon2id before registration
     reaches a production-like baseline.
 - [ ] Implement login, short-lived access JWTs, and rotating refresh sessions.
