@@ -1,6 +1,7 @@
 package com.andrii.vaultnote.app.api.error;
 
 import com.andrii.vaultnote.app.exception.EntityExistsException;
+import com.andrii.vaultnote.app.exception.EmailVerificationFailedException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,21 @@ class GlobalExceptionHandlerTest {
         .containsExactly(
             "ENTITY_ALREADY_EXISTS",
             "UserEntity with email 'new@email.com' already exists.");
+  }
+
+  @Test
+  void shouldHandleEmailVerificationFailedException() {
+    var exception = new EmailVerificationFailedException();
+
+    var response = handler.handleEmailVerificationFailedException(exception);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+    assertThat(response.getBody())
+        .isNotNull()
+        .extracting(ApiErrorResponse::code, ApiErrorResponse::message)
+        .containsExactly(
+            "EMAIL_VERIFICATION_FAILED",
+            "Email verification link is invalid or has expired.");
   }
 
   @Test

@@ -4,6 +4,7 @@ import com.andrii.vaultnote.app.api.auth.dto.RegisterUserRequest;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserResponse;
 import com.andrii.vaultnote.app.exception.EntityExistsException;
 import com.andrii.vaultnote.app.mapper.UserMapper;
+import com.andrii.vaultnote.app.security.EmailVerificationTokenGenerator;
 import com.andrii.vaultnote.app.service.EmailVerificationService;
 import com.andrii.vaultnote.app.service.RegistrationService;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
@@ -27,9 +28,11 @@ public class RegistrationServiceImpl implements RegistrationService {
   private static final String SQLSTATE_UNIQUE_VIOLATION = "23505";
 
   UserJpaRepository userJpaRepository;
+
   UserMapper userMapper;
   PasswordEncoder passwordEncoder;
   EmailVerificationService emailVerificationService;
+  EmailVerificationTokenGenerator tokenGenerator;
 
   @Override
   @Transactional
