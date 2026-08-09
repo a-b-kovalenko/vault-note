@@ -1,0 +1,52 @@
+= ADR 008: Mail delivery boundary and MVP email verification delivery
+:status: accepted
+:date: 2026-08-09
+
+== Context
+
+Registration must send an email-verification message, while local development
+needs a safe way to inspect messages without contacting real recipients. The
+application should also keep SMTP details out of registration business logic
+and remain testable without a running mail server.
+
+The first iteration does not need durable asynchronous delivery. Introducing
+an outbox before the registration flow is complete would add persistence,
+retry, worker, and failure-recovery concerns before they are required.
+
+== Decision
+
+Use an application-level `MailSender` port and an SMTP adapter:
+
+* `MailSender` accepts an application `MailMessage` and hides the mail
+  provider API from application services;
+* `SmtpMailSender` adapts the message to Spring's `JavaMailSender`;
+* Mailpit is the local SMTP server and message-inspection UI, started through
+  the root `compose.yaml`;
+* SMTP host, port, credentials, and sender address are configured through
+  environment variables, so a production SMTP provider can replace Mailpit
+  without changing the application service;
+* the MVP sends the verification email synchronously during registration,
+  inside the existing transaction;
+* the MVP intentionally does not add an outbox, retries, resend rate limits,
+  token cleanup, or delivery audit events.
+
+If SMTP delivery fails in the MVP, the registration transaction fails as well.
+The resulting failure semantics are explicit and will be revisited when a
+durable outbox and retry policy are introduced.
+
+== Consequences
+
+* Local development can inspect verification emails without sending external
+  mail.
+* Application services depend on a small, mockable port rather than on Spring
+  Mail classes.
+* Tests can replace `MailSender` with a mock and verify the message contract
+  without requiring Mailpit.
+* Synchronous delivery keeps the first implementation small but couples
+  registration success to SMTP availability.
+* A future outbox can be added behind the same application boundary after the
+  required retry, idempotency, and failure-handling semantics are defined.
+
+== Status
+
+Accepted.

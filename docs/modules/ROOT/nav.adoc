@@ -7,3 +7,4 @@
 ** xref:adr/005-users-persistence-ownership.adoc[ADR 005: Users persistence ownership]
 ** xref:adr/006-single-module-modular-monolith.adoc[ADR 006: Single-module modular monolith]
 ** xref:adr/007-liquibase-testcontainers-integration-tests.adoc[ADR 007: Liquibase and Testcontainers]
+** xref:adr/008-mail-delivery-boundary.adoc[ADR 008: Mail delivery boundary]

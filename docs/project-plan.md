@@ -203,6 +203,8 @@ initial ADRs now describe decisions that are implemented in the repository:
 4. [x] PostgreSQL and Liquibase persistence baseline (`004`).
 5. [x] Users persistence ownership (`005`).
 6. [x] Single-module modular monolith (`006`).
+7. [x] Liquibase and Testcontainers integration-test strategy (`007`).
+8. [x] Mail delivery boundary and MVP email verification delivery (`008`).
 
 The following ADRs remain planned and must be created only when their decisions
 are implemented:
@@ -211,7 +213,6 @@ are implemented:
 - [ ] CSRF and CORS strategy for Angular and cookie-backed refresh operations.
 - [ ] Role model with `USER` and read-only `ADMIN`.
 - [ ] OpenAPI as the contract source and generated Angular client.
-- [x] Liquibase and Testcontainers integration-test strategy (`007`).
 - [ ] Antora publishing to GitHub Pages.
 
 ## Verification sequence
