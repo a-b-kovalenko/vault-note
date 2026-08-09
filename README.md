@@ -14,14 +14,36 @@ production-inspired authentication lifecycle.
 
 ```text
 vault-note/
-├── backend/      Spring Boot, Java 25, single Gradle project
-├── frontend/     Angular standalone application
-└── docs/         Antora documentation and architecture decision records
+├── backend/         Spring Boot, Java 25, single Gradle project
+├── frontend/        Angular standalone application
+├── docs/            Antora documentation and architecture decision records
+└── VaultNote Atlas/ Ukrainian Obsidian learning vault
 ```
 
 The backend uses package-level boundaries for `common`, `users`, `notes`,
 `security`, and the runnable `app` package. OpenAPI will define the API
 contract and generate the frontend client.
+
+## Obsidian knowledge vault
+
+`VaultNote Atlas/` is a Ukrainian-only Obsidian vault for explanations and
+concepts that emerge during project work. Open this directory as the vault
+root in Obsidian. It follows the navigation-first approach used by the
+`java-kb` vault, adapted to this smaller project:
+
+```text
+VaultNote Atlas/
+├── VaultNote_Atlas.md  central MOC and navigation
+├── content/            all learning notes
+└── assets/             shared images and diagrams
+```
+
+The workflow is: capture an open question as a draft in `content/`, refine the
+useful explanation, add a short TL;DR and a link to the central MOC, then
+register the note under the appropriate topic in `VaultNote_Atlas.md`. Stable
+project decisions belong in the public Antora documentation and ADRs; the
+vault keeps the Ukrainian learning context around them. The detailed local
+rules are in [.agents/AGENTS.md](.agents/AGENTS.md).
 
 ## Target product scope
 
@@ -105,6 +127,9 @@ Invalid requests return `400` with code `VALIDATION_FAILED` and field-level
 `ENTITY_ALREADY_EXISTS`.
 
 ## Planning and progress
+
+The published [VaultNote documentation](https://a-b-kovalenko.github.io/vault-note/)
+contains the Antora overview and architecture decisions.
 
 The tracked [implementation plan](docs/project-plan.md) and
 [execution board](docs/project-progress.md) describe the intended build-out
