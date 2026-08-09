@@ -12,6 +12,9 @@ group = 'com.andrii'
 version = '0.1.0-SNAPSHOT'
 description = 'VaultNote Spring Boot application.'
 
+def docsProjectDir = rootProject.file('../docs')
+def docsSiteDir = new File(docsProjectDir, 'build/site')
+
 repositories {
   mavenCentral()
 }
@@ -105,6 +108,31 @@ tasks.register('integrationTest', Test) {
   useJUnitPlatform()
 }
 
+tasks.register('antoraInstall', Exec) {
+  description = 'Installs the pinned Antora documentation dependencies.'
+  group = 'documentation'
+  workingDir docsProjectDir
+  commandLine 'npm', 'ci'
+  inputs.files(
+      new File(docsProjectDir, 'package.json'),
+      new File(docsProjectDir, 'package-lock.json'))
+  outputs.dir(new File(docsProjectDir, 'node_modules'))
+}
+
+tasks.register('antoraBuild', Exec) {
+  description = 'Builds the Antora documentation site.'
+  group = 'documentation'
+  dependsOn tasks.named('antoraInstall')
+  workingDir docsProjectDir
+  commandLine 'npm', 'run', 'build'
+  inputs.files(fileTree(docsProjectDir) {
+    include 'antora.yml'
+    include 'antora-playbook.yml'
+    include 'modules/**'
+  })
+  outputs.dir(docsSiteDir)
+}
+
 spotless {
   java {
     target 'src/*/java/**/*.java'
@@ -143,4 +171,9 @@ tasks.named('check') {
   dependsOn tasks.named('integrationTest')
   dependsOn tasks.named('jacocoTestReport')
   dependsOn tasks.named('jacocoTestCoverageVerification')
+  dependsOn tasks.named('antoraBuild')
+}
+
+tasks.named('clean') {
+  delete docsSiteDir
 }

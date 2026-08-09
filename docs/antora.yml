@@ -1,0 +1,6 @@
+name: vaultnote
+title: VaultNote
+version: ~
+start_page: vaultnote::index.adoc
+nav:
+  - modules/ROOT/nav.adoc

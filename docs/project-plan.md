@@ -200,7 +200,7 @@ are implemented:
 - [ ] CSRF and CORS strategy for Angular and cookie-backed refresh operations.
 - [ ] Role model with `USER` and read-only `ADMIN`.
 - [ ] OpenAPI as the contract source and generated Angular client.
-- [ ] Liquibase and Testcontainers integration-test strategy.
+- [x] Liquibase and Testcontainers integration-test strategy (`007`).
 - [ ] Antora publishing to GitHub Pages.
 
 ## Verification sequence

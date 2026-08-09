@@ -6,7 +6,11 @@ change has been merged into `main`.
 
 ## Current focus
 
-- Current focus: continue the registration and email-verification flow.
+- Antora metadata, navigation, Gradle integration, and the GitHub Pages
+  workflow are implemented; the first Pages deployment is pending.
+- Next feature after documentation publishing: add Mailpit Compose setup and a
+  non-secret environment example.
+- The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
 
@@ -65,7 +69,7 @@ change has been merged into `main`.
 
 ## Phase 5 — Documentation and publishing
 
-- [ ] Add Antora component metadata and navigation.
+- [x] Add Antora component metadata and navigation.
 - [ ] Record the remaining architecture decision records.
 - [ ] Complete README setup, operations, and verification instructions.
 - [ ] Publish Antora documentation to GitHub Pages.

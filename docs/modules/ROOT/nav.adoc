@@ -1,0 +1,9 @@
+* xref:index.adoc[Overview]
+* Architecture Decision Records
+** xref:adr/001-monorepo-layout.adoc[ADR 001: Monorepo layout]
+** xref:adr/002-antora-documentation.adoc[ADR 002: Antora documentation]
+** xref:adr/003-backend-module-boundaries.adoc[ADR 003: Backend module boundaries]
+** xref:adr/004-postgresql-liquibase-persistence.adoc[ADR 004: PostgreSQL and Liquibase]
+** xref:adr/005-users-persistence-ownership.adoc[ADR 005: Users persistence ownership]
+** xref:adr/006-single-module-modular-monolith.adoc[ADR 006: Single-module modular monolith]
+** xref:adr/007-liquibase-testcontainers-integration-tests.adoc[ADR 007: Liquibase and Testcontainers]

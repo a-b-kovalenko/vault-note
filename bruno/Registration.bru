@@ -1,0 +1,24 @@
+meta {
+  name: Registration
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{apiUrl}}/api/v1/auth/registrations
+  body: json
+  auth: inherit
+}
+
+body:json {
+    {
+      "email": "email@www4",
+      "display_name": " ",
+      "password": "password1234"
+    }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
