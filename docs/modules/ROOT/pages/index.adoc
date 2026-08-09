@@ -1,0 +1,85 @@
+= VaultNote
+:description: Overview of the VaultNote private Markdown notes application
+
+VaultNote is a local learning application for private Markdown notes. It
+combines an Angular single-page application, a Spring Boot API, PostgreSQL,
+and a production-inspired authentication lifecycle.
+
+== Purpose
+
+The project is intentionally small enough to understand end to end while
+exercising realistic backend and frontend boundaries:
+
+* Spring Boot and Spring Security;
+* PostgreSQL persistence with Liquibase migrations;
+* REST API contracts and generated frontend clients;
+* email verification and session-based authentication;
+* Angular application state, route guards, and access control.
+
+== Current state
+
+The backend foundation is in progress. The repository currently contains:
+
+* a single-module Spring Boot backend with package-level feature boundaries;
+* PostgreSQL persistence in the `vaultnote` schema;
+* Liquibase migrations with Hibernate schema validation;
+* local and Testcontainers-backed test profiles;
+* a registration endpoint with request validation and field-level errors;
+* Argon2id password hashing;
+* unit and PostgreSQL integration coverage for health and registration flows.
+
+The following parts remain planned:
+
+* Mailpit setup and email verification;
+* login, JWT access tokens, rotating refresh sessions, logout, and CSRF/CORS;
+* roles and authorization rules;
+* private notes and profile workflows;
+* the Angular frontend and generated API client.
+
+== Target architecture
+
+```text
+vault-note/
+├── backend/      Spring Boot, Java 25, single Gradle project
+├── frontend/     Angular standalone application
+├── bruno/        Executable local API requests
+└── docs/         Antora documentation and architecture decisions
+```
+
+The backend keeps feature ownership in packages under
+`com.andrii.vaultnote`:
+
+* `app` owns application startup, web wiring, configuration, and the API
+  boundary;
+* `users` owns users and user persistence;
+* `notes` owns notes, ownership rules, and Markdown behavior;
+* `security` owns authentication, sessions, CSRF, CORS, and authorization;
+* `common` is reserved for stable cross-cutting contracts and utilities.
+
+PostgreSQL remains an existing local service. Docker Compose is reserved for
+Mailpit, while Docker is also required when Testcontainers runs the isolated
+integration-test database.
+
+== Product boundaries
+
+The first iteration targets private Markdown notes with owner-only CRUD,
+pagination, optimistic locking, email/password authentication, email
+verification, JWT access tokens, rotating refresh sessions, and `USER` and
+read-only `ADMIN` roles.
+
+The first iteration does not include raw HTML in notes, attachments, note
+sharing, password reset, OAuth2, search, browser end-to-end tests, application
+CI, or production deployment.
+
+== Documentation map
+
+* `README.md` is the repository entry point and local quick start.
+* `docs/project-plan.md` contains the target scope and implementation plan.
+* `docs/project-progress.md` is the live execution board.
+* `docs/modules/ROOT/pages/adr/` contains numbered architecture decisions.
+* Swagger/OpenAPI is the API reference once the backend is running.
+* `bruno/` contains executable requests for local API verification.
+
+Architecture decisions are recorded only when they are implemented or are
+important to preserve. ADR 003 is retained as a superseded historical record;
+ADR 006 is the current decision for the backend modular structure.

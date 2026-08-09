@@ -1,0 +1,48 @@
+= ADR 007: Liquibase and Testcontainers integration-test strategy
+:status: accepted
+:date: 2026-08-09
+
+== Context
+
+VaultNote must verify that the JPA mappings, Liquibase migrations, PostgreSQL
+schema, and HTTP behavior work together. Local application development uses a
+shared PostgreSQL service, but integration tests must be isolated from that
+service and must not depend on its data or migration state.
+
+== Decision
+
+Run integration tests against an isolated PostgreSQL Testcontainer rather than
+the shared local database.
+
+The backend owns a dedicated `integrationTest` source set and Gradle task under
+`backend/`. The shared integration-test base class starts one PostgreSQL
+`16-alpine` container per test JVM with database `vault_note`, the local test
+credentials, and an initialization script that creates the `vaultnote` schema.
+Spring's dynamic test properties point the application datasource at the
+container. Application startup then runs the regular Liquibase master
+changelog against that database, while Hibernate remains configured with
+`ddl-auto: validate`.
+
+Use DBRider datasets for deterministic fixture setup and cleanup. Integration
+tests run with a random HTTP port and cover health and registration behavior
+through the real Spring Boot application and PostgreSQL database.
+
+The `check` task depends on `integrationTest`, so migration and HTTP integration
+coverage are part of the backend quality gate. Unit tests remain separate and
+do not require a database container.
+
+== Consequences
+
+* Migration failures and JPA/schema drift are detected against real PostgreSQL.
+* Integration tests are isolated from developer data and do not require the
+  shared local database to be available.
+* Docker is required when running integration tests because Testcontainers
+  manages the PostgreSQL container.
+* Tests are slower than unit tests, so they remain in a dedicated source set
+  while the complete quality gate still runs them automatically.
+* Test fixtures must be maintained as deterministic datasets rather than
+  relying on test order or state left by another test.
+
+== Status
+
+Accepted.

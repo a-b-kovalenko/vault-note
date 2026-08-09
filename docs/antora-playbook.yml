@@ -1,0 +1,19 @@
+site:
+  title: VaultNote
+  url: https://a-b-kovalenko.github.io/vault-note
+  start_page: vaultnote::index.adoc
+
+content:
+  sources:
+    - url: ..
+      branches: HEAD
+      start_path: docs
+
+ui:
+  bundle:
+    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
+    snapshot: true
+
+output:
+  clean: true
+  dir: ./build/site
