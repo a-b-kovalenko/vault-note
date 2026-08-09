@@ -26,13 +26,18 @@ The backend foundation is in progress. The repository currently contains:
 * local and Testcontainers-backed test profiles;
 * a registration endpoint with request validation and field-level errors;
 * Argon2id password hashing;
-* unit and PostgreSQL integration coverage for health and registration flows.
+* Mailpit-backed email verification with hashed, single-use tokens;
+* fixed numeric user-role codes and registration role assignment;
+* a login endpoint with email-verification and password checks;
+* a 15-minute JWT access token and seven-day hashed refresh-token cookie;
+* unit coverage for the login and token-generation services, plus PostgreSQL
+  integration coverage for health, registration, and email verification.
 
 The following parts remain planned:
 
-* Mailpit setup and email verification;
-* login, JWT access tokens, rotating refresh sessions, logout, and CSRF/CORS;
-* roles and authorization rules;
+* refresh endpoint, refresh rotation, reuse detection, and logout;
+* JWT request authentication, CSRF/CORS, rate limiting, and audit events;
+* authorization rules for notes and administrator views;
 * private notes and profile workflows;
 * the Angular frontend and generated API client.
 

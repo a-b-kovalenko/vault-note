@@ -10,8 +10,12 @@ change has been merged into `main`.
   workflow are implemented; the site is published.
 - The Mailpit baseline and the complete email-verification vertical slice are
   implemented and covered by PostgreSQL integration tests.
-- Next: implement login, short-lived access JWTs, and rotating refresh
-  sessions.
+- Login endpoint, short-lived JWT issuance, initial refresh-token persistence,
+  and `HttpOnly` cookie delivery are merged into `main`.
+- Unit coverage for the login service is in place; PostgreSQL integration
+  coverage for login is still pending.
+- Next: add login integration scenarios, then implement the refresh endpoint,
+  token rotation, reuse detection, logout, and authentication hardening.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -60,6 +64,11 @@ change has been merged into `main`.
     - [x] Cover valid, invalid, expired, reused, and concurrent token scenarios
       against PostgreSQL.
 - [ ] Implement login, short-lived access JWTs, and rotating refresh sessions.
+  - [x] Implement login, short-lived access JWT issuance, and initial refresh
+    token cookie delivery.
+  - [ ] Add PostgreSQL integration coverage for successful and failed login,
+    including access-token response, refresh cookie, and persisted token hash.
+  - [ ] Implement refresh endpoint and rotating refresh sessions.
 - [ ] Add CSRF, CORS, rate limiting, and refresh-token reuse handling.
   - [ ] Start CSRF work after the registration vertical slice is implemented
     and verified.

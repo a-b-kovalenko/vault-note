@@ -1,4 +1,5 @@
 * xref:index.adoc[Overview]
+* xref:authentication.adoc[Authentication]
 * Architecture Decision Records
 ** xref:adr/001-monorepo-layout.adoc[ADR 001: Monorepo layout]
 ** xref:adr/002-antora-documentation.adoc[ADR 002: Antora documentation]
@@ -8,3 +9,4 @@
 ** xref:adr/006-single-module-modular-monolith.adoc[ADR 006: Single-module modular monolith]
 ** xref:adr/007-liquibase-testcontainers-integration-tests.adoc[ADR 007: Liquibase and Testcontainers]
 ** xref:adr/008-mail-delivery-boundary.adoc[ADR 008: Mail delivery boundary]
+** xref:adr/009-fixed-role-codes.adoc[ADR 009: Fixed role codes]
