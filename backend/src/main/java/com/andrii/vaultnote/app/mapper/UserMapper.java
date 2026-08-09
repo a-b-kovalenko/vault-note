@@ -11,6 +11,7 @@ public interface UserMapper {
 
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "emailVerified", ignore = true)
+  @Mapping(target = "roles", ignore = true)
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   UserEntity toUserEntity(RegisterUserRequest request, String passwordHash);

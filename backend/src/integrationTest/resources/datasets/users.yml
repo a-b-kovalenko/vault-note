@@ -1,5 +1,0 @@
-users:
-  - id: 1000
-    email: existing@example.com
-    display_name: Existing User
-    password_hash: existing-password-hash

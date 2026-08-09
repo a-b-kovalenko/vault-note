@@ -20,9 +20,11 @@ The application layer uses the users persistence package while the launcher
 scans the shared `com.andrii.vaultnote` package tree. JPA entities remain
 internal persistence models and are not REST response types.
 
-Roles are not stored as a field on `UserEntity`. They will be modeled through
-separate `roles` and `user_roles` tables so one user can have multiple roles
-and future role types can be added without changing the `users` table.
+Roles are not stored as a single field on `users`. A user can have multiple
+roles through the `user_roles` table. The role is represented by the
+`UserRole` enum and stored as a stable numeric `role_code`, rather than through
+a separate `roles` table. The current codes are `1` for `USER` and `2` for
+`ADMIN`.
 
 == Consequences
 
@@ -30,8 +32,9 @@ and future role types can be added without changing the `users` table.
 * Future application services can depend on a users-owned persistence boundary.
 * The application package contains wiring rather than user-specific persistence
   behavior.
-* Role persistence will be introduced as a separate association model rather
-  than as an enum column on `users`.
+* Role assignments remain normalized and can represent multiple roles per user.
+* Adding a role requires a new enum code and a corresponding database
+  constraint migration.
 * DTOs and API contracts must be introduced before exposing user data over REST.
 
 == Status

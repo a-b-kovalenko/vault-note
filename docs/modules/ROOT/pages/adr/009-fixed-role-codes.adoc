@@ -1,0 +1,39 @@
+= ADR 009: Fixed role codes for user assignments
+:status: accepted
+:date: 2026-08-09
+
+== Context
+
+VaultNote needs `USER` and read-only `ADMIN` authorities. Roles are fixed
+application concepts in the first iteration: users cannot create roles and no
+role metadata or role-management API is required.
+
+== Decision
+
+Represent roles with the `UserRole` enum and explicit numeric codes:
+
+* `USER` has code `1`;
+* `ADMIN` has code `2`.
+
+Store assignments in `vaultnote.user_roles` with `user_id` and `role_code`.
+Use a composite primary key, a foreign key to `users`, and a check constraint
+for the supported codes. Persist and read the enum through a JPA
+`AttributeConverter`; do not use enum ordinal persistence.
+
+Do not create a separate `roles` table in this iteration. Promote the role
+value to a data-backed entity only when roles become runtime-managed or need
+metadata such as descriptions, lifecycle state, or assignment audit data.
+
+== Consequences
+
+* The database keeps normalized multi-role assignments without an extra role
+  catalog table.
+* Numeric codes remain stable even if the enum declaration order changes.
+* Adding a role requires a new enum constant and a migration update for the
+  database check constraint.
+* JWT authorities can continue to use readable names such as `ROLE_USER` and
+  `ROLE_ADMIN`.
+
+== Status
+
+Accepted.

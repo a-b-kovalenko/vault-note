@@ -8,10 +8,10 @@ change has been merged into `main`.
 
 - Antora metadata, navigation, Gradle integration, and the GitHub Pages
   workflow are implemented; the site is published.
-- The Mailpit baseline and the first part of the email-verification vertical
-  slice are implemented.
-- Next: add the dedicated email-verification endpoint and atomically consume
-  the token.
+- The Mailpit baseline and the complete email-verification vertical slice are
+  implemented and covered by PostgreSQL integration tests.
+- Next: implement login, short-lived access JWTs, and rotating refresh
+  sessions.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -30,15 +30,18 @@ change has been merged into `main`.
 - [x] Create the Liquibase master changelog and `vaultnote` schema baseline.
 - [x] Add local and Testcontainers-driven test profiles.
   - [x] Add PostgreSQL Testcontainers, DBRider datasets, and HTTP integration
-    coverage for the health and registration flows.
+    coverage for the health, registration, and email-verification flows.
   - [x] Add the local test profile.
 - [x] Add Mailpit Compose setup and non-secret environment example.
 
 ## Phase 2 — Identity and security
 
-- [ ] Model users, roles, and user-role assignments.
+- [x] Model users, roles, and user-role assignments.
   - [x] Add `UserEntity` and `UserJpaRepository` for the users table.
-- [ ] Implement registration and email verification.
+  - [x] Add fixed numeric `UserRole` codes and persist assignments in
+    `user_roles`.
+  - [x] Assign the `USER` role to every newly registered user.
+- [x] Implement registration and email verification.
   - [x] Add the registration endpoint and verify successful and duplicate-email
     flows against PostgreSQL.
   - [x] Add complete request validation: non-blank email/display name,
@@ -47,13 +50,15 @@ change has been merged into `main`.
       API error codes.
   - [x] Replace the temporary BCrypt encoder with Argon2id before registration
     reaches a production-like baseline.
-  - [ ] Implement the email-verification MVP after the Mailpit baseline.
+  - [x] Implement the email-verification MVP after the Mailpit baseline.
     - [x] Add `email_verification_tokens` with a user relation, hashed token,
       expiry, `used_at`, and `created_at`.
     - [x] Generate a single-use token and send its raw value through
       `MailSender`.
-    - [ ] Add a dedicated email-verification endpoint.
-    - [ ] Atomically mark the token as used and set `email_verified` to `true`.
+    - [x] Add a dedicated email-verification endpoint.
+    - [x] Atomically mark the token as used and set `email_verified` to `true`.
+    - [x] Cover valid, invalid, expired, reused, and concurrent token scenarios
+      against PostgreSQL.
 - [ ] Implement login, short-lived access JWTs, and rotating refresh sessions.
 - [ ] Add CSRF, CORS, rate limiting, and refresh-token reuse handling.
   - [ ] Start CSRF work after the registration vertical slice is implemented

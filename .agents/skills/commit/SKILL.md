@@ -22,7 +22,21 @@ stage, commit, and push. Never invoke it proactively.
    `.mcp.json`) remain excluded by Git.
 3. Run the relevant quality gate before staging the final commit. For backend
    changes run `./gradlew check` from `backend/`; include focused checks when
-   they provide faster feedback. Stop on a failed check and report the cause.
+   they provide faster feedback.
+   - If the gate fails, stop commit and push progression, but do not end the
+     workflow with only a failure summary. Inspect the output and classify each
+     failure as mechanical, behavior/test-related, or environmental.
+   - Apply safe, in-scope fixes when the remedy is unambiguous, such as running
+     the formatter or correcting imports, then rerun the quality gate.
+   - For behavior or coverage failures, explain the root cause and provide the
+     recommended fix plus viable alternatives. Add focused tests when they are
+     clearly part of the requested change; do not lower coverage thresholds or
+     exclude production behavior merely to make the gate pass.
+   - If the remedy changes product scope, quality policy, or requires external
+     state or user authority, pause before applying it and ask for direction.
+   - Continue toward commit only after the quality gate passes. If a failure
+     remains after in-scope remediation, report the exact blocker and the next
+     recommended action.
 4. Run `git diff --cached --check` and inspect the staged summary and diff.
    Do not continue if the staged content contains secrets or generated output.
 5. Choose a concise Conventional Commit message (`feat`, `fix`, `docs`,
