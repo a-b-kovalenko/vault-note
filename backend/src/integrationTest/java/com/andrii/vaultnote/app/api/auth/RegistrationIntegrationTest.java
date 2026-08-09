@@ -2,19 +2,24 @@ package com.andrii.vaultnote.app.api.auth;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserRequest;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserResponse;
 import com.andrii.vaultnote.app.api.error.ApiErrorResponse;
 import com.andrii.vaultnote.app.api.error.ValidationViolation;
+import com.andrii.vaultnote.app.mail.MailMessage;
+import com.andrii.vaultnote.app.mail.MailSender;
+import com.andrii.vaultnote.users.infrastructure.persistence.repository.EmailVerificationTokenJpaRepository;
 import com.andrii.vaultnote.support.AbstractBaseIntegrationTest;
-import com.andrii.vaultnote.users.infrastructure.persistence.UserJpaRepository;
+import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
 import com.github.database.rider.core.api.dataset.DataSet;
 import io.restassured.http.ContentType;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -29,10 +34,17 @@ class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
   private static final String PASSWORD = "Password1234";
 
   private final UserJpaRepository userJpaRepository;
+  private final EmailVerificationTokenJpaRepository tokenRepository;
+  private final MailSender mailSender;
 
   @Autowired
-  RegistrationIntegrationTest(UserJpaRepository userJpaRepository) {
+  RegistrationIntegrationTest(
+      UserJpaRepository userJpaRepository,
+      EmailVerificationTokenJpaRepository tokenRepository,
+      MailSender mailSender) {
     this.userJpaRepository = userJpaRepository;
+    this.tokenRepository = tokenRepository;
+    this.mailSender = mailSender;
   }
 
   @Test
@@ -70,6 +82,22 @@ class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
     assertThat(savedUser.getCreatedAt()).isBetween(requestStartedAt, requestFinishedAt);
     assertThat(savedUser.getUpdatedAt()).isBetween(requestStartedAt, requestFinishedAt);
     assertThat(savedUser.getUpdatedAt()).isAfterOrEqualTo(savedUser.getCreatedAt());
+
+    assertThat(tokenRepository.findAll())
+        .singleElement()
+        .satisfies(token -> {
+          assertThat(token.getUser().getId()).isEqualTo(savedUser.getId());
+          assertThat(token.getTokenHash()).hasSize(64);
+          assertThat(token.getExpiresAt()).isAfter(requestFinishedAt);
+          assertThat(token.getUsedAt()).isNull();
+        });
+
+    var mailCaptor = ArgumentCaptor.forClass(MailMessage.class);
+    verify(mailSender).send(mailCaptor.capture());
+    assertThat(mailCaptor.getValue().to()).isEqualTo(email);
+    assertThat(mailCaptor.getValue().text())
+        .startsWith("Please verify your VaultNote email by opening this link:")
+        .contains("http://localhost:4200/verify-email?token=");
   }
 
   @Test

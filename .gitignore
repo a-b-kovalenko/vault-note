@@ -3,6 +3,10 @@ build/
 node_modules/
 .workspace/
 .mcp.json
+.env
+.env.*
+!.env.example
+backend/src/main/resources/application-local-secrets.yaml
 VaultNote Atlas/.obsidian/workspace.json
 VaultNote Atlas/.obsidian/community-plugins.json
 VaultNote Atlas/.obsidian/bookmarks.json

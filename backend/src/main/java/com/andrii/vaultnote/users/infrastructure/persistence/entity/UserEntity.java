@@ -1,4 +1,4 @@
-package com.andrii.vaultnote.users.infrastructure.persistence;
+package com.andrii.vaultnote.users.infrastructure.persistence.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

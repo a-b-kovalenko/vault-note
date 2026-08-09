@@ -78,7 +78,8 @@ Create Liquibase migrations in schema `vaultnote` for:
 - `notes`: owner relation, title, Markdown content, timestamps, and `@Version`.
 - `refresh_tokens`: per-session hashed token, expiry, rotation lineage, and
   revocation state.
-- `email_verification_tokens`: expiring, single-use hashed tokens.
+- `email_verification_tokens`: user relation, single-use hashed token, expiry,
+  used timestamp, and creation timestamp for the email-verification MVP.
 - `auth_audit_events`: successful/failed login, logout, and token revocation.
 
 Seed `USER` and `ADMIN` roles via migrations. Open registration grants only
@@ -96,8 +97,13 @@ Implement these flows:
 
 1. Register with email, display name, and a password of at least 12 characters
    including at least two digits. Return a neutral public response.
-2. Issue a one-time, expiring email-verification link through Mailpit. Support
-   rate-limited resend; invalidate older verification tokens.
+2. Implement the email-verification MVP after the Mailpit baseline:
+   - create an expiring, single-use hashed token;
+   - send the raw token in a verification link through `MailSender`;
+   - expose a dedicated verification endpoint;
+   - atomically mark the token as used and `users.email_verified` as `true`.
+   The MVP intentionally does not include outbox delivery, resend, rate
+   limiting, token history, or cleanup jobs.
 3. Allow verified users to log in. Issue a 15-minute JWT access token returned
    to Angular memory and a 7-day refresh token in an `HttpOnly` cookie.
 4. Store refresh tokens only as hashes. Rotate on every refresh and revoke the
@@ -109,6 +115,11 @@ Protect login by rate limiting on both IP and email, without account lockout.
 Implement CSRF protection for cookie-backed refresh and logout calls using the
 Angular-compatible XSRF token pattern. Configure CORS as an explicit allowlist
 for the local Angular origin with credentials enabled.
+
+Email delivery hardening is a later phase. It includes rate-limited resend,
+invalidation of older verification tokens, cleanup of expired tokens, audit
+events, and an outbox when reliable delivery and retry semantics become
+necessary.
 
 Use production-like cookie settings where possible. The `local` profile may omit
 the `Secure` flag for HTTP localhost; document the required production setting.
