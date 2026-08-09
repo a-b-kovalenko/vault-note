@@ -1,0 +1,6 @@
+users:
+  - id: 2000
+    email: verification@example.com
+    display_name: Verification User
+    password_hash: verification-password-hash
+    email_verified: false

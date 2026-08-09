@@ -8,10 +8,10 @@ change has been merged into `main`.
 
 - Antora metadata, navigation, Gradle integration, and the GitHub Pages
   workflow are implemented; the site is published.
-- The Mailpit baseline and the first part of the email-verification vertical
-  slice are implemented.
-- Next: add the dedicated email-verification endpoint and atomically consume
-  the token.
+- The Mailpit baseline and the complete email-verification vertical slice are
+  implemented and covered by PostgreSQL integration tests.
+- Next: implement login, short-lived access JWTs, and rotating refresh
+  sessions.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -30,7 +30,7 @@ change has been merged into `main`.
 - [x] Create the Liquibase master changelog and `vaultnote` schema baseline.
 - [x] Add local and Testcontainers-driven test profiles.
   - [x] Add PostgreSQL Testcontainers, DBRider datasets, and HTTP integration
-    coverage for the health and registration flows.
+    coverage for the health, registration, and email-verification flows.
   - [x] Add the local test profile.
 - [x] Add Mailpit Compose setup and non-secret environment example.
 
@@ -38,7 +38,7 @@ change has been merged into `main`.
 
 - [ ] Model users, roles, and user-role assignments.
   - [x] Add `UserEntity` and `UserJpaRepository` for the users table.
-- [ ] Implement registration and email verification.
+- [x] Implement registration and email verification.
   - [x] Add the registration endpoint and verify successful and duplicate-email
     flows against PostgreSQL.
   - [x] Add complete request validation: non-blank email/display name,
@@ -52,8 +52,10 @@ change has been merged into `main`.
       expiry, `used_at`, and `created_at`.
     - [x] Generate a single-use token and send its raw value through
       `MailSender`.
-    - [ ] Add a dedicated email-verification endpoint.
-    - [ ] Atomically mark the token as used and set `email_verified` to `true`.
+    - [x] Add a dedicated email-verification endpoint.
+    - [x] Atomically mark the token as used and set `email_verified` to `true`.
+    - [x] Cover valid, invalid, expired, reused, and concurrent token scenarios
+      against PostgreSQL.
 - [ ] Implement login, short-lived access JWTs, and rotating refresh sessions.
 - [ ] Add CSRF, CORS, rate limiting, and refresh-token reuse handling.
   - [ ] Start CSRF work after the registration vertical slice is implemented

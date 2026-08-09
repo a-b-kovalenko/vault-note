@@ -16,7 +16,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @DBRider
-@DBUnit(schema = "vaultnote", caseInsensitiveStrategy = Orthography.LOWERCASE)
+@DBUnit(schema = "vaultnote", caseInsensitiveStrategy = Orthography.LOWERCASE, alwaysCleanBefore = true, alwaysCleanAfter = true)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(AbstractBaseIntegrationTest.TestMailConfiguration.class)
 public abstract class AbstractBaseIntegrationTest {

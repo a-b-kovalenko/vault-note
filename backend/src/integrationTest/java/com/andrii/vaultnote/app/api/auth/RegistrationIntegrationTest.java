@@ -19,6 +19,8 @@ import java.time.Instant;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,15 +29,15 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
-@DataSet(value = "datasets/users.yml", cleanBefore = true, cleanAfter = true, skipCleaningFor = {"databasechangelog",
-    "databasechangeloglock"})
+@DataSet(value = "users.yml", skipCleaningFor = {"databasechangelog", "databasechangeloglock"})
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
 
   private static final String PASSWORD = "Password1234";
 
-  private final UserJpaRepository userJpaRepository;
-  private final EmailVerificationTokenJpaRepository tokenRepository;
-  private final MailSender mailSender;
+  UserJpaRepository userJpaRepository;
+  EmailVerificationTokenJpaRepository tokenRepository;
+  MailSender mailSender;
 
   @Autowired
   RegistrationIntegrationTest(
@@ -47,6 +49,14 @@ class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
     this.mailSender = mailSender;
   }
 
+  /**
+   * Registers a new user against PostgreSQL.
+   *
+   * <p>
+   * The endpoint must return {@code 201 Created}, persist a hashed password and
+   * an unverified user, create an email verification token, and send the
+   * verification email.
+   */
   @Test
   void shouldRegisterUserAgainstPostgres() {
     var email = uniqueEmail();
@@ -100,6 +110,13 @@ class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
         .contains("http://localhost:4200/verify-email?token=");
   }
 
+  /**
+   * Rejects registration when the requested email is already registered.
+   *
+   * <p>
+   * The endpoint must return {@code 409 Conflict} with
+   * {@code ENTITY_ALREADY_EXISTS}.
+   */
   @Test
   void shouldRejectDuplicateEmail() {
     var request = RegisterUserRequest.builder()
@@ -122,6 +139,19 @@ class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
     assertThat(response.code()).isEqualTo("ENTITY_ALREADY_EXISTS");
   }
 
+  /**
+   * Rejects registration requests that violate field validation or the password
+   * policy.
+   *
+   * @param scenario
+   *          name of the invalid input scenario
+   * @param request
+   *          registration request under test
+   * @param expectedField
+   *          expected field reported in the validation violation
+   * @param expectedCode
+   *          expected API validation code
+   */
   @ParameterizedTest(name = "{0}")
   @MethodSource("invalidRegistrationRequests")
   void shouldRejectInvalidRegistrationRequest(

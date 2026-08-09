@@ -101,6 +101,8 @@ sourceSets {
 configurations {
   integrationTestImplementation.extendsFrom testImplementation
   integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+  integrationTestCompileOnly.extendsFrom testCompileOnly
+  integrationTestAnnotationProcessor.extendsFrom testAnnotationProcessor
 }
 
 tasks.named('test') {
