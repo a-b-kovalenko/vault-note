@@ -1,7 +1,8 @@
 package com.andrii.vaultnote.app.api.error;
 
-import com.andrii.vaultnote.app.exception.EntityExistsException;
+import com.andrii.vaultnote.app.exception.AuthenticationFailedException;
 import com.andrii.vaultnote.app.exception.EmailVerificationFailedException;
+import com.andrii.vaultnote.app.exception.EntityExistsException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +40,19 @@ public class GlobalExceptionHandler {
 
     return ResponseEntity
         .status(HttpStatus.BAD_REQUEST)
+        .body(response);
+  }
+
+  @ExceptionHandler(AuthenticationFailedException.class)
+  public ResponseEntity<ApiErrorResponse> handleAuthenticationFailedException(
+      AuthenticationFailedException exception) {
+
+    log.warn("Authentication failed");
+
+    var response = new ApiErrorResponse("AUTHENTICATION_FAILED", exception.getMessage());
+
+    return ResponseEntity
+        .status(HttpStatus.UNAUTHORIZED)
         .body(response);
   }
 

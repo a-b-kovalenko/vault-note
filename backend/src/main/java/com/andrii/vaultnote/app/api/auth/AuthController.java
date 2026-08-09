@@ -1,8 +1,11 @@
 package com.andrii.vaultnote.app.api.auth;
 
+import com.andrii.vaultnote.app.api.auth.dto.LoginRequest;
+import com.andrii.vaultnote.app.api.auth.dto.LoginResponse;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserRequest;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserResponse;
 import com.andrii.vaultnote.app.service.EmailVerificationService;
+import com.andrii.vaultnote.app.service.LoginService;
 import com.andrii.vaultnote.app.service.RegistrationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,6 +16,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,17 +29,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class RegistrationController {
+public class AuthController {
 
   RegistrationService registrationService;
-  EmailVerificationService verificationService;
+  EmailVerificationService emailVerificationService;
+  LoginService loginService;
+  RefreshTokenCookieFactory refreshTokenCookieFactory;
 
   @Operation
   @ApiResponse(responseCode = "201", description = "Register user", content = {
       @Content(mediaType = "application/json", schema = @Schema(implementation = RegisterUserResponse.class))})
   @ApiResponse(responseCode = "400", description = "Invalid request", content = {@Content})
-  @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
-  @ApiResponse(responseCode = "404", description = "Not found", content = {@Content})
   @ApiResponse(responseCode = "409", description = "Email already registered", content = {@Content})
   @ApiResponse(responseCode = "500", description = "Server error", content = {@Content})
 
@@ -45,8 +50,7 @@ public class RegistrationController {
   }
 
   @Operation
-  @ApiResponse(responseCode = "204", description = "Verify user's email", content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = RegisterUserResponse.class))})
+  @ApiResponse(responseCode = "204", description = "Verify user's email")
   @ApiResponse(responseCode = "400", description = "Invalid request", content = {@Content})
   @ApiResponse(responseCode = "404", description = "Not found", content = {@Content})
   @ApiResponse(responseCode = "500", description = "Server error", content = {@Content})
@@ -54,6 +58,25 @@ public class RegistrationController {
   @PostMapping("/email-verification")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void verifyEmail(@RequestParam(name = "token") String token) {
-    verificationService.verifyEmail(token);
+    emailVerificationService.verifyEmail(token);
   }
+
+  @Operation
+  @ApiResponse(responseCode = "200", description = "Login user", content = {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class))})
+  @ApiResponse(responseCode = "400", description = "Invalid request", content = {@Content})
+  @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
+  @ApiResponse(responseCode = "500", description = "Server error", content = {@Content})
+
+  @PostMapping("/login")
+  public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
+    var loginResult = loginService.login(request);
+
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .header(HttpHeaders.SET_COOKIE,
+            refreshTokenCookieFactory.create(loginResult.rawRefreshToken()).toString())
+        .body(loginResult.response());
+  }
+
 }

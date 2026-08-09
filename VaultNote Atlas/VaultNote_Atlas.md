@@ -15,6 +15,7 @@
 ## Security
 
 - [Паролі: validation та Argon2id](content/Паролі-validation-та-Argon2id.md): різниця між password policy і безпечним зберіганням пароля.
+- [Refresh token rotation і reuse detection](content/Refresh-token-rotation-і-reuse-detection.md): як оновлюються refresh tokens і чому reuse завершує всю token family.
 
 ## Email
 

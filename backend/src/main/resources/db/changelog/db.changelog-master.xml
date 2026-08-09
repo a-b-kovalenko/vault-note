@@ -8,5 +8,6 @@
   <include file="db/changelog/changesets/001-create-users-table.xml" relativeToChangelogFile="false"/>
   <include file="db/changelog/changesets/002-create-email-verification-tokens-table.xml" relativeToChangelogFile="false"/>
   <include file="db/changelog/changesets/003-create-user-roles-table.xml" relativeToChangelogFile="false"/>
+  <include file="db/changelog/changesets/004-create-refresh-tokens-table.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

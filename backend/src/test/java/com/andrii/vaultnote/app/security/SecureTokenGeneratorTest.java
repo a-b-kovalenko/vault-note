@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-class EmailVerificationTokenGeneratorTest {
+class SecureTokenGeneratorTest {
 
-  private final EmailVerificationTokenGenerator generator = new EmailVerificationTokenGenerator();
+  private final SecureTokenGenerator generator = new SecureTokenGenerator();
 
   @Test
   void shouldGenerateUrlSafeTokenAndHash() {

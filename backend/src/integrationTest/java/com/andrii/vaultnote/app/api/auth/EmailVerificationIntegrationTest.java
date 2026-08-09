@@ -4,8 +4,8 @@ import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.andrii.vaultnote.app.api.error.ApiErrorResponse;
-import com.andrii.vaultnote.app.security.EmailVerificationTokenGenerator;
-import com.andrii.vaultnote.app.security.EmailVerificationTokenGenerator.GeneratedToken;
+import com.andrii.vaultnote.app.security.SecureTokenGenerator;
+import com.andrii.vaultnote.app.security.SecureTokenGenerator.GeneratedToken;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.EmailVerificationTokenEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.EmailVerificationTokenJpaRepository;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
@@ -45,14 +45,14 @@ class EmailVerificationIntegrationTest extends AbstractBaseIntegrationTest {
 
   UserJpaRepository userRepository;
   EmailVerificationTokenJpaRepository tokenRepository;
-  EmailVerificationTokenGenerator tokenGenerator;
+  SecureTokenGenerator tokenGenerator;
   Clock clock;
 
   @Autowired
   EmailVerificationIntegrationTest(
       UserJpaRepository userRepository,
       EmailVerificationTokenJpaRepository tokenRepository,
-      EmailVerificationTokenGenerator tokenGenerator,
+      SecureTokenGenerator tokenGenerator,
       Clock clock) {
     this.userRepository = userRepository;
     this.tokenRepository = tokenRepository;
