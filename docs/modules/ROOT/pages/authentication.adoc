@@ -1,0 +1,106 @@
+= Authentication
+:description: Current VaultNote login and token delivery flow
+
+VaultNote uses email/password authentication. A user must verify the email
+address before login succeeds.
+
+== Current login flow
+
+The login endpoint is `POST /api/v1/auth/login`. Its request body contains the
+email and password:
+
+[source,json]
+----
+{
+  "email": "user@example.com",
+  "password": "Password1234"
+}
+----
+
+`LoginServiceImpl` performs the following operations:
+
+. Finds the user with roles through `UserJpaRepository`.
+. Rejects an unknown, unverified, or incorrectly authenticated user with the
+  same `401 Unauthorized` response.
+. Creates a short-lived JWT access token.
+. Creates a random refresh token, stores only its hash, and assigns a new token
+  family identifier.
+. Returns the access token in the response body and passes the raw refresh token
+  to `AuthController` for cookie delivery.
+
+The JSON response contains:
+
+[source,json]
+----
+{
+  "access_token": "<jwt>",
+  "token_type": "Bearer",
+  "expires_in": 900
+}
+----
+
+The API response also sets the refresh-token cookie. The raw refresh token is
+never included in the JSON response.
+
+== Access token
+
+`AccessTokenGenerator` creates a signed JWT with these claims:
+
+* `sub` — the user identifier;
+* `roles` — readable role names such as `USER` and `ADMIN`;
+* `iss` — the configured issuer;
+* `iat` — the issue time;
+* `exp` — the expiration time.
+
+The default access-token lifetime is 15 minutes. The token is intended to be
+held in Angular memory rather than in `localStorage` or another persistent
+browser store.
+
+== Refresh token
+
+The refresh token is an opaque, URL-safe random value. `SecureTokenGenerator`
+returns both the raw value and its SHA-256 hash:
+
+* the raw value is sent in the `HttpOnly` cookie;
+* only the hash is persisted in `refresh_tokens`;
+* `RefreshTokenEntity` stores the user, expiry, token family, and revocation
+  state.
+
+The default lifetime is seven days. Cookie construction is isolated in
+`RefreshTokenCookieFactory` and uses these defaults:
+
+* cookie name: `vaultnote_refresh_token`;
+* path: `/api/v1/auth`;
+* `HttpOnly`: enabled;
+* `SameSite`: `Lax`;
+* `Secure`: disabled for local HTTP development and configurable for other
+  environments.
+
+== Configuration
+
+JWT and refresh-token settings are externalized through environment variables:
+
+* `VAULTNOTE_JWT_SECRET`;
+* `VAULTNOTE_JWT_ISSUER`;
+* `VAULTNOTE_JWT_ACCESS_TOKEN_TTL`;
+* `VAULTNOTE_REFRESH_TOKEN_TTL`;
+* `VAULTNOTE_REFRESH_TOKEN_COOKIE_SECURE`;
+* `VAULTNOTE_REFRESH_TOKEN_COOKIE_SAME_SITE`.
+
+The local defaults are suitable only for development. A deployed environment
+must provide its own JWT secret and enable the `Secure` cookie flag.
+
+== Remaining authentication work
+
+The initial login and token-delivery flow is implemented. The following parts
+are intentionally still pending:
+
+* `POST /api/v1/auth/refresh`;
+* refresh-token rotation on every refresh request;
+* reuse detection and revocation of the affected token family;
+* logout and refresh-cookie clearing;
+* JWT decoding and authentication of protected API requests;
+* CSRF, CORS, rate limiting, and authentication audit events.
+
+Swagger/OpenAPI remains the reference for the endpoint contract. This page
+documents the security behavior and token lifecycle around that contract.
