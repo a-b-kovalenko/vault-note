@@ -83,6 +83,19 @@ Liquibase. By default it connects to `localhost:5432` as `user` with password
 `password`; override these values with `VAULTNOTE_DATABASE_URL`,
 `VAULTNOTE_DATABASE_USERNAME`, and `VAULTNOTE_DATABASE_PASSWORD` when needed.
 
+Mailpit provides the local SMTP server and web UI for inspecting outgoing mail.
+Copy the non-secret example environment file and start only the Mailpit
+service:
+
+```shell
+cp .env.example .env
+docker compose up -d mailpit
+```
+
+The backend sends SMTP traffic to `localhost:1025`; inspect captured messages at
+[http://localhost:8025](http://localhost:8025). Override the Mailpit ports or
+SMTP settings through `.env` when the defaults are already in use.
+
 Start the backend with the `local` profile after the shared PostgreSQL instance
 is available:
 
@@ -98,9 +111,11 @@ cd backend
 ./gradlew antoraBuild
 ```
 
-The documentation build requires Node.js 20 or newer and npm. The generated
-site is written to `docs/build/site`. The regular `check` task also includes
-the documentation build.
+The Gradle build downloads the pinned Node.js runtime automatically, so a
+system-wide Node.js or npm installation is not required. The first run needs
+network access to download Node.js and install the locked Antora dependencies.
+The generated site is written to `docs/build/site`. The regular `check` task
+also includes the documentation build.
 
 ## Implemented registration API
 

@@ -6,5 +6,6 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
   <include file="db/changelog/changesets/001-create-users-table.xml" relativeToChangelogFile="false"/>
+  <include file="db/changelog/changesets/002-create-email-verification-tokens-table.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

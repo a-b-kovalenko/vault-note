@@ -1,8 +1,10 @@
+import com.github.gradle.node.npm.task.NpmTask
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 
 plugins {
   id 'org.springframework.boot' version '4.1.0'
   id 'io.spring.dependency-management' version '1.1.7'
+  id 'com.github.node-gradle.node' version '7.1.0'
   id 'com.diffplug.spotless' version '8.9.0'
   id 'jacoco'
   id 'java'
@@ -14,6 +16,15 @@ description = 'VaultNote Spring Boot application.'
 
 def docsProjectDir = rootProject.file('../docs')
 def docsSiteDir = new File(docsProjectDir, 'build/site')
+def docsNodeVersion = '22.14.0'
+
+node {
+  version = docsNodeVersion
+  download = true
+  nodeProjectDir = docsProjectDir
+  workDir = file('.gradle/nodejs')
+  npmWorkDir = file('.gradle/npm')
+}
 
 repositories {
   mavenCentral()
@@ -46,6 +57,7 @@ dependencies {
 
   implementation 'org.springframework.boot:spring-boot-starter-actuator'
   implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+  implementation 'org.springframework.boot:spring-boot-starter-mail'
   implementation 'org.springframework.boot:spring-boot-starter-webmvc'
   implementation 'org.springframework.boot:spring-boot-starter-liquibase'
   implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -108,23 +120,23 @@ tasks.register('integrationTest', Test) {
   useJUnitPlatform()
 }
 
-tasks.register('antoraInstall', Exec) {
+tasks.register('antoraInstall', NpmTask) {
   description = 'Installs the pinned Antora documentation dependencies.'
   group = 'documentation'
-  workingDir docsProjectDir
-  commandLine 'npm', 'ci'
+  workingDir = docsProjectDir
+  args = ['ci']
   inputs.files(
       new File(docsProjectDir, 'package.json'),
       new File(docsProjectDir, 'package-lock.json'))
   outputs.dir(new File(docsProjectDir, 'node_modules'))
 }
 
-tasks.register('antoraBuild', Exec) {
+tasks.register('antoraBuild', NpmTask) {
   description = 'Builds the Antora documentation site.'
   group = 'documentation'
   dependsOn tasks.named('antoraInstall')
-  workingDir docsProjectDir
-  commandLine 'npm', 'run', 'build'
+  workingDir = docsProjectDir
+  args = ['run', 'build']
   inputs.files(fileTree(docsProjectDir) {
     include 'antora.yml'
     include 'antora-playbook.yml'

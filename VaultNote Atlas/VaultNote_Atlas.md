@@ -19,6 +19,8 @@
 ## Email
 
 - [Mail та верифікація email](content/Mail.md): межа Mail, Mailpit, SMTP і рішення поки не додавати outbox.
+- [Email verification tokens](content/Email-verification-tokens.md): окрема
+  модель одноразових hashed токенів для підтвердження адреси.
 
 ## Testing
 

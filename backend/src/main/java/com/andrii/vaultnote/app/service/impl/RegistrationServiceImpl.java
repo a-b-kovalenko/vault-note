@@ -4,9 +4,10 @@ import com.andrii.vaultnote.app.api.auth.dto.RegisterUserRequest;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserResponse;
 import com.andrii.vaultnote.app.exception.EntityExistsException;
 import com.andrii.vaultnote.app.mapper.UserMapper;
+import com.andrii.vaultnote.app.service.EmailVerificationService;
 import com.andrii.vaultnote.app.service.RegistrationService;
-import com.andrii.vaultnote.users.infrastructure.persistence.UserEntity;
-import com.andrii.vaultnote.users.infrastructure.persistence.UserJpaRepository;
+import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
+import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
 import jakarta.transaction.Transactional;
 import java.sql.SQLException;
 import lombok.AccessLevel;
@@ -28,6 +29,7 @@ public class RegistrationServiceImpl implements RegistrationService {
   UserJpaRepository userJpaRepository;
   UserMapper userMapper;
   PasswordEncoder passwordEncoder;
+  EmailVerificationService emailVerificationService;
 
   @Override
   @Transactional
@@ -49,6 +51,8 @@ public class RegistrationServiceImpl implements RegistrationService {
       }
       throw e;
     }
+
+    emailVerificationService.issueVerificationEmail(savedEntity);
 
     return new RegisterUserResponse(savedEntity.getId());
   }

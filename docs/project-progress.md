@@ -7,9 +7,11 @@ change has been merged into `main`.
 ## Current focus
 
 - Antora metadata, navigation, Gradle integration, and the GitHub Pages
-  workflow are implemented; the first Pages deployment is pending.
-- Next feature after documentation publishing: add Mailpit Compose setup and a
-  non-secret environment example.
+  workflow are implemented; the site is published.
+- The Mailpit baseline and the first part of the email-verification vertical
+  slice are implemented.
+- Next: add the dedicated email-verification endpoint and atomically consume
+  the token.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -30,7 +32,7 @@ change has been merged into `main`.
   - [x] Add PostgreSQL Testcontainers, DBRider datasets, and HTTP integration
     coverage for the health and registration flows.
   - [x] Add the local test profile.
-- [ ] Add Mailpit Compose setup and non-secret environment example.
+- [x] Add Mailpit Compose setup and non-secret environment example.
 
 ## Phase 2 — Identity and security
 
@@ -45,6 +47,13 @@ change has been merged into `main`.
       API error codes.
   - [x] Replace the temporary BCrypt encoder with Argon2id before registration
     reaches a production-like baseline.
+  - [ ] Implement the email-verification MVP after the Mailpit baseline.
+    - [x] Add `email_verification_tokens` with a user relation, hashed token,
+      expiry, `used_at`, and `created_at`.
+    - [x] Generate a single-use token and send its raw value through
+      `MailSender`.
+    - [ ] Add a dedicated email-verification endpoint.
+    - [ ] Atomically mark the token as used and set `email_verified` to `true`.
 - [ ] Implement login, short-lived access JWTs, and rotating refresh sessions.
 - [ ] Add CSRF, CORS, rate limiting, and refresh-token reuse handling.
   - [ ] Start CSRF work after the registration vertical slice is implemented
@@ -71,5 +80,13 @@ change has been merged into `main`.
 
 - [x] Add Antora component metadata and navigation.
 - [ ] Record the remaining architecture decision records.
-- [ ] Complete README setup, operations, and verification instructions.
-- [ ] Publish Antora documentation to GitHub Pages.
+- [x] Complete README setup, operations, and verification instructions.
+- [x] Publish Antora documentation to GitHub Pages.
+
+## Phase 6 — Email and authentication hardening
+
+- [ ] Add rate-limited verification-email resend.
+- [ ] Invalidate older active verification tokens when a new one is issued.
+- [ ] Add cleanup and audit handling for expired or invalidated tokens.
+- [ ] Revisit outbox delivery, retry, and SMTP-failure semantics when reliable
+  asynchronous email delivery becomes necessary.

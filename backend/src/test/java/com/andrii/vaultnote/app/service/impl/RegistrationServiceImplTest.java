@@ -4,8 +4,9 @@ import com.andrii.vaultnote.app.api.auth.dto.RegisterUserRequest;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserResponse;
 import com.andrii.vaultnote.app.exception.EntityExistsException;
 import com.andrii.vaultnote.app.mapper.UserMapper;
-import com.andrii.vaultnote.users.infrastructure.persistence.UserEntity;
-import com.andrii.vaultnote.users.infrastructure.persistence.UserJpaRepository;
+import com.andrii.vaultnote.app.service.EmailVerificationService;
+import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
+import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
 import java.sql.SQLException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -41,6 +42,8 @@ class RegistrationServiceImplTest {
   UserJpaRepository userJpaRepository;
   @Mock
   PasswordEncoder passwordEncoder;
+  @Mock
+  EmailVerificationService emailVerificationService;
 
   @Spy
   UserMapper userMapper = Mappers.getMapper(UserMapper.class);
@@ -71,6 +74,7 @@ class RegistrationServiceImplTest {
     verify(passwordEncoder, times(1)).encode(RAW_PASSWORD);
     verify(userMapper).toUserEntity(request, MOCK_HASH);
     verify(userJpaRepository).save(any(UserEntity.class));
+    verify(emailVerificationService).issueVerificationEmail(any(UserEntity.class));
 
     assertThat(response)
         .extracting(RegisterUserResponse::userId)
@@ -92,6 +96,7 @@ class RegistrationServiceImplTest {
 
     verifyNoInteractions(userMapper);
     verifyNoInteractions(passwordEncoder);
+    verifyNoInteractions(emailVerificationService);
     verify(userJpaRepository, never()).save(any(UserEntity.class));
   }
 
