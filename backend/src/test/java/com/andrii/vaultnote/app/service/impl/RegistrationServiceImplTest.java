@@ -5,6 +5,7 @@ import com.andrii.vaultnote.app.api.auth.dto.RegisterUserResponse;
 import com.andrii.vaultnote.app.exception.EntityExistsException;
 import com.andrii.vaultnote.app.mapper.UserMapper;
 import com.andrii.vaultnote.app.service.EmailVerificationService;
+import com.andrii.vaultnote.users.domain.UserRole;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
 import java.sql.SQLException;
@@ -13,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -73,9 +75,11 @@ class RegistrationServiceImplTest {
 
     verify(passwordEncoder, times(1)).encode(RAW_PASSWORD);
     verify(userMapper).toUserEntity(request, MOCK_HASH);
-    verify(userJpaRepository).save(any(UserEntity.class));
+    var userCaptor = ArgumentCaptor.forClass(UserEntity.class);
+    verify(userJpaRepository).save(userCaptor.capture());
     verify(emailVerificationService).issueVerificationEmail(any(UserEntity.class));
 
+    assertThat(userCaptor.getValue().getRoles()).containsExactly(UserRole.USER);
     assertThat(response)
         .extracting(RegisterUserResponse::userId)
         .isEqualTo(1L);

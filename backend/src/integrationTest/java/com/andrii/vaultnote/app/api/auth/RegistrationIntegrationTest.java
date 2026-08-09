@@ -10,6 +10,7 @@ import com.andrii.vaultnote.app.api.error.ApiErrorResponse;
 import com.andrii.vaultnote.app.api.error.ValidationViolation;
 import com.andrii.vaultnote.app.mail.MailMessage;
 import com.andrii.vaultnote.app.mail.MailSender;
+import com.andrii.vaultnote.users.domain.UserRole;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.EmailVerificationTokenJpaRepository;
 import com.andrii.vaultnote.support.AbstractBaseIntegrationTest;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
@@ -29,7 +30,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
-@DataSet(value = "users.yml", skipCleaningFor = {"databasechangelog", "databasechangeloglock"})
+@DataSet(value = "auth-baseline.yml", skipCleaningFor = {"databasechangelog", "databasechangeloglock"})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
 
@@ -89,6 +90,7 @@ class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
         .isNotEqualTo(PASSWORD)
         .startsWith("$argon2id$");
     assertThat(savedUser.isEmailVerified()).isFalse();
+    assertThat(savedUser.getRoles()).containsExactly(UserRole.USER);
     assertThat(savedUser.getCreatedAt()).isBetween(requestStartedAt, requestFinishedAt);
     assertThat(savedUser.getUpdatedAt()).isBetween(requestStartedAt, requestFinishedAt);
     assertThat(savedUser.getUpdatedAt()).isAfterOrEqualTo(savedUser.getCreatedAt());

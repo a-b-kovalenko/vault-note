@@ -34,7 +34,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.context.annotation.Primary;
 
-@DataSet(value = "email-verification.yml", skipCleaningFor = {"databasechangelog", "databasechangeloglock"})
+@DataSet(value = "auth-baseline.yml", skipCleaningFor = {"databasechangelog", "databasechangeloglock"})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Import(EmailVerificationIntegrationTest.TestClockConfiguration.class)
 class EmailVerificationIntegrationTest extends AbstractBaseIntegrationTest {

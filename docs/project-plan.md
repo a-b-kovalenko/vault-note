@@ -74,7 +74,8 @@ Create Liquibase migrations in schema `vaultnote` for:
 
 - `users`: `BIGINT` ID, unique email, `display_name`, Argon2id password hash,
   verification state, timestamps, and future-compatible auth-provider fields.
-- `roles` and `user_roles`: initial roles are `USER` and `ADMIN`.
+- `user_roles`: many-to-many user assignments with stable numeric role codes;
+  the initial codes are `USER` (1) and `ADMIN` (2).
 - `notes`: owner relation, title, Markdown content, timestamps, and `@Version`.
 - `refresh_tokens`: per-session hashed token, expiry, rotation lineage, and
   revocation state.
@@ -82,9 +83,9 @@ Create Liquibase migrations in schema `vaultnote` for:
   used timestamp, and creation timestamp for the email-verification MVP.
 - `auth_audit_events`: successful/failed login, logout, and token revocation.
 
-Seed `USER` and `ADMIN` roles via migrations. Open registration grants only
-`USER`. Promote the initial administrator with a documented manual SQL script;
-never add a privileged bootstrap endpoint.
+The role migration assigns `USER` to existing users. Open registration grants
+only `USER`; promote the initial administrator with a documented manual SQL
+script that inserts role code `2`. Never add a privileged bootstrap endpoint.
 
 Treat every schema evolution as an ordered, forward-only Liquibase migration;
 set Hibernate DDL generation to validation only. Use PostgreSQL-specific SQL
@@ -211,7 +212,7 @@ are implemented:
 
 - [ ] JWT access token and rotating refresh token in an `HttpOnly` cookie.
 - [ ] CSRF and CORS strategy for Angular and cookie-backed refresh operations.
-- [ ] Role model with `USER` and read-only `ADMIN`.
+- [x] Fixed role model with numeric enum codes and read-only `ADMIN` (`009`).
 - [ ] OpenAPI as the contract source and generated Angular client.
 - [ ] Antora publishing to GitHub Pages.
 

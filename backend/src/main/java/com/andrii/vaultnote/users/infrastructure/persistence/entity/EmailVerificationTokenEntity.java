@@ -19,7 +19,7 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
-@Table(name = "email_verification_tokens", schema = "vaultnote")
+@Table(name = "email_verification_tokens")
 @Getter
 @Builder(toBuilder = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)

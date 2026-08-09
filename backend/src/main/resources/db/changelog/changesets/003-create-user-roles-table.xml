@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="003-create-user-roles-table" author="andrii" dbms="postgresql">
+        <sql>
+            CREATE TABLE vaultnote.user_roles (
+                user_id BIGINT NOT NULL,
+                role_code SMALLINT NOT NULL,
+                CONSTRAINT pk_user_roles PRIMARY KEY (user_id, role_code),
+                CONSTRAINT fk_user_roles_user
+                    FOREIGN KEY (user_id)
+                    REFERENCES vaultnote.users (id)
+                    ON DELETE CASCADE,
+                CONSTRAINT ck_user_roles_role_code
+                    CHECK (role_code IN (1, 2))
+            );
+
+            CREATE INDEX ix_user_roles_role_code
+                ON vaultnote.user_roles (role_code);
+
+            INSERT INTO vaultnote.user_roles (user_id, role_code)
+            SELECT users.id, 1
+            FROM vaultnote.users users;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

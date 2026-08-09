@@ -36,8 +36,11 @@ change has been merged into `main`.
 
 ## Phase 2 — Identity and security
 
-- [ ] Model users, roles, and user-role assignments.
+- [x] Model users, roles, and user-role assignments.
   - [x] Add `UserEntity` and `UserJpaRepository` for the users table.
+  - [x] Add fixed numeric `UserRole` codes and persist assignments in
+    `user_roles`.
+  - [x] Assign the `USER` role to every newly registered user.
 - [x] Implement registration and email verification.
   - [x] Add the registration endpoint and verify successful and duplicate-email
     flows against PostgreSQL.
@@ -47,7 +50,7 @@ change has been merged into `main`.
       API error codes.
   - [x] Replace the temporary BCrypt encoder with Argon2id before registration
     reaches a production-like baseline.
-  - [ ] Implement the email-verification MVP after the Mailpit baseline.
+  - [x] Implement the email-verification MVP after the Mailpit baseline.
     - [x] Add `email_verification_tokens` with a user relation, hashed token,
       expiry, `used_at`, and `created_at`.
     - [x] Generate a single-use token and send its raw value through

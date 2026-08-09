@@ -7,10 +7,12 @@ import com.andrii.vaultnote.app.mapper.UserMapper;
 import com.andrii.vaultnote.app.security.EmailVerificationTokenGenerator;
 import com.andrii.vaultnote.app.service.EmailVerificationService;
 import com.andrii.vaultnote.app.service.RegistrationService;
+import com.andrii.vaultnote.users.domain.UserRole;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
 import jakarta.transaction.Transactional;
 import java.sql.SQLException;
+import java.util.EnumSet;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -43,7 +45,9 @@ public class RegistrationServiceImpl implements RegistrationService {
       throw new EntityExistsException(UserEntity.class.getSimpleName(), "email", email);
     }
     var passwordHash = passwordEncoder.encode(request.password());
-    var newEntity = userMapper.toUserEntity(request, passwordHash);
+    var newEntity = userMapper.toUserEntity(request, passwordHash).toBuilder()
+        .roles(EnumSet.of(UserRole.USER))
+        .build();
 
     UserEntity savedEntity;
     try {
