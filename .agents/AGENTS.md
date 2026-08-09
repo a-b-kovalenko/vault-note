@@ -23,6 +23,21 @@ change involves those concerns.
 - Never create a Git commit or push changes without the user's explicit command
   for that action.
 
+## Java package structure
+
+- Organize packages by architectural role and feature ownership.
+- Keep API DTOs near their feature: `app.api.<feature>.dto`.
+- Keep application configuration in `app.config`.
+- Keep service contracts in `app.service` and implementations in
+  `app.service.impl`.
+- Keep application exceptions in `app.exception`.
+- Separate persistence entities and repositories:
+  `infrastructure.persistence.entity` and
+  `infrastructure.persistence.repository`.
+- Do not mix controllers, DTOs, entities, and repositories in one package.
+- Avoid generic packages such as `model`, `data`, or `util` unless their
+  responsibility is genuinely cross-cutting.
+
 ## Obsidian knowledge vault
 
 Before editing the Obsidian vault, read the shared Markdown and Obsidian

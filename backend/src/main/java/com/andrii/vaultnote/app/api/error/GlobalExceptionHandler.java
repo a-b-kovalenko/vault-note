@@ -1,6 +1,7 @@
 package com.andrii.vaultnote.app.api.error;
 
 import com.andrii.vaultnote.app.exception.EntityExistsException;
+import com.andrii.vaultnote.app.exception.EmailVerificationFailedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,19 @@ public class GlobalExceptionHandler {
 
     return ResponseEntity
         .status(HttpStatus.CONFLICT)
+        .body(response);
+  }
+
+  @ExceptionHandler(EmailVerificationFailedException.class)
+  public ResponseEntity<ApiErrorResponse> handleEmailVerificationFailedException(
+      EmailVerificationFailedException exception) {
+
+    log.warn("Email verification failed: {}", exception.getMessage());
+
+    var response = new ApiErrorResponse("EMAIL_VERIFICATION_FAILED", exception.getMessage());
+
+    return ResponseEntity
+        .status(HttpStatus.BAD_REQUEST)
         .body(response);
   }
 
