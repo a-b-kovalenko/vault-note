@@ -4,7 +4,7 @@ import com.andrii.vaultnote.app.config.EmailVerificationProperties;
 import com.andrii.vaultnote.app.exception.EmailVerificationFailedException;
 import com.andrii.vaultnote.app.mail.MailMessage;
 import com.andrii.vaultnote.app.mail.MailSender;
-import com.andrii.vaultnote.app.security.EmailVerificationTokenGenerator;
+import com.andrii.vaultnote.app.security.SecureTokenGenerator;
 import com.andrii.vaultnote.app.service.EmailVerificationService;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.EmailVerificationTokenEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
@@ -17,12 +17,14 @@ import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import static java.util.Objects.isNull;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class EmailVerificationServiceImpl implements EmailVerificationService {
@@ -32,7 +34,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
 
   UserJpaRepository userJpaRepository;
   EmailVerificationTokenJpaRepository tokenRepository;
-  EmailVerificationTokenGenerator tokenGenerator;
+  SecureTokenGenerator tokenGenerator;
   EmailVerificationProperties properties;
   MailSender mailSender;
   Clock clock;
@@ -40,6 +42,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
   @Override
   @Transactional
   public void issueVerificationEmail(UserEntity user) {
+    log.info("Issuing email verification for userId={}", user.getId());
     var generatedToken = tokenGenerator.generate();
     var token = EmailVerificationTokenEntity.builder()
         .user(user)
@@ -69,12 +72,13 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         .map(tokenGenerator::hash)
         .orElseThrow(EmailVerificationFailedException::new);
     var now = clock.instant();
-    tokenRepository.findByTokenHash(tokenHash)
+    var verifiedUser = tokenRepository.findByTokenHash(tokenHash)
         .filter(t -> isNull(t.getUsedAt()) && t.getExpiresAt().isAfter(now))
         .map(token -> markTokenUsed(token, now))
         .map(EmailVerificationTokenEntity::getUser)
         .map(this::markEmailVerified)
         .orElseThrow(EmailVerificationFailedException::new);
+    log.info("Email verified for userId={}", verifiedUser.getId());
   }
 
   private EmailVerificationTokenEntity markTokenUsed(

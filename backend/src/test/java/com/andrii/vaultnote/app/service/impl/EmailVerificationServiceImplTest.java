@@ -11,7 +11,7 @@ import com.andrii.vaultnote.app.config.EmailVerificationProperties;
 import com.andrii.vaultnote.app.exception.EmailVerificationFailedException;
 import com.andrii.vaultnote.app.mail.MailMessage;
 import com.andrii.vaultnote.app.mail.MailSender;
-import com.andrii.vaultnote.app.security.EmailVerificationTokenGenerator;
+import com.andrii.vaultnote.app.security.SecureTokenGenerator;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.EmailVerificationTokenEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.EmailVerificationTokenJpaRepository;
@@ -45,7 +45,7 @@ class EmailVerificationServiceImplTest {
   EmailVerificationTokenJpaRepository tokenRepository;
 
   @Mock
-  EmailVerificationTokenGenerator tokenGenerator;
+  SecureTokenGenerator tokenGenerator;
 
   @Mock
   EmailVerificationProperties properties;
@@ -65,7 +65,7 @@ class EmailVerificationServiceImplTest {
         .id(1L)
         .email(EMAIL)
         .build();
-    var generatedToken = new EmailVerificationTokenGenerator.GeneratedToken(RAW_TOKEN, TOKEN_HASH);
+    var generatedToken = new SecureTokenGenerator.GeneratedToken(RAW_TOKEN, TOKEN_HASH);
     when(tokenGenerator.generate()).thenReturn(generatedToken);
     when(properties.baseUrl()).thenReturn(BASE_URL);
     when(properties.tokenTtl()).thenReturn(TOKEN_TTL);

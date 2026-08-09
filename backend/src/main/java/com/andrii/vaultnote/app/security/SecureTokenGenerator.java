@@ -10,7 +10,7 @@ import java.util.Objects;
 import org.springframework.stereotype.Component;
 
 @Component
-public class EmailVerificationTokenGenerator {
+public class SecureTokenGenerator {
 
   private static final int TOKEN_BYTES = 32;
   private static final String HASH_ALGORITHM = "SHA-256";

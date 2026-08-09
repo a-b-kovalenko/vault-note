@@ -4,7 +4,7 @@ import com.andrii.vaultnote.app.api.auth.dto.RegisterUserRequest;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserResponse;
 import com.andrii.vaultnote.app.exception.EntityExistsException;
 import com.andrii.vaultnote.app.mapper.UserMapper;
-import com.andrii.vaultnote.app.security.EmailVerificationTokenGenerator;
+import com.andrii.vaultnote.app.security.SecureTokenGenerator;
 import com.andrii.vaultnote.app.service.EmailVerificationService;
 import com.andrii.vaultnote.app.service.RegistrationService;
 import com.andrii.vaultnote.users.domain.UserRole;
@@ -34,7 +34,7 @@ public class RegistrationServiceImpl implements RegistrationService {
   UserMapper userMapper;
   PasswordEncoder passwordEncoder;
   EmailVerificationService emailVerificationService;
-  EmailVerificationTokenGenerator tokenGenerator;
+  SecureTokenGenerator tokenGenerator;
 
   @Override
   @Transactional

@@ -28,6 +28,7 @@ public class SecurityConfig {
             .requestMatchers(GET, "/actuator/health").permitAll()
             .requestMatchers(POST, "/api/v1/auth/registrations").permitAll()
             .requestMatchers(POST, "/api/v1/auth/email-verification").permitAll()
+            .requestMatchers(POST, "/api/v1/auth/login").permitAll()
             .anyRequest().authenticated());
 
     return http.build();
