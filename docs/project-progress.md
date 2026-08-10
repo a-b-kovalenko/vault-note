@@ -14,10 +14,13 @@ change has been merged into `main`.
   and `HttpOnly` cookie delivery are merged into `main`.
 - Bearer JWT validation and the protected `GET /api/v1/auth/me` endpoint are
   implemented and covered by PostgreSQL integration tests.
+- JWT `roles` claims are validated against the `UserRole` enum and mapped to
+  Spring Security authorities; missing or unknown roles are rejected before the
+  controller.
 - Unit and PostgreSQL integration coverage for the three current login
   scenarios is implemented and verified.
-- Next: map JWT roles to authorities, add method-level authorization and
-  OpenAPI bearer documentation, then implement refresh, rotation, reuse
+- Next: enable method-level authorization and add OpenAPI bearer documentation,
+  then implement refresh, rotation, reuse
   detection, logout, and the remaining authentication hardening.
 - The local profile is implemented and verified locally.
 
@@ -80,7 +83,8 @@ change has been merged into `main`.
   - [ ] Enable Spring Security SPA CSRF, expose `/csrf`, and require the token
     for login, refresh, and logout requests.
 - [ ] Add authentication audit events and authorization rules.
-  - [ ] Map the JWT `roles` claim to Spring Security authorities.
+  - [x] Validate the JWT `roles` claim against `UserRole` and map it to Spring
+    Security authorities.
   - [ ] Enable method security and add `@PreAuthorize` rules for protected
     operations.
   - [ ] Add `CurrentUserProvider` over `SecurityContextHolder` and use it in

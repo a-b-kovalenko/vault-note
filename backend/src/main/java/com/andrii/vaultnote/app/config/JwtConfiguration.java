@@ -1,10 +1,12 @@
 package com.andrii.vaultnote.app.config;
 
+import com.andrii.vaultnote.app.security.JwtRolesValidator;
 import java.nio.charset.StandardCharsets;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -34,11 +36,16 @@ class JwtConfiguration {
   }
 
   @Bean
-  JwtDecoder jwtDecoder(SecretKey jwtSecretKey, JwtProperties properties) {
+  JwtDecoder jwtDecoder(
+      SecretKey jwtSecretKey,
+      JwtProperties properties,
+      JwtRolesValidator jwtRolesValidator) {
     var decoder = NimbusJwtDecoder.withSecretKey(jwtSecretKey)
         .macAlgorithm(MacAlgorithm.HS256)
         .build();
-    decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(properties.issuer()));
+    decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
+        JwtValidators.createDefaultWithIssuer(properties.issuer()),
+        jwtRolesValidator));
     return decoder;
   }
 
