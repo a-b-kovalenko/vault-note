@@ -106,7 +106,9 @@ Implement these flows:
    The MVP intentionally does not include outbox delivery, resend, rate
    limiting, token history, or cleanup jobs.
 3. Allow verified users to log in. Issue a 15-minute JWT access token returned
-   to Angular memory and a 7-day refresh token in an `HttpOnly` cookie.
+   to Angular memory and a 7-day refresh token in an `HttpOnly` cookie. Validate
+   the bearer JWT on protected requests and expose a current-user access-check
+   endpoint.
 4. Store refresh tokens only as hashes. Rotate on every refresh and revoke the
    current session on logout.
 5. When a rotated refresh token is reused, revoke every active session for the
@@ -116,6 +118,15 @@ Protect login by rate limiting on both IP and email, without account lockout.
 Implement CSRF protection for cookie-backed refresh and logout calls using the
 Angular-compatible XSRF token pattern. Configure CORS as an explicit allowlist
 for the local Angular origin with credentials enabled.
+
+Complete JWT authorization integration:
+
+- map the JWT `roles` claim to Spring Security authorities;
+- enable method security and use `@PreAuthorize` for role and ownership rules;
+- introduce a `CurrentUserProvider` abstraction backed by
+  `SecurityContextHolder`, and use it in services for current-user ownership;
+- register the OpenAPI `bearerAuth` security scheme and annotate protected
+  endpoints with `@SecurityRequirement`.
 
 Email delivery hardening is a later phase. It includes rate-limited resend,
 invalidation of older verification tokens, cleanup of expired tokens, audit

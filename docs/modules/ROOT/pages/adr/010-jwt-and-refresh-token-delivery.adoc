@@ -30,10 +30,10 @@ Use `HttpOnly` and `SameSite=Lax` for the cookie. The local HTTP profile may
 leave `Secure` disabled; deployed environments must provide a unique JWT
 secret and enable `Secure`.
 
-The current implementation covers login, initial refresh-token persistence, and
-cookie delivery. Refresh rotation, reuse detection, logout, and JWT request
-authentication are follow-up decisions and are not treated as implemented by
-this ADR.
+The current implementation covers login, initial refresh-token persistence,
+cookie delivery, JWT request authentication, and the protected
+`GET /api/v1/auth/me` access-check endpoint. Refresh rotation, reuse detection,
+logout, and CSRF protection remain follow-up work.
 
 == Consequences
 

@@ -3,3 +3,9 @@ spring:
     url: ${VAULTNOTE_DATABASE_URL:jdbc:postgresql://localhost:5432/vault_note}
     username: ${VAULTNOTE_DATABASE_USERNAME:user}
     password: ${VAULTNOTE_DATABASE_PASSWORD:password}
+
+app:
+  jwt:
+    access-token-ttl: P3D
+  refresh-token:
+    ttl: P7D
