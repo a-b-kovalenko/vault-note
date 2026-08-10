@@ -1,8 +1,8 @@
 package com.andrii.vaultnote.app.config;
 
+import com.andrii.vaultnote.app.security.RolesJwtAuthenticationConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -23,7 +23,9 @@ public class SecurityConfig {
   private static final int ARGON2_ITERATIONS = 2;
 
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+  public SecurityFilterChain securityFilterChain(
+      HttpSecurity http,
+      RolesJwtAuthenticationConverter jwtAuthenticationConverter) {
     http
         .csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(session -> session
@@ -34,7 +36,8 @@ public class SecurityConfig {
             .requestMatchers(POST, "/api/v1/auth/email-verification").permitAll()
             .requestMatchers(POST, "/api/v1/auth/login").permitAll()
             .anyRequest().authenticated())
-        .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+        .oauth2ResourceServer(oauth2 -> oauth2
+            .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
 
     return http.build();
   }

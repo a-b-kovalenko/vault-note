@@ -121,7 +121,9 @@ for the local Angular origin with credentials enabled.
 
 Complete JWT authorization integration:
 
-- map the JWT `roles` claim to Spring Security authorities;
+- validate the JWT `roles` claim against the `UserRole` enum and reject missing
+  or unknown roles before controller execution;
+- map the validated JWT `roles` claim to Spring Security authorities;
 - enable method security and use `@PreAuthorize` for role and ownership rules;
 - introduce a `CurrentUserProvider` abstraction backed by
   `SecurityContextHolder`, and use it in services for current-user ownership;
