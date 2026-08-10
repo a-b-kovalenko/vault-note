@@ -84,11 +84,25 @@ JWT and refresh-token settings are externalized through environment variables:
 * `VAULTNOTE_JWT_ISSUER`;
 * `VAULTNOTE_JWT_ACCESS_TOKEN_TTL`;
 * `VAULTNOTE_REFRESH_TOKEN_TTL`;
+* `VAULTNOTE_REFRESH_TOKEN_COOKIE_NAME`;
+* `VAULTNOTE_REFRESH_TOKEN_COOKIE_PATH`;
 * `VAULTNOTE_REFRESH_TOKEN_COOKIE_SECURE`;
 * `VAULTNOTE_REFRESH_TOKEN_COOKIE_SAME_SITE`.
 
 The local defaults are suitable only for development. A deployed environment
 must provide its own JWT secret and enable the `Secure` cookie flag.
+
+== Integration coverage
+
+`LoginIntegrationTest` runs against PostgreSQL and covers the current login
+boundary with three scenarios:
+
+* a verified user receives the access token and refresh cookie, and only the
+  refresh-token hash is persisted;
+* an incorrect password returns `401 Unauthorized` without a cookie or database
+  session;
+* an unverified email returns the same neutral `401 Unauthorized` without a
+  cookie or database session.
 
 == Remaining authentication work
 

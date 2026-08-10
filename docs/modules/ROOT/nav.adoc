@@ -10,3 +10,4 @@
 ** xref:adr/007-liquibase-testcontainers-integration-tests.adoc[ADR 007: Liquibase and Testcontainers]
 ** xref:adr/008-mail-delivery-boundary.adoc[ADR 008: Mail delivery boundary]
 ** xref:adr/009-fixed-role-codes.adoc[ADR 009: Fixed role codes]
+** xref:adr/010-jwt-and-refresh-token-delivery.adoc[ADR 010: JWT and refresh-token delivery]

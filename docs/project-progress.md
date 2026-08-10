@@ -12,10 +12,10 @@ change has been merged into `main`.
   implemented and covered by PostgreSQL integration tests.
 - Login endpoint, short-lived JWT issuance, initial refresh-token persistence,
   and `HttpOnly` cookie delivery are merged into `main`.
-- Unit coverage for the login service is in place; PostgreSQL integration
-  coverage for login is still pending.
-- Next: add login integration scenarios, then implement the refresh endpoint,
-  token rotation, reuse detection, logout, and authentication hardening.
+- Unit and PostgreSQL integration coverage for the three current login
+  scenarios is implemented and verified.
+- Next: implement the refresh endpoint, token rotation, reuse detection,
+  logout, and authentication hardening.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -66,7 +66,7 @@ change has been merged into `main`.
 - [ ] Implement login, short-lived access JWTs, and rotating refresh sessions.
   - [x] Implement login, short-lived access JWT issuance, and initial refresh
     token cookie delivery.
-  - [ ] Add PostgreSQL integration coverage for successful and failed login,
+  - [x] Add PostgreSQL integration coverage for successful and failed login,
     including access-token response, refresh cookie, and persisted token hash.
   - [ ] Implement refresh endpoint and rotating refresh sessions.
 - [ ] Add CSRF, CORS, rate limiting, and refresh-token reuse handling.
@@ -94,6 +94,7 @@ change has been merged into `main`.
 
 - [x] Add Antora component metadata and navigation.
 - [ ] Record the remaining architecture decision records.
+  - [x] Record JWT access and initial refresh-token delivery (`010`).
 - [x] Complete README setup, operations, and verification instructions.
 - [x] Publish Antora documentation to GitHub Pages.
 

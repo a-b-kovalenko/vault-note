@@ -1,0 +1,50 @@
+= ADR 010: JWT access and refresh-token delivery
+:status: accepted
+:date: 2026-08-10
+
+== Context
+
+VaultNote needs a login flow that keeps access tokens short-lived while
+allowing a browser session to continue without storing credentials or tokens
+in persistent browser storage. The backend must also be able to revoke and
+later rotate refresh sessions without storing bearer secrets in plaintext.
+
+== Decision
+
+Use two different token types during login:
+
+* return a signed JWT access token in the JSON response;
+* issue an opaque refresh token in an `HttpOnly` cookie.
+
+The access token has a default lifetime of 15 minutes and contains the user
+identifier, issuer, issue and expiry timestamps, and readable role names. The
+frontend is expected to keep it in memory only.
+
+The refresh token has a default lifetime of seven days. Generate it with
+cryptographically secure randomness, send the raw value only through the
+cookie, and persist only its SHA-256 hash in `vaultnote.refresh_tokens`. Store
+the user relation, expiry, revocation state, and a token-family identifier with
+the hash.
+
+Use `HttpOnly` and `SameSite=Lax` for the cookie. The local HTTP profile may
+leave `Secure` disabled; deployed environments must provide a unique JWT
+secret and enable `Secure`.
+
+The current implementation covers login, initial refresh-token persistence, and
+cookie delivery. Refresh rotation, reuse detection, logout, and JWT request
+authentication are follow-up decisions and are not treated as implemented by
+this ADR.
+
+== Consequences
+
+* JavaScript cannot directly read the refresh token from the browser cookie.
+* A database compromise does not immediately expose usable refresh-token
+  values because only hashes are persisted.
+* Access tokens limit the lifetime of a leaked bearer token.
+* The backend must implement refresh rotation and CSRF protection before the
+  cookie-backed session lifecycle is complete.
+* Cookie and JWT settings must be externalized per environment.
+
+== Status
+
+Accepted.
