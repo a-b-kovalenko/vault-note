@@ -206,11 +206,12 @@ initial ADRs now describe decisions that are implemented in the repository:
 6. [x] Single-module modular monolith (`006`).
 7. [x] Liquibase and Testcontainers integration-test strategy (`007`).
 8. [x] Mail delivery boundary and MVP email verification delivery (`008`).
+9. [x] JWT access and initial refresh-token delivery (`010`).
 
 The following ADRs remain planned and must be created only when their decisions
 are implemented:
 
-- [ ] JWT access token and rotating refresh token in an `HttpOnly` cookie.
+- [ ] Refresh-token rotation, reuse detection, and logout.
 - [ ] CSRF and CORS strategy for Angular and cookie-backed refresh operations.
 - [x] Fixed role model with numeric enum codes and read-only `ADMIN` (`009`).
 - [ ] OpenAPI as the contract source and generated Angular client.

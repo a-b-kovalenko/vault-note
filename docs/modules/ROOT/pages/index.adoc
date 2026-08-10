@@ -31,7 +31,8 @@ The backend foundation is in progress. The repository currently contains:
 * a login endpoint with email-verification and password checks;
 * a 15-minute JWT access token and seven-day hashed refresh-token cookie;
 * unit coverage for the login and token-generation services, plus PostgreSQL
-  integration coverage for health, registration, and email verification.
+  integration coverage for health, registration, email verification, and the
+  current login scenarios.
 
 The following parts remain planned:
 
