@@ -4,6 +4,7 @@ import com.andrii.vaultnote.app.security.RolesJwtAuthenticationConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
@@ -14,6 +15,7 @@ import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
 
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
   private static final int ARGON2_SALT_LENGTH = 16;
@@ -32,6 +34,9 @@ public class SecurityConfig {
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(GET, "/actuator/health").permitAll()
+            .requestMatchers(GET, "/swagger-ui.html").permitAll()
+            .requestMatchers(GET, "/swagger-ui/**").permitAll()
+            .requestMatchers(GET, "/v3/api-docs/**").permitAll()
             .requestMatchers(POST, "/api/v1/auth/registrations").permitAll()
             .requestMatchers(POST, "/api/v1/auth/email-verification").permitAll()
             .requestMatchers(POST, "/api/v1/auth/login").permitAll()

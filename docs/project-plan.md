@@ -126,7 +126,7 @@ Complete JWT authorization integration:
 - map the validated JWT `roles` claim to Spring Security authorities;
 - enable method security and use `@PreAuthorize` for role and ownership rules;
 - introduce a `CurrentUserProvider` abstraction backed by
-  `SecurityContextHolder`, and use it in services for current-user ownership;
+  `SecurityContextHolder`;
 - register the OpenAPI `bearerAuth` security scheme and annotate protected
   endpoints with `@SecurityRequirement`.
 
@@ -153,6 +153,8 @@ Build CRUD for notes with `BIGINT` IDs, title limited to 200 characters, and
 Markdown content limited to 20,000 characters. Store source Markdown only;
 disallow raw HTML, attachments, and images. Render a safe Markdown subset,
 sanitize output, and permit only safe link protocols.
+
+Use `CurrentUserProvider` in note services for current-user ownership checks.
 
 All collection endpoints are paginated. Sort a user's notes by `updatedAt`
 descending by default. Do not add search yet. Use optimistic locking and return

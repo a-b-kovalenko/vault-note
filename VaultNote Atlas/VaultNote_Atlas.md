@@ -16,6 +16,8 @@
 
 - [Паролі: validation та Argon2id](content/Паролі-validation-та-Argon2id.md): різниця між password policy і безпечним зберіганням пароля.
 - [JWT-аутентифікація і перевірка доступу](content/JWT-аутентифікація-і-перевірка-доступу.md): повний шлях від Bearer token у Bruno до `JwtDecoder`, `SecurityContext` і protected endpoint.
+- [OpenAPI bearerAuth і SecurityRequirement](content/OpenAPI-bearerAuth-та-SecurityRequirement.md): як Swagger описує JWT-автентифікацію і чому це не замінює Spring Security.
+- [@PreAuthorize на service-інтерфейсі](content/PreAuthorize-на-service-інтерфейсі.md): чому authorization для use case має бути на service boundary, а не лише в controller.
 - [Refresh token rotation і reuse detection](content/Refresh-token-rotation-і-reuse-detection.md): як оновлюються refresh tokens і чому reuse завершує всю token family.
 
 ## Email

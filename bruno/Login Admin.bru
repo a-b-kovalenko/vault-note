@@ -1,0 +1,27 @@
+meta {
+  name: Login Admin
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{apiUrl}}/api/v1/auth/login
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "{{loginEmail}}",
+    "password": "{{loginPassword}}"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
