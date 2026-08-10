@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -89,6 +90,7 @@ public class AuthController {
   @ApiResponse(responseCode = "200", description = "Get authenticated user", content = {
       @Content(mediaType = "application/json", schema = @Schema(implementation = CurrentUserResponse.class))})
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
+  @SecurityRequirement(name = "bearerAuth")
   @GetMapping("/me")
   public CurrentUserResponse currentUser(@AuthenticationPrincipal Jwt jwt) {
     return CurrentUserResponse.builder()

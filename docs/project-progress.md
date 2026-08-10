@@ -1,8 +1,8 @@
 # VaultNote progress
 
 `project-plan.md` records the detailed scope and architectural decisions.
-This file is the live execution board: mark an item complete only after its
-change has been merged into `main`.
+This file is the live execution board: mark an item complete after its change
+has been implemented and verified. Branch integration is tracked separately.
 
 ## Current focus
 
@@ -11,17 +11,18 @@ change has been merged into `main`.
 - The Mailpit baseline and the complete email-verification vertical slice are
   implemented and covered by PostgreSQL integration tests.
 - Login endpoint, short-lived JWT issuance, initial refresh-token persistence,
-  and `HttpOnly` cookie delivery are merged into `main`.
+  and `HttpOnly` cookie delivery are implemented and verified.
 - Bearer JWT validation and the protected `GET /api/v1/auth/me` endpoint are
   implemented and covered by PostgreSQL integration tests.
 - JWT `roles` claims are validated against the `UserRole` enum and mapped to
   Spring Security authorities; missing or unknown roles are rejected before the
   controller.
+- The authorization slice now includes method security, the
+  `CurrentUserProvider`, the admin user list, and OpenAPI bearer documentation.
 - Unit and PostgreSQL integration coverage for the three current login
   scenarios is implemented and verified.
-- Next: enable method-level authorization and add OpenAPI bearer documentation,
-  then implement refresh, rotation, reuse
-  detection, logout, and the remaining authentication hardening.
+- Next: implement refresh, rotation, reuse detection, logout, and the remaining
+  authentication hardening.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -85,19 +86,22 @@ change has been merged into `main`.
 - [ ] Add authentication audit events and authorization rules.
   - [x] Validate the JWT `roles` claim against `UserRole` and map it to Spring
     Security authorities.
-  - [ ] Enable method security and add `@PreAuthorize` rules for protected
+  - [x] Enable method security and add `@PreAuthorize` rules for protected
     operations.
-  - [ ] Add `CurrentUserProvider` over `SecurityContextHolder` and use it in
-    services for current-user ownership checks.
-  - [ ] Register the OpenAPI `bearerAuth` scheme and annotate protected
+  - [x] Add `CurrentUserProvider` over `SecurityContextHolder`.
+  - [x] Register the OpenAPI `bearerAuth` scheme and annotate protected
     endpoints with `@SecurityRequirement`.
 
 ## Phase 3 — Notes and profile
 
 - [ ] Implement private notes CRUD, ownership checks, and pagination.
+  - [ ] Use `CurrentUserProvider` in note services for current-user ownership
+    checks.
 - [ ] Add optimistic locking and safe Markdown rendering.
 - [ ] Implement profile display-name updates and current-session logout.
 - [ ] Add read-only administrator user and note views.
+  - [x] Add the paginated administrator user list.
+  - [ ] Add the read-only administrator note view.
 
 ## Phase 4 — Angular frontend
 

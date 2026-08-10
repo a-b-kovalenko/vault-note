@@ -1,6 +1,7 @@
 package com.andrii.vaultnote.app.mapper;
 
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserRequest;
+import com.andrii.vaultnote.app.api.users.dto.UserInfoDto;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -15,4 +16,6 @@ public interface UserMapper {
   @Mapping(target = "createdAt", ignore = true)
   @Mapping(target = "updatedAt", ignore = true)
   UserEntity toUserEntity(RegisterUserRequest request, String passwordHash);
+
+  UserInfoDto toUserInfoDto(UserEntity userEntity);
 }
