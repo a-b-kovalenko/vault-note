@@ -1,0 +1,16 @@
+meta {
+  name: Email Verification
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{apiUrl}}/api/v1/auth/email-verification?token={{emailVerificationToken}}
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

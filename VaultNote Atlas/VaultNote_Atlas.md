@@ -15,6 +15,7 @@
 ## Security
 
 - [Паролі: validation та Argon2id](content/Паролі-validation-та-Argon2id.md): різниця між password policy і безпечним зберіганням пароля.
+- [JWT-аутентифікація і перевірка доступу](content/JWT-аутентифікація-і-перевірка-доступу.md): повний шлях від Bearer token у Bruno до `JwtDecoder`, `SecurityContext` і protected endpoint.
 - [Refresh token rotation і reuse detection](content/Refresh-token-rotation-і-reuse-detection.md): як оновлюються refresh tokens і чому reuse завершує всю token family.
 
 ## Email

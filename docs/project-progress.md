@@ -12,10 +12,13 @@ change has been merged into `main`.
   implemented and covered by PostgreSQL integration tests.
 - Login endpoint, short-lived JWT issuance, initial refresh-token persistence,
   and `HttpOnly` cookie delivery are merged into `main`.
+- Bearer JWT validation and the protected `GET /api/v1/auth/me` endpoint are
+  implemented and covered by PostgreSQL integration tests.
 - Unit and PostgreSQL integration coverage for the three current login
   scenarios is implemented and verified.
-- Next: implement the refresh endpoint, token rotation, reuse detection,
-  logout, and authentication hardening.
+- Next: map JWT roles to authorities, add method-level authorization and
+  OpenAPI bearer documentation, then implement refresh, rotation, reuse
+  detection, logout, and the remaining authentication hardening.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -66,6 +69,8 @@ change has been merged into `main`.
 - [ ] Implement login, short-lived access JWTs, and rotating refresh sessions.
   - [x] Implement login, short-lived access JWT issuance, and initial refresh
     token cookie delivery.
+  - [x] Validate bearer JWTs on protected requests and expose the current-user
+    access-check endpoint.
   - [x] Add PostgreSQL integration coverage for successful and failed login,
     including access-token response, refresh cookie, and persisted token hash.
   - [ ] Implement refresh endpoint and rotating refresh sessions.
@@ -75,6 +80,13 @@ change has been merged into `main`.
   - [ ] Enable Spring Security SPA CSRF, expose `/csrf`, and require the token
     for login, refresh, and logout requests.
 - [ ] Add authentication audit events and authorization rules.
+  - [ ] Map the JWT `roles` claim to Spring Security authorities.
+  - [ ] Enable method security and add `@PreAuthorize` rules for protected
+    operations.
+  - [ ] Add `CurrentUserProvider` over `SecurityContextHolder` and use it in
+    services for current-user ownership checks.
+  - [ ] Register the OpenAPI `bearerAuth` scheme and annotate protected
+    endpoints with `@SecurityRequirement`.
 
 ## Phase 3 — Notes and profile
 
