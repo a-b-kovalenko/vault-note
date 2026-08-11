@@ -243,7 +243,6 @@ Claim `roles` перевіряється через `UserRole`, а
 
 У поточному authentication slice ще не реалізовані:
 
-- CSRF/CORS hardening;
 - rate limiting та authentication audit events.
 
 ## Типові помилки під час ручної перевірки

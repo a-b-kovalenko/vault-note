@@ -24,7 +24,9 @@ has been implemented and verified. Branch integration is tracked separately.
   implemented and verified.
 - Current-session logout and refresh-cookie clearing are implemented and
   verified.
-- Next: implement the remaining authentication hardening.
+- CORS and SPA-compatible CSRF protection are implemented and verified.
+- Next: implement the remaining authentication hardening: rate limiting and
+  authentication audit events.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -90,11 +92,14 @@ has been implemented and verified. Branch integration is tracked separately.
     behavior against PostgreSQL.
   - [ ] Add cleanup for expired refresh tokens; retain revoked tokens until
     `expires_at` so reuse detection remains possible.
-- [ ] Add CSRF, CORS, rate limiting, and authentication hardening.
-  - [ ] Start CSRF work after the registration vertical slice is implemented
-    and verified.
-  - [ ] Enable Spring Security SPA CSRF, expose `/csrf`, and require the token
-    for login, refresh, and logout requests.
+- [x] Add CORS and SPA-compatible CSRF protection.
+  - [x] Configure an explicit Angular-origin allowlist with credentials.
+  - [x] Expose `/csrf` with the `XSRF-TOKEN` cookie and
+    `X-XSRF-TOKEN` header contract.
+  - [x] Require the token for login, refresh, and logout requests.
+  - [x] Verify token issuance, rejection, CORS preflight, and unknown-origin
+    behavior with PostgreSQL-backed integration tests.
+- [ ] Add rate limiting and authentication audit events.
 - [ ] Add authentication audit events and authorization rules.
   - [x] Validate the JWT `roles` claim against `UserRole` and map it to Spring
     Security authorities.
@@ -127,9 +132,11 @@ has been implemented and verified. Branch integration is tracked separately.
 
 - [x] Add Antora component metadata and navigation.
 - [ ] Record the remaining architecture decision records.
+  - [x] Record the fixed numeric role-code strategy (`009`).
   - [x] Record JWT access and initial refresh-token delivery (`010`).
   - [x] Record refresh-token rotation and reuse detection (`011`).
   - [x] Record current-session logout (`012`).
+  - [x] Record the CSRF and CORS strategy (`013`).
 - [x] Complete README setup, operations, and verification instructions.
 - [x] Publish Antora documentation to GitHub Pages.
 

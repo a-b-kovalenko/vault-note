@@ -33,8 +33,8 @@ rotation.
 * Other login sessions and token families remain active.
 * Immediate access-token revocation would require a separate stateful denylist
   or token-version mechanism.
-* CSRF protection for the cookie-backed endpoint remains a required hardening
-  step.
+* Logout must include the CSRF token header when called by the browser client;
+  the shared policy is defined by ADR 013.
 
 == Status
 

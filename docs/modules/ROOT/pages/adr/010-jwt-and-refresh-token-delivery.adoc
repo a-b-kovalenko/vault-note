@@ -32,9 +32,9 @@ secret and enable `Secure`.
 
 The current implementation covers login, refresh-token persistence and
 rotation, reuse detection, current-session logout, cookie delivery, JWT request
-authentication, and the protected `GET /api/v1/auth/me` access-check endpoint.
-CSRF protection remains follow-up work and is recorded separately in the
-project plan.
+authentication, the protected `GET /api/v1/auth/me` access-check endpoint, and
+the CSRF/CORS boundary for browser clients. The detailed browser protection
+decision is recorded in ADR 013.
 
 == Consequences
 
@@ -42,8 +42,8 @@ project plan.
 * A database compromise does not immediately expose usable refresh-token
   values because only hashes are persisted.
 * Access tokens limit the lifetime of a leaked bearer token.
-* The backend must implement CSRF protection before the cookie-backed session
-  lifecycle is complete.
+* Cookie-backed authentication endpoints must participate in the CSRF flow
+  described by ADR 013.
 * Cookie and JWT settings must be externalized per environment.
 
 == Status

@@ -1,6 +1,5 @@
 package com.andrii.vaultnote.app.api.auth;
 
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.andrii.vaultnote.app.api.auth.dto.LoginRequest;
@@ -69,7 +68,7 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
         .password(PASSWORD)
         .build();
 
-    var loginResponse = given()
+    var loginResponse = givenWithCsrf()
         .port(port)
         .contentType("application/json")
         .body(loginRequest)
@@ -84,7 +83,7 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
     var oldRefreshTokenHash = secureTokenGenerator.hash(oldRawRefreshToken);
     var requestStartedAt = Instant.now();
 
-    var response = given()
+    var response = givenWithCsrf()
         .port(port)
         .cookie(REFRESH_COOKIE_NAME, oldRawRefreshToken)
         .when()
@@ -145,7 +144,7 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
         .email(USER_EMAIL)
         .password(PASSWORD)
         .build();
-    var loginResponse = given()
+    var loginResponse = givenWithCsrf()
         .port(port)
         .contentType("application/json")
         .body(loginRequest)
@@ -160,7 +159,7 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
         .findFirst()
         .orElseThrow();
 
-    var response = given()
+    var response = givenWithCsrf()
         .port(port)
         .cookie(REFRESH_COOKIE_NAME, rawRefreshToken)
         .when()
@@ -187,7 +186,7 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
    */
   @Test
   void shouldClearRefreshTokenCookieWhenLogoutCookieIsMissing() {
-    var response = given()
+    var response = givenWithCsrf()
         .port(port)
         .when()
         .post(LOGOUT_ENDPOINT)
