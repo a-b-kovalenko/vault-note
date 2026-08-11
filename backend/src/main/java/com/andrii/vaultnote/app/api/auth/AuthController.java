@@ -6,7 +6,9 @@ import com.andrii.vaultnote.app.api.auth.dto.CurrentUserResponse;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserRequest;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserResponse;
 import com.andrii.vaultnote.app.service.EmailVerificationService;
+import com.andrii.vaultnote.app.service.LoginResult;
 import com.andrii.vaultnote.app.service.LoginService;
+import com.andrii.vaultnote.app.service.RefreshTokenService;
 import com.andrii.vaultnote.app.service.RegistrationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,8 +22,9 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,9 +41,11 @@ import java.util.Objects;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthController {
 
-  RegistrationService registrationService;
   EmailVerificationService emailVerificationService;
   LoginService loginService;
+  RegistrationService registrationService;
+  RefreshTokenService refreshTokenService;
+
   RefreshTokenCookieFactory refreshTokenCookieFactory;
 
   @Operation
@@ -77,13 +82,16 @@ public class AuthController {
 
   @PostMapping("/login")
   public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
-    var loginResult = loginService.login(request);
+    return authenticationResponse(loginService.login(request));
+  }
 
-    return ResponseEntity
-        .status(HttpStatus.OK)
-        .header(HttpHeaders.SET_COOKIE,
-            refreshTokenCookieFactory.create(loginResult.rawRefreshToken()).toString())
-        .body(loginResult.response());
+  @Operation(summary = "Refresh access token")
+  @ApiResponse(responseCode = "200", description = "Refresh access token", content = {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class))})
+  @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token", content = {@Content})
+  @PostMapping("/refresh")
+  public ResponseEntity<LoginResponse> refresh(@CookieValue(name = "vaultnote_refresh_token") String rawRefreshToken) {
+    return authenticationResponse(refreshTokenService.refresh(rawRefreshToken));
   }
 
   @Operation
@@ -97,6 +105,14 @@ public class AuthController {
         .userId(Long.parseLong(Objects.requireNonNull(jwt.getSubject())))
         .roles(jwt.getClaimAsStringList("roles"))
         .build();
+  }
+
+  private ResponseEntity<LoginResponse> authenticationResponse(LoginResult loginResult) {
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .header(HttpHeaders.SET_COOKIE,
+            refreshTokenCookieFactory.create(loginResult.rawRefreshToken()).toString())
+        .body(loginResult.response());
   }
 
 }

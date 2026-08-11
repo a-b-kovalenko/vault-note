@@ -10,8 +10,9 @@ has been implemented and verified. Branch integration is tracked separately.
   workflow are implemented; the site is published.
 - The Mailpit baseline and the complete email-verification vertical slice are
   implemented and covered by PostgreSQL integration tests.
-- Login endpoint, short-lived JWT issuance, initial refresh-token persistence,
-  and `HttpOnly` cookie delivery are implemented and verified.
+- Login endpoint, short-lived JWT issuance, refresh-token persistence,
+  `HttpOnly` cookie delivery, refresh rotation, and reuse detection are
+  implemented and verified.
 - Bearer JWT validation and the protected `GET /api/v1/auth/me` endpoint are
   implemented and covered by PostgreSQL integration tests.
 - JWT `roles` claims are validated against the `UserRole` enum and mapped to
@@ -19,10 +20,9 @@ has been implemented and verified. Branch integration is tracked separately.
   controller.
 - The authorization slice now includes method security, the
   `CurrentUserProvider`, the admin user list, and OpenAPI bearer documentation.
-- Unit and PostgreSQL integration coverage for the three current login
-  scenarios is implemented and verified.
-- Next: implement refresh, rotation, reuse detection, logout, and the remaining
-  authentication hardening.
+- Unit and PostgreSQL integration coverage for login and refresh rotation is
+  implemented and verified.
+- Next: implement logout and the remaining authentication hardening.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -70,15 +70,22 @@ has been implemented and verified. Branch integration is tracked separately.
     - [x] Atomically mark the token as used and set `email_verified` to `true`.
     - [x] Cover valid, invalid, expired, reused, and concurrent token scenarios
       against PostgreSQL.
-- [ ] Implement login, short-lived access JWTs, and rotating refresh sessions.
+- [x] Implement login, short-lived access JWTs, and rotating refresh sessions.
   - [x] Implement login, short-lived access JWT issuance, and initial refresh
     token cookie delivery.
   - [x] Validate bearer JWTs on protected requests and expose the current-user
     access-check endpoint.
   - [x] Add PostgreSQL integration coverage for successful and failed login,
     including access-token response, refresh cookie, and persisted token hash.
-  - [ ] Implement refresh endpoint and rotating refresh sessions.
-- [ ] Add CSRF, CORS, rate limiting, and refresh-token reuse handling.
+  - [x] Implement refresh endpoint, rotation, and token-family reuse detection.
+  - [x] Cover rotation, unknown, expired, and reused token scenarios with unit
+    tests.
+  - [x] Cover successful refresh rotation against PostgreSQL.
+  - [x] Add the Bruno refresh request and verify the cookie-based flow against
+    the local PostgreSQL database.
+  - [ ] Add cleanup for expired refresh tokens; retain revoked tokens until
+    `expires_at` so reuse detection remains possible.
+- [ ] Add CSRF, CORS, rate limiting, and authentication hardening.
   - [ ] Start CSRF work after the registration vertical slice is implemented
     and verified.
   - [ ] Enable Spring Security SPA CSRF, expose `/csrf`, and require the token
@@ -115,6 +122,7 @@ has been implemented and verified. Branch integration is tracked separately.
 - [x] Add Antora component metadata and navigation.
 - [ ] Record the remaining architecture decision records.
   - [x] Record JWT access and initial refresh-token delivery (`010`).
+  - [x] Record refresh-token rotation and reuse detection (`011`).
 - [x] Complete README setup, operations, and verification instructions.
 - [x] Publish Antora documentation to GitHub Pages.
 

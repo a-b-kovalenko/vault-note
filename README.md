@@ -4,11 +4,11 @@ VaultNote is a local learning project for private Markdown notes. It combines
 an Angular single-page application, a Spring Boot API, PostgreSQL, and a
 production-inspired authentication lifecycle.
 
-> **Project status:** backend foundation in progress. The repository currently
-> contains the users persistence baseline, registration endpoint, request
-> validation, Argon2id password hashing, local/test profiles, and PostgreSQL
-> integration coverage. Email verification, the remaining authentication flows,
-> and the frontend are still planned.
+> **Project status:** backend authentication foundation in progress. The
+> repository currently contains registration, email verification, login, JWT
+> access tokens, rotating refresh sessions, local/test profiles, and PostgreSQL
+> integration coverage. Logout, the remaining hardening, and the frontend are
+> still planned.
 
 ## Planned architecture
 
@@ -116,6 +116,30 @@ system-wide Node.js or npm installation is not required. The first run needs
 network access to download Node.js and install the locked Antora dependencies.
 The generated site is written to `docs/build/site`. The regular `check` task
 also includes the documentation build.
+
+## Implemented authentication API
+
+The backend currently supports registration, email verification, login, and
+refresh-token rotation. A verified user can log in with:
+
+```shell
+curl --include --request POST http://localhost:8080/api/v1/auth/login \
+  --header 'Content-Type: application/json' \
+  --data '{"email":"user@example.com","password":"Password1234"}'
+```
+
+The response contains a short-lived JWT access token and sets the raw refresh
+token in the `HttpOnly` `vaultnote_refresh_token` cookie. Refresh the session by
+sending that cookie back:
+
+```shell
+curl --include --request POST http://localhost:8080/api/v1/auth/refresh \
+  --cookie 'vaultnote_refresh_token=<raw-refresh-token>'
+```
+
+Each successful refresh revokes the old refresh token, creates a replacement in
+the same token family, and returns a new cookie. Reusing an already rotated
+token revokes the active family and returns `401`.
 
 ## Implemented registration API
 

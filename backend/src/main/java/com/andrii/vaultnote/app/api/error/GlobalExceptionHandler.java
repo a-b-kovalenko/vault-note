@@ -3,6 +3,7 @@ package com.andrii.vaultnote.app.api.error;
 import com.andrii.vaultnote.app.exception.AuthenticationFailedException;
 import com.andrii.vaultnote.app.exception.EmailVerificationFailedException;
 import com.andrii.vaultnote.app.exception.EntityExistsException;
+import com.andrii.vaultnote.app.exception.RefreshTokenAuthenticationFailedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,6 +51,21 @@ public class GlobalExceptionHandler {
     log.warn("Authentication failed");
 
     var response = new ApiErrorResponse("AUTHENTICATION_FAILED", exception.getMessage());
+
+    return ResponseEntity
+        .status(HttpStatus.UNAUTHORIZED)
+        .body(response);
+  }
+
+  @ExceptionHandler(RefreshTokenAuthenticationFailedException.class)
+  public ResponseEntity<ApiErrorResponse> handleRefreshTokenAuthenticationFailedException(
+      RefreshTokenAuthenticationFailedException exception) {
+
+    log.warn("Refresh token authentication failed");
+
+    var response = new ApiErrorResponse(
+        "REFRESH_TOKEN_AUTHENTICATION_FAILED",
+        exception.getMessage());
 
     return ResponseEntity
         .status(HttpStatus.UNAUTHORIZED)

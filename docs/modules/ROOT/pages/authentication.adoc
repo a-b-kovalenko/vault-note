@@ -92,6 +92,36 @@ The default and local lifetime is seven days. Cookie construction is isolated in
 * `Secure`: disabled for local HTTP development and configurable for other
   environments.
 
+== Refresh flow
+
+The refresh endpoint is `POST /api/v1/auth/refresh`. The browser sends the
+`vaultnote_refresh_token` cookie automatically:
+
+[source,http]
+----
+POST /api/v1/auth/refresh
+Cookie: vaultnote_refresh_token=<raw-refresh-token>
+----
+
+The endpoint does not require a Bearer access token. It is `permitAll` in
+`SecurityConfig` because the refresh cookie is the credential for this request.
+The service still rejects a missing, unknown, expired, or revoked token with
+`401 Unauthorized` and code `REFRESH_TOKEN_AUTHENTICATION_FAILED`.
+
+On a successful request, `RefreshTokenServiceImpl` performs rotation in one
+transaction:
+
+. hashes the raw cookie value and locks the matching database row;
+. checks the token expiry and revocation state;
+. revokes the current token;
+. creates a new token in the same token family;
+. returns a new access token and replaces the refresh cookie.
+
+The old token cannot be used again. If a revoked token is reused, all active
+tokens in its family are revoked and the client must authenticate again. The
+family-wide update is implemented by
+`RefreshTokenJpaRepository.revokeActiveByTokenFamilyId(...)`.
+
 == Configuration
 
 JWT and refresh-token settings are externalized through environment variables:
@@ -120,16 +150,17 @@ boundary with three scenarios:
 * an unverified email returns the same neutral `401 Unauthorized` without a
   cookie or database session.
 
+`RefreshTokenIntegrationTest` covers the successful refresh boundary against
+PostgreSQL. It verifies that the old token is revoked, the replacement belongs
+to the same family, only the replacement remains active, and the new raw value
+is delivered in the cookie.
+
 == Remaining authentication work
 
-The initial login and token-delivery flow is implemented. The following parts
-are intentionally still pending:
+Login, refresh rotation, and reuse detection are implemented. The following
+parts are intentionally still pending:
 
-* `POST /api/v1/auth/refresh`;
-* refresh-token rotation on every refresh request;
-* reuse detection and revocation of the affected token family;
 * logout and refresh-cookie clearing;
-* JWT decoding and authentication of protected API requests;
 * CSRF, CORS, rate limiting, and authentication audit events.
 
 Swagger/OpenAPI remains the reference for the endpoint contract. This page

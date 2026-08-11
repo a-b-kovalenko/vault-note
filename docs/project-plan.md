@@ -111,8 +111,11 @@ Implement these flows:
    endpoint.
 4. Store refresh tokens only as hashes. Rotate on every refresh and revoke the
    current session on logout.
-5. When a rotated refresh token is reused, revoke every active session for the
-   affected user and record the security event.
+5. When a rotated refresh token is reused, revoke every active token in the
+   affected token family and record the security event.
+6. Add refresh-token cleanup that removes records only after `expires_at`.
+   Retain revoked but not-yet-expired records so reuse detection continues to
+   work. Cleanup may run as a scheduled job or an explicit maintenance task.
 
 Protect login by rate limiting on both IP and email, without account lockout.
 Implement CSRF protection for cookie-backed refresh and logout calls using the
@@ -222,11 +225,12 @@ initial ADRs now describe decisions that are implemented in the repository:
 7. [x] Liquibase and Testcontainers integration-test strategy (`007`).
 8. [x] Mail delivery boundary and MVP email verification delivery (`008`).
 9. [x] JWT access and initial refresh-token delivery (`010`).
+10. [x] Refresh-token rotation and reuse detection (`011`).
 
 The following ADRs remain planned and must be created only when their decisions
 are implemented:
 
-- [ ] Refresh-token rotation, reuse detection, and logout.
+- [ ] Logout and refresh-cookie clearing.
 - [ ] CSRF and CORS strategy for Angular and cookie-backed refresh operations.
 - [x] Fixed role model with numeric enum codes and read-only `ADMIN` (`009`).
 - [ ] OpenAPI as the contract source and generated Angular client.
