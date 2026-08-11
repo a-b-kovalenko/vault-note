@@ -17,8 +17,12 @@ Refresh token — це довгоживучий credential, за допомог�
 - **JPA-модель** — `RefreshTokenEntity`.
 - **Пошук із захистом від race condition** — `RefreshTokenJpaRepository.findByTokenHash(...)` використовує `PESSIMISTIC_WRITE`.
 - **Відкликання всієї family** — `RefreshTokenJpaRepository.revokeActiveByTokenFamilyId(...)` оновлює всі активні токени family одним запитом.
+- **Refresh endpoint** — `AuthController#refresh` приймає raw token із cookie та повертає нову пару токенів.
+- **Ротація** — `RefreshTokenServiceImpl` відкликає використаний токен і створює наступний у тій самій family.
+- **Виявлення reuse** — повторне використання відкликаного токена відкликає всі активні токени його family.
+- **Інтеграційна перевірка** — `RefreshTokenIntegrationTest` перевіряє HTTP-flow і стан PostgreSQL після ротації.
 
-На цьому етапі вже готові database migration, entity та repository. Сам refresh-сервіс, який виконуватиме rotation і виявлятиме reuse, буде доданий у наступному кроці. Тому наведені вище repository-методи вже виражають майбутню поведінку, але ще не викликаються з endpoint-а.
+Refresh flow реалізований поверх цієї persistence-моделі. Endpoint дозволений без Bearer access token, бо автентифікація відбувається за refresh token у `HttpOnly` cookie.
 
 ## Навіщо потрібна rotation
 
@@ -76,6 +80,30 @@ T2: active
 Pessimistic lock потрібен, щоб два паралельні запити не змогли одночасно
 прийняти один і той самий `T1` як активний.
 
+## Refresh endpoint
+
+Клієнт викликає `POST /api/v1/auth/refresh`. Raw refresh token передається
+автоматично в cookie `vaultnote_refresh_token`; access token у заголовку
+`Authorization` для цього endpoint-а не потрібен.
+
+Успішна відповідь містить новий access token у JSON і замінює refresh cookie
+наступним raw token. Запит є `permitAll` у `SecurityConfig`, але це не робить
+його публічним у практичному сенсі: без валідного cookie сервіс повертає
+`401`.
+
+Перевірки й зміни виконуються в одній транзакції:
+
+1. raw token хешується;
+2. запис шукається під pessimistic lock;
+3. перевіряються `revoked_at` і `expires_at`;
+4. поточний token відкликається атомарним update;
+5. створюється наступний token у тій самій family;
+6. генерується новий access token і встановлюється cookie.
+
+Якщо token невідомий, прострочений або вже відкликаний, API повертає
+`REFRESH_TOKEN_AUTHENTICATION_FAILED`. Для вже відкликаного token-а додатково
+відкликаються всі активні token-и його family.
+
 ## Що відбувається при reuse
 
 Уявімо, що атакер скопіював `T1`, а справжній клієнт уже виконав refresh:
@@ -120,12 +148,10 @@ database:   SHA-256(raw-refresh-token)
 
 ## Основні стани токена
 
-| Стан | Значення |
-| --- | --- |
-| `active` | Токен можна використати, якщо він не прострочений. |
-| `revoked` | Токен уже замінено, відкликано через logout або reuse. |
-| `expired` | `expires_at` минув, навіть якщо `revoked_at` порожній. |
-| `reuse detected` | Надійшла спроба використати токен, який уже відкликаний. |
+- `active` — токен можна використати, якщо він не прострочений.
+- `revoked` — токен уже замінено або відкликано через reuse.
+- `expired` — `expires_at` минув, навіть якщо `revoked_at` порожній.
+- `reuse detected` — надійшла спроба використати токен, який уже відкликаний.
 
 У таблиці немає текстового статусу. Стан визначається комбінацією
 `expires_at` і `revoked_at`.

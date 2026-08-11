@@ -231,23 +231,21 @@ Spring Security не створює серверну HTTP-сесію для acce
 
 ## Ролі та межі поточної реалізації
 
-Claim `roles` зараз читається endpoint-ом і повертається у response. Але сам
-claim ще не перетворений у Spring authorities. Тому для правил на кшталт
-`hasRole("ADMIN")` потрібен окремий JWT authorities converter.
+Claim `roles` перевіряється через `UserRole`, а
+`RolesJwtAuthenticationConverter` перетворює значення на Spring authorities
+на кшталт `ROLE_USER` і `ROLE_ADMIN` ще до входу в controller. Невідоме або
+відсутнє значення ролі відхиляється під час authentication.
 
 Поточний `GET /api/v1/auth/me` перевіряє саме автентифікацію, а не повну
 авторизацію. Він також не перевіряє, чи існує user із `sub` у базі. Тому
 видалений user теоретично залишатиметься authenticated до завершення терміну
 дії JWT.
 
-Ще не реалізовані:
+У поточному authentication slice ще не реалізовані:
 
-- refresh endpoint;
-- rotation refresh tokens;
-- reuse detection;
 - logout і дострокове відкликання сесії;
 - CSRF/CORS hardening;
-- повне перетворення ролей у Spring authorities.
+- rate limiting та authentication audit events.
 
 ## Типові помилки під час ручної перевірки
 

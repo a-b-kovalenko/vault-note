@@ -1,0 +1,44 @@
+= ADR 011: Refresh-token rotation and reuse detection
+:status: accepted
+:date: 2026-08-11
+
+== Context
+
+VaultNote stores refresh tokens as hashes and delivers the raw value through an
+`HttpOnly` cookie. A long-lived token must not remain reusable after a refresh,
+and reuse of an already rotated token is a security signal that may indicate a
+copied credential.
+
+== Decision
+
+Implement refresh as a one-time-token rotation flow:
+
+* expose `POST /api/v1/auth/refresh` as a cookie-authenticated endpoint;
+* lock the matching token row with `PESSIMISTIC_WRITE` while validating it;
+* reject unknown, expired, and revoked tokens with the same authentication
+  error;
+* revoke the current token and create a replacement in the same token family;
+* when a revoked token is reused, revoke every active token in that family;
+* execute validation, revocation, and replacement creation in one transaction;
+* persist only token hashes and return the replacement raw value only in the
+  `HttpOnly` cookie.
+
+The refresh endpoint is `permitAll` at the HTTP security-filter level because
+Spring Security must not require an access token before the refresh service can
+authenticate the request using its cookie.
+
+== Consequences
+
+* Each refresh token can be successfully used only once.
+* A stolen token that is reused after rotation invalidates the affected session
+  family instead of silently extending it.
+* Pessimistic locking prevents concurrent refresh requests from both accepting
+  the same active token.
+* A client must log in again after reuse detection.
+* Logout, CSRF protection for cookie-backed requests, rate limiting, and audit
+  events remain separate follow-up work.
+
+== Status
+
+Accepted and implemented by `RefreshTokenServiceImpl`,
+`RefreshTokenJpaRepository`, and `RefreshTokenIntegrationTest`.

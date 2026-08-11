@@ -1,0 +1,16 @@
+meta {
+  name: Refresh Token
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{apiUrl}}/api/v1/auth/refresh
+  body: none
+  auth: none
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

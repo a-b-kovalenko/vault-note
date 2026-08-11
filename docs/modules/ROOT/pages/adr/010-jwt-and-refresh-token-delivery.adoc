@@ -30,10 +30,11 @@ Use `HttpOnly` and `SameSite=Lax` for the cookie. The local HTTP profile may
 leave `Secure` disabled; deployed environments must provide a unique JWT
 secret and enable `Secure`.
 
-The current implementation covers login, initial refresh-token persistence,
-cookie delivery, JWT request authentication, and the protected
-`GET /api/v1/auth/me` access-check endpoint. Refresh rotation, reuse detection,
-logout, and CSRF protection remain follow-up work.
+The current implementation covers login, refresh-token persistence and
+rotation, reuse detection, cookie delivery, JWT request authentication, and the
+protected `GET /api/v1/auth/me` access-check endpoint. Logout and CSRF
+protection remain follow-up work and are recorded separately in the project
+plan.
 
 == Consequences
 
@@ -41,8 +42,8 @@ logout, and CSRF protection remain follow-up work.
 * A database compromise does not immediately expose usable refresh-token
   values because only hashes are persisted.
 * Access tokens limit the lifetime of a leaked bearer token.
-* The backend must implement refresh rotation and CSRF protection before the
-  cookie-backed session lifecycle is complete.
+* The backend must implement logout and CSRF protection before the cookie-backed
+  session lifecycle is complete.
 * Cookie and JWT settings must be externalized per environment.
 
 == Status

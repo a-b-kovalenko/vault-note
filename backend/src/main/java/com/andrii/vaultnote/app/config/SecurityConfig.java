@@ -40,6 +40,7 @@ public class SecurityConfig {
             .requestMatchers(POST, "/api/v1/auth/registrations").permitAll()
             .requestMatchers(POST, "/api/v1/auth/email-verification").permitAll()
             .requestMatchers(POST, "/api/v1/auth/login").permitAll()
+            .requestMatchers(POST, "/api/v1/auth/refresh").permitAll()
             .anyRequest().authenticated())
         .oauth2ResourceServer(oauth2 -> oauth2
             .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));

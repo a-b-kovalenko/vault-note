@@ -9,11 +9,13 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.andrii.vaultnote.app.api.auth.dto.LoginRequest;
+import com.andrii.vaultnote.app.api.auth.dto.LoginResponse;
 import com.andrii.vaultnote.app.api.auth.dto.TokenType;
 import com.andrii.vaultnote.app.config.RefreshTokenProperties;
 import com.andrii.vaultnote.app.exception.AuthenticationFailedException;
-import com.andrii.vaultnote.app.security.AccessTokenGenerator;
 import com.andrii.vaultnote.app.security.SecureTokenGenerator;
+import com.andrii.vaultnote.app.service.AuthenticationResultFactory;
+import com.andrii.vaultnote.app.service.LoginResult;
 import com.andrii.vaultnote.users.domain.UserRole;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.RefreshTokenEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
@@ -55,9 +57,9 @@ class LoginServiceImplTest {
   @Mock
   PasswordEncoder passwordEncoder;
   @Mock
-  AccessTokenGenerator accessTokenGenerator;
-  @Mock
   SecureTokenGenerator secureTokenGenerator;
+  @Mock
+  AuthenticationResultFactory authenticationResultFactory;
   @Mock
   RefreshTokenProperties refreshTokenProperties;
   @Mock
@@ -72,13 +74,18 @@ class LoginServiceImplTest {
     var request = loginRequest();
     var generatedRefreshToken = new SecureTokenGenerator.GeneratedToken(
         RAW_REFRESH_TOKEN, REFRESH_TOKEN_HASH);
-    var generatedAccessToken = new AccessTokenGenerator.GeneratedToken(
-        ACCESS_TOKEN, ACCESS_TOKEN_TTL.toSeconds());
+    var expectedResult = new LoginResult(
+        LoginResponse.builder()
+            .accessToken(ACCESS_TOKEN)
+            .tokenType(TokenType.BEARER)
+            .expiresIn(ACCESS_TOKEN_TTL.toSeconds())
+            .build(),
+        RAW_REFRESH_TOKEN);
 
     when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
     when(passwordEncoder.matches(PASSWORD, PASSWORD_HASH)).thenReturn(true);
     when(secureTokenGenerator.generate()).thenReturn(generatedRefreshToken);
-    when(accessTokenGenerator.generate(user)).thenReturn(generatedAccessToken);
+    when(authenticationResultFactory.create(user, RAW_REFRESH_TOKEN)).thenReturn(expectedResult);
     when(clock.instant()).thenReturn(NOW);
     when(refreshTokenProperties.ttl()).thenReturn(REFRESH_TOKEN_TTL);
 
@@ -92,14 +99,11 @@ class LoginServiceImplTest {
     assertThat(savedRefreshToken.getTokenHash()).isEqualTo(REFRESH_TOKEN_HASH);
     assertThat(savedRefreshToken.getTokenFamilyId()).isNotNull();
     assertThat(savedRefreshToken.getExpiresAt()).isEqualTo(NOW.plus(REFRESH_TOKEN_TTL));
-    assertThat(result.rawRefreshToken()).isEqualTo(RAW_REFRESH_TOKEN);
-    assertThat(result.response().accessToken()).isEqualTo(ACCESS_TOKEN);
-    assertThat(result.response().tokenType()).isEqualTo(TokenType.BEARER);
-    assertThat(result.response().expiresIn()).isEqualTo(ACCESS_TOKEN_TTL.toSeconds());
+    assertThat(result).isSameAs(expectedResult);
 
     verify(passwordEncoder).matches(PASSWORD, PASSWORD_HASH);
     verify(secureTokenGenerator).generate();
-    verify(accessTokenGenerator).generate(user);
+    verify(authenticationResultFactory).create(user, RAW_REFRESH_TOKEN);
   }
 
   @Test
@@ -114,7 +118,7 @@ class LoginServiceImplTest {
         passwordEncoder,
         secureTokenGenerator,
         refreshTokenRepository,
-        accessTokenGenerator,
+        authenticationResultFactory,
         refreshTokenProperties,
         clock);
   }
@@ -134,7 +138,7 @@ class LoginServiceImplTest {
         passwordEncoder,
         secureTokenGenerator,
         refreshTokenRepository,
-        accessTokenGenerator,
+        authenticationResultFactory,
         refreshTokenProperties,
         clock);
   }
@@ -153,7 +157,7 @@ class LoginServiceImplTest {
     verifyNoInteractions(
         secureTokenGenerator,
         refreshTokenRepository,
-        accessTokenGenerator,
+        authenticationResultFactory,
         refreshTokenProperties,
         clock);
     verify(refreshTokenRepository, never()).save(any(RefreshTokenEntity.class));

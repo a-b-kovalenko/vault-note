@@ -1,12 +1,10 @@
 package com.andrii.vaultnote.app.service.impl;
 
 import com.andrii.vaultnote.app.api.auth.dto.LoginRequest;
-import com.andrii.vaultnote.app.api.auth.dto.LoginResponse;
-import com.andrii.vaultnote.app.api.auth.dto.TokenType;
 import com.andrii.vaultnote.app.config.RefreshTokenProperties;
 import com.andrii.vaultnote.app.exception.AuthenticationFailedException;
-import com.andrii.vaultnote.app.security.AccessTokenGenerator;
 import com.andrii.vaultnote.app.security.SecureTokenGenerator;
+import com.andrii.vaultnote.app.service.AuthenticationResultFactory;
 import com.andrii.vaultnote.app.service.LoginResult;
 import com.andrii.vaultnote.app.service.LoginService;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.RefreshTokenEntity;
@@ -29,12 +27,12 @@ import org.springframework.transaction.annotation.Transactional;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class LoginServiceImpl implements LoginService {
 
-  UserJpaRepository userRepository;
-  RefreshTokenJpaRepository refreshTokenRepository;
-  PasswordEncoder passwordEncoder;
-  AccessTokenGenerator accessTokenGenerator;
   SecureTokenGenerator secureTokenGenerator;
+  AuthenticationResultFactory authenticationResultFactory;
+  RefreshTokenJpaRepository refreshTokenRepository;
   RefreshTokenProperties refreshTokenProperties;
+  UserJpaRepository userRepository;
+  PasswordEncoder passwordEncoder;
   Clock clock;
 
   @Override
@@ -57,14 +55,6 @@ public class LoginServiceImpl implements LoginService {
         .build();
     refreshTokenRepository.save(refreshToken);
 
-    var accessToken = accessTokenGenerator.generate(user);
-
-    var loginResponse = LoginResponse.builder()
-        .accessToken(accessToken.rawValue())
-        .tokenType(TokenType.BEARER)
-        .expiresIn(accessToken.expiresIn())
-        .build();
-
-    return new LoginResult(loginResponse, generatedRefreshToken.rawValue());
+    return authenticationResultFactory.create(user, generatedRefreshToken.rawValue());
   }
 }
