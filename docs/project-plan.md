@@ -109,8 +109,8 @@ Implement these flows:
    to Angular memory and a 7-day refresh token in an `HttpOnly` cookie. Validate
    the bearer JWT on protected requests and expose a current-user access-check
    endpoint.
-4. Store refresh tokens only as hashes. Rotate on every refresh and revoke the
-   current session on logout.
+4. Store refresh tokens only as hashes. Rotate on every refresh, revoke the
+   current session on logout, and clear the refresh-token cookie.
 5. When a rotated refresh token is reused, revoke every active token in the
    affected token family and record the security event.
 6. Add refresh-token cleanup that removes records only after `expires_at`.
@@ -226,11 +226,11 @@ initial ADRs now describe decisions that are implemented in the repository:
 8. [x] Mail delivery boundary and MVP email verification delivery (`008`).
 9. [x] JWT access and initial refresh-token delivery (`010`).
 10. [x] Refresh-token rotation and reuse detection (`011`).
+11. [x] Current-session logout (`012`).
 
 The following ADRs remain planned and must be created only when their decisions
 are implemented:
 
-- [ ] Logout and refresh-cookie clearing.
 - [ ] CSRF and CORS strategy for Angular and cookie-backed refresh operations.
 - [x] Fixed role model with numeric enum codes and read-only `ADMIN` (`009`).
 - [ ] OpenAPI as the contract source and generated Angular client.

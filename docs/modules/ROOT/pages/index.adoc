@@ -31,13 +31,14 @@ The backend foundation is in progress. The repository currently contains:
 * a login endpoint with email-verification and password checks;
 * a 15-minute JWT access token and seven-day hashed refresh-token cookie;
 * a refresh endpoint with token rotation and reuse detection;
+* a current-session logout endpoint that revokes the refresh token and clears
+  the cookie;
 * unit coverage for the login, refresh, and token-generation services, plus
   PostgreSQL integration coverage for health, registration, email verification,
   login, and refresh rotation.
 
 The following parts remain planned:
 
-* logout and refresh-cookie clearing;
 * CSRF/CORS, rate limiting, and authentication audit events;
 * authorization rules for notes and administrator views;
 * private notes and profile workflows;

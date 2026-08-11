@@ -22,7 +22,9 @@ has been implemented and verified. Branch integration is tracked separately.
   `CurrentUserProvider`, the admin user list, and OpenAPI bearer documentation.
 - Unit and PostgreSQL integration coverage for login and refresh rotation is
   implemented and verified.
-- Next: implement logout and the remaining authentication hardening.
+- Current-session logout and refresh-cookie clearing are implemented and
+  verified.
+- Next: implement the remaining authentication hardening.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -83,6 +85,9 @@ has been implemented and verified. Branch integration is tracked separately.
   - [x] Cover successful refresh rotation against PostgreSQL.
   - [x] Add the Bruno refresh request and verify the cookie-based flow against
     the local PostgreSQL database.
+  - [x] Implement current-session logout and clear the refresh-token cookie.
+  - [x] Cover logout, token revocation, cookie clearing, and missing-cookie
+    behavior against PostgreSQL.
   - [ ] Add cleanup for expired refresh tokens; retain revoked tokens until
     `expires_at` so reuse detection remains possible.
 - [ ] Add CSRF, CORS, rate limiting, and authentication hardening.
@@ -105,7 +110,8 @@ has been implemented and verified. Branch integration is tracked separately.
   - [ ] Use `CurrentUserProvider` in note services for current-user ownership
     checks.
 - [ ] Add optimistic locking and safe Markdown rendering.
-- [ ] Implement profile display-name updates and current-session logout.
+- [ ] Implement profile display-name updates.
+- [x] Implement the backend current-session logout endpoint.
 - [ ] Add read-only administrator user and note views.
   - [x] Add the paginated administrator user list.
   - [ ] Add the read-only administrator note view.
@@ -123,6 +129,7 @@ has been implemented and verified. Branch integration is tracked separately.
 - [ ] Record the remaining architecture decision records.
   - [x] Record JWT access and initial refresh-token delivery (`010`).
   - [x] Record refresh-token rotation and reuse detection (`011`).
+  - [x] Record current-session logout (`012`).
 - [x] Complete README setup, operations, and verification instructions.
 - [x] Publish Antora documentation to GitHub Pages.
 

@@ -29,6 +29,7 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
 
   private static final String LOGIN_ENDPOINT = "/api/v1/auth/login";
   private static final String REFRESH_ENDPOINT = "/api/v1/auth/refresh";
+  private static final String LOGOUT_ENDPOINT = "/api/v1/auth/logout";
   private static final String REFRESH_COOKIE_NAME = "vaultnote_refresh_token";
   private static final String USER_EMAIL = "refresh@example.com";
   private static final String PASSWORD = "Password1234";
@@ -131,6 +132,77 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
     assertThat(newRefreshToken.getExpiresAt())
         .isAfter(requestStartedAt.plus(REFRESH_TOKEN_TTL).minusSeconds(5))
         .isBefore(requestFinishedAt.plus(REFRESH_TOKEN_TTL).plusSeconds(5));
+  }
+
+  /**
+   * Revokes the current refresh token through the HTTP logout endpoint and clears
+   * the refresh-token cookie.
+   */
+  @Test
+  void shouldLogoutAndClearRefreshTokenAgainstPostgres() {
+    var user = saveUser();
+    var loginRequest = LoginRequest.builder()
+        .email(USER_EMAIL)
+        .password(PASSWORD)
+        .build();
+    var loginResponse = given()
+        .port(port)
+        .contentType("application/json")
+        .body(loginRequest)
+        .when()
+        .post(LOGIN_ENDPOINT)
+        .then()
+        .statusCode(HttpStatus.OK.value())
+        .extract()
+        .response();
+    var rawRefreshToken = loginResponse.getCookie(REFRESH_COOKIE_NAME);
+    var persistedToken = refreshTokenRepository.findAll().stream()
+        .findFirst()
+        .orElseThrow();
+
+    var response = given()
+        .port(port)
+        .cookie(REFRESH_COOKIE_NAME, rawRefreshToken)
+        .when()
+        .post(LOGOUT_ENDPOINT)
+        .then()
+        .statusCode(HttpStatus.NO_CONTENT.value())
+        .extract()
+        .response();
+
+    var revokedToken = refreshTokenRepository.findById(persistedToken.getId()).orElseThrow();
+    assertThat(response.getBody().asString()).isEmpty();
+    assertThat(response.getHeader("Set-Cookie"))
+        .contains(REFRESH_COOKIE_NAME + "=")
+        .contains("Path=/api/v1/auth")
+        .contains("Max-Age=0")
+        .contains("HttpOnly")
+        .contains("SameSite=Lax");
+    assertThat(revokedToken.getUser().getId()).isEqualTo(user.getId());
+    assertThat(revokedToken.getRevokedAt()).isNotNull();
+  }
+
+  /**
+   * Clears the refresh-token cookie even when the client has no active cookie.
+   */
+  @Test
+  void shouldClearRefreshTokenCookieWhenLogoutCookieIsMissing() {
+    var response = given()
+        .port(port)
+        .when()
+        .post(LOGOUT_ENDPOINT)
+        .then()
+        .statusCode(HttpStatus.NO_CONTENT.value())
+        .extract()
+        .response();
+
+    assertThat(response.getHeader("Set-Cookie"))
+        .contains(REFRESH_COOKIE_NAME + "=")
+        .contains("Path=/api/v1/auth")
+        .contains("Max-Age=0")
+        .contains("HttpOnly")
+        .contains("SameSite=Lax");
+    assertThat(refreshTokenRepository.findAll()).isEmpty();
   }
 
   private UserEntity saveUser() {

@@ -19,6 +19,7 @@
 - [OpenAPI bearerAuth і SecurityRequirement](content/OpenAPI-bearerAuth-та-SecurityRequirement.md): як Swagger описує JWT-автентифікацію і чому це не замінює Spring Security.
 - [@PreAuthorize на service-інтерфейсі](content/PreAuthorize-на-service-інтерфейсі.md): чому authorization для use case має бути на service boundary, а не лише в controller.
 - [Refresh token rotation і reuse detection](content/Refresh-token-rotation-і-reuse-detection.md): як оновлюються refresh tokens і чому reuse завершує всю token family.
+- [Logout-флоу](content/Logout-флоу.md): як завершується поточна refresh-сесія і чому access JWT ще живе до `exp`.
 
 ## Email
 

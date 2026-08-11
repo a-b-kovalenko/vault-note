@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Slf4j
@@ -66,6 +67,25 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     refreshTokenRepository.save(nextRefreshToken);
 
     return authenticationResultFactory.create(token.getUser(), generatedRefreshToken.rawValue());
+  }
+
+  @Override
+  @Transactional
+  public void logout(String rawRefreshToken) {
+    log.info("Received request to logout");
+
+    if (isNull(rawRefreshToken)) {
+      log.info("Logout request did not contain a refresh token");
+      return;
+    }
+
+    var tokenHash = secureTokenGenerator.hash(rawRefreshToken);
+    var revokedTokens = refreshTokenRepository.findByTokenHash(tokenHash)
+        .filter(token -> isNull(token.getRevokedAt()))
+        .map(token -> refreshTokenRepository.revokeActiveById(token.getId(), clock.instant()))
+        .orElse(0);
+
+    log.info("Logout completed; revoked {} refresh token(s)", revokedTokens);
   }
 
 }
