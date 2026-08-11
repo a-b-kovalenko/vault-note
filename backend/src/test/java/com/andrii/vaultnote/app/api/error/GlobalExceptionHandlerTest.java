@@ -2,6 +2,7 @@ package com.andrii.vaultnote.app.api.error;
 
 import com.andrii.vaultnote.app.exception.EntityExistsException;
 import com.andrii.vaultnote.app.exception.EmailVerificationFailedException;
+import com.andrii.vaultnote.app.exception.NoteNotFoundException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,19 @@ class GlobalExceptionHandlerTest {
         .containsExactly(
             "EMAIL_VERIFICATION_FAILED",
             "Email verification link is invalid or has expired.");
+  }
+
+  @Test
+  void shouldHandleNoteNotFoundException() {
+    var exception = new NoteNotFoundException(11L);
+
+    var response = handler.handleNoteNotFoundException(exception);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    assertThat(response.getBody())
+        .isNotNull()
+        .extracting(ApiErrorResponse::code, ApiErrorResponse::message)
+        .containsExactly("NOTE_NOT_FOUND", "Note with id '11' was not found.");
   }
 
   @Test

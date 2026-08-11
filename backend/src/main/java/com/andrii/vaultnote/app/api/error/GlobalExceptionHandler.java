@@ -4,6 +4,7 @@ import com.andrii.vaultnote.app.exception.AuthenticationFailedException;
 import com.andrii.vaultnote.app.exception.EmailVerificationFailedException;
 import com.andrii.vaultnote.app.exception.EntityExistsException;
 import com.andrii.vaultnote.app.exception.RefreshTokenAuthenticationFailedException;
+import com.andrii.vaultnote.app.exception.NoteNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -69,6 +70,19 @@ public class GlobalExceptionHandler {
 
     return ResponseEntity
         .status(HttpStatus.UNAUTHORIZED)
+        .body(response);
+  }
+
+  @ExceptionHandler(NoteNotFoundException.class)
+  public ResponseEntity<ApiErrorResponse> handleNoteNotFoundException(
+      NoteNotFoundException exception) {
+
+    log.warn("Note not found: {}", exception.getMessage());
+
+    var response = new ApiErrorResponse("NOTE_NOT_FOUND", exception.getMessage());
+
+    return ResponseEntity
+        .status(HttpStatus.NOT_FOUND)
         .body(response);
   }
 

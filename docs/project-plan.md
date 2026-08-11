@@ -171,6 +171,13 @@ The Profile page displays the email and verification state, permits only
 `display_name` updates, and provides logout for the current session. Email
 change and global logout are deferred.
 
+The implemented notes baseline currently includes the owner-only REST CRUD
+endpoints, explicit request/response DTOs, pagination with `updatedAt DESC` as
+the default order, `CurrentUserProvider` ownership checks, and centralized
+`NOTE_NOT_FOUND` handling. The remaining notes work is optimistic-lock conflict
+handling, safe Markdown rendering, administrator read-only access, and
+PostgreSQL-backed endpoint integration coverage.
+
 ## Angular frontend
 
 Create `frontend/` as a standalone Angular application with lazy-loaded routes,

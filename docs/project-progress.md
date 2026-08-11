@@ -25,8 +25,12 @@ has been implemented and verified. Branch integration is tracked separately.
 - Current-session logout and refresh-cookie clearing are implemented and
   verified.
 - CORS and SPA-compatible CSRF protection are implemented and verified.
-- Next: implement the remaining authentication hardening: rate limiting and
-  authentication audit events.
+- The private Notes CRUD baseline is implemented: owner-only endpoints,
+  pagination, DTO boundaries, `CurrentUserProvider` ownership checks, and
+  `NOTE_NOT_FOUND` handling.
+- Next: finish Notes with optimistic locking, safe Markdown rendering, and
+  PostgreSQL-backed endpoint integration tests; the remaining authentication
+  hardening is rate limiting and authentication audit events.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -111,10 +115,12 @@ has been implemented and verified. Branch integration is tracked separately.
 
 ## Phase 3 — Notes and profile
 
-- [ ] Implement private notes CRUD, ownership checks, and pagination.
-  - [ ] Use `CurrentUserProvider` in note services for current-user ownership
+- [x] Implement private notes CRUD, ownership checks, and pagination.
+  - [x] Use `CurrentUserProvider` in note services for current-user ownership
     checks.
 - [ ] Add optimistic locking and safe Markdown rendering.
+  - [ ] Return `409 Conflict` for stale note updates.
+  - [ ] Sanitize rendered Markdown and enforce the safe Markdown subset.
 - [ ] Implement profile display-name updates.
 - [x] Implement the backend current-session logout endpoint.
 - [ ] Add read-only administrator user and note views.

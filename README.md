@@ -196,6 +196,36 @@ Invalid requests return `400` with code `VALIDATION_FAILED` and field-level
 `violations`. A duplicate email returns `409` with code
 `ENTITY_ALREADY_EXISTS`.
 
+## Implemented notes API
+
+The protected notes resource provides owner-only CRUD:
+
+- `GET /api/v1/notes` — paginated current-user notes, sorted by `updated_at`
+  descending by default;
+- `GET /api/v1/notes/{noteId}` — get one owned note;
+- `POST /api/v1/notes` — create a note and return `201`;
+- `PUT /api/v1/notes/{noteId}` — update an owned note;
+- `DELETE /api/v1/notes/{noteId}` — permanently delete an owned note and return
+  `204`.
+
+All requests require a bearer access token. `POST`, `PUT`, and `DELETE` also
+require the CSRF cookie/header contract described above. Create and update
+requests use:
+
+```json
+{
+  "title": "My note",
+  "content": "# Markdown content"
+}
+```
+
+Titles are limited to 200 characters and content to 20,000 characters. The
+service applies ownership through `CurrentUserProvider`; a missing or another user's
+note returns `404` with code `NOTE_NOT_FOUND`.
+
+Optimistic-lock conflict handling, safe Markdown rendering, administrator note
+views, and PostgreSQL-backed notes integration tests remain planned.
+
 ## Planning and progress
 
 The published [VaultNote documentation](https://a-b-kovalenko.github.io/vault-note/)
