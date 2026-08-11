@@ -35,8 +35,8 @@ authenticate the request using its cookie.
 * Pessimistic locking prevents concurrent refresh requests from both accepting
   the same active token.
 * A client must log in again after reuse detection.
-* CSRF protection for cookie-backed requests, rate limiting, and audit events
-  remain separate follow-up work.
+* CSRF protection for cookie-backed requests is defined by ADR 013; rate
+  limiting and audit events remain separate follow-up work.
 
 == Status
 

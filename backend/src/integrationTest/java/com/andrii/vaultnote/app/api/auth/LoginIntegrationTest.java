@@ -1,6 +1,5 @@
 package com.andrii.vaultnote.app.api.auth;
 
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.andrii.vaultnote.app.api.auth.dto.LoginRequest;
@@ -75,7 +74,7 @@ class LoginIntegrationTest extends AbstractBaseIntegrationTest {
         .build();
     var requestStartedAt = Instant.now();
 
-    var response = given()
+    var response = givenWithCsrf()
         .port(port)
         .contentType("application/json")
         .body(request)
@@ -140,7 +139,7 @@ class LoginIntegrationTest extends AbstractBaseIntegrationTest {
         .password(WRONG_PASSWORD)
         .build();
 
-    var response = given()
+    var response = givenWithCsrf()
         .port(port)
         .contentType("application/json")
         .body(request)
@@ -179,7 +178,7 @@ class LoginIntegrationTest extends AbstractBaseIntegrationTest {
         .password(PASSWORD)
         .build();
 
-    var response = given()
+    var response = givenWithCsrf()
         .port(port)
         .contentType("application/json")
         .body(request)

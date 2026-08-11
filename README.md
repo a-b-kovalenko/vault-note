@@ -7,8 +7,9 @@ production-inspired authentication lifecycle.
 > **Project status:** backend authentication foundation in progress. The
 > repository currently contains registration, email verification, login, JWT
 > access tokens, rotating refresh sessions, current-session logout,
-> local/test profiles, and PostgreSQL integration coverage. The remaining
-> hardening and the frontend are still planned.
+> local/test profiles, CORS, SPA-compatible CSRF protection, and PostgreSQL
+> integration coverage. Rate limiting, audit events, and the frontend are
+> still planned.
 
 ## Planned architecture
 
@@ -82,6 +83,8 @@ application uses the `vaultnote` schema and applies its schema through
 Liquibase. By default it connects to `localhost:5432` as `user` with password
 `password`; override these values with `VAULTNOTE_DATABASE_URL`,
 `VAULTNOTE_DATABASE_USERNAME`, and `VAULTNOTE_DATABASE_PASSWORD` when needed.
+The browser CORS allowlist defaults to `http://localhost:4200`; override it
+with `VAULTNOTE_CORS_ALLOWED_ORIGINS` when the frontend uses another origin.
 
 Mailpit provides the local SMTP server and web UI for inspecting outgoing mail.
 Copy the non-secret example environment file and start only the Mailpit
@@ -120,12 +123,24 @@ also includes the documentation build.
 ## Implemented authentication API
 
 The backend currently supports registration, email verification, login,
-refresh-token rotation, and current-session logout. A verified user can log in
+refresh-token rotation, current-session logout, and browser CSRF/CORS
+protection. Before a state-changing authentication request, obtain a CSRF
+token and preserve its cookie:
+
+```shell
+curl --include --cookie-jar cookies.txt http://localhost:8080/csrf
+```
+
+Copy the `token` value from the response and send it in the
+`X-XSRF-TOKEN` header together with the cookie jar. A verified user can log in
 with:
 
 ```shell
 curl --include --request POST http://localhost:8080/api/v1/auth/login \
+  --cookie cookies.txt \
+  --cookie-jar cookies.txt \
   --header 'Content-Type: application/json' \
+  --header 'X-XSRF-TOKEN: <csrf-token>' \
   --data '{"email":"user@example.com","password":"Password1234"}'
 ```
 
@@ -135,7 +150,9 @@ sending that cookie back:
 
 ```shell
 curl --include --request POST http://localhost:8080/api/v1/auth/refresh \
-  --cookie 'vaultnote_refresh_token=<raw-refresh-token>'
+  --cookie cookies.txt \
+  --cookie-jar cookies.txt \
+  --header 'X-XSRF-TOKEN: <csrf-token>'
 ```
 
 Each successful refresh revokes the old refresh token, creates a replacement in
@@ -146,7 +163,9 @@ Logout the current refresh session with:
 
 ```shell
 curl --include --request POST http://localhost:8080/api/v1/auth/logout \
-  --cookie 'vaultnote_refresh_token=<raw-refresh-token>'
+  --cookie cookies.txt \
+  --cookie-jar cookies.txt \
+  --header 'X-XSRF-TOKEN: <csrf-token>'
 ```
 
 The endpoint returns `204`, revokes the matching refresh token, and clears the

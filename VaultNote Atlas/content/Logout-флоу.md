@@ -79,13 +79,15 @@ Logout відкликає лише token поточної сесії. Інші l
 
 Повторний `Logout` без cookie також має повернути `204`.
 
-## Важливе обмеження
+## CSRF для browser flow
 
-Cookie-based logout потребує CSRF-захисту, коли endpoint буде викликатися з
-браузерного frontend-а. У поточній локальній реалізації CSRF вимкнений; це
-окрема майбутня задача authentication hardening.
+Cookie-based logout тепер захищений CSRF. Browser client спочатку отримує token
+через `GET /csrf`, читає cookie `XSRF-TOKEN` і передає її значення в header
+`X-XSRF-TOKEN` разом із refresh cookie. Без коректного header сервер відхиляє
+запит зі статусом `403`.
 
 ## Пов'язані нотатки
 
+- [CSRF та CORS](CSRF-та-CORS.md)
 - [Refresh token rotation і reuse detection](Refresh-token-rotation-і-reuse-detection.md)
 - [JWT-аутентифікація і перевірка доступу](JWT-аутентифікація-і-перевірка-доступу.md)

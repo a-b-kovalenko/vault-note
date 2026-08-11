@@ -5,13 +5,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+
+import static jakarta.servlet.DispatcherType.ERROR;
 
 import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.OPTIONS;
 import static org.springframework.http.HttpMethod.POST;
 
 @Configuration
@@ -27,16 +32,27 @@ public class SecurityConfig {
   @Bean
   public SecurityFilterChain securityFilterChain(
       HttpSecurity http,
-      RolesJwtAuthenticationConverter jwtAuthenticationConverter) {
+      RolesJwtAuthenticationConverter jwtAuthenticationConverter,
+      CsrfTokenRepository csrfTokenRepository,
+      CsrfTokenRequestHandler csrfTokenRequestHandler) {
     http
-        .csrf(AbstractHttpConfigurer::disable)
+        .cors(Customizer.withDefaults())
+        .csrf(csrf -> csrf
+            .csrfTokenRepository(csrfTokenRepository)
+            .csrfTokenRequestHandler(csrfTokenRequestHandler)
+            .ignoringRequestMatchers(
+                "/api/v1/auth/registrations",
+                "/api/v1/auth/email-verification"))
         .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
+            .dispatcherTypeMatchers(ERROR).permitAll()
+            .requestMatchers(OPTIONS, "/**").permitAll()
             .requestMatchers(GET, "/actuator/health").permitAll()
             .requestMatchers(GET, "/swagger-ui.html").permitAll()
             .requestMatchers(GET, "/swagger-ui/**").permitAll()
             .requestMatchers(GET, "/v3/api-docs/**").permitAll()
+            .requestMatchers(GET, "/csrf").permitAll()
             .requestMatchers(POST, "/api/v1/auth/registrations").permitAll()
             .requestMatchers(POST, "/api/v1/auth/email-verification").permitAll()
             .requestMatchers(POST, "/api/v1/auth/login").permitAll()

@@ -118,9 +118,13 @@ Implement these flows:
    work. Cleanup may run as a scheduled job or an explicit maintenance task.
 
 Protect login by rate limiting on both IP and email, without account lockout.
-Implement CSRF protection for cookie-backed refresh and logout calls using the
-Angular-compatible XSRF token pattern. Configure CORS as an explicit allowlist
-for the local Angular origin with credentials enabled.
+Implement Spring Security's SPA-compatible CSRF protection with
+`CookieCsrfTokenRepository`: expose `GET /csrf`, deliver the raw token in the
+`XSRF-TOKEN` cookie, and require it in the `X-XSRF-TOKEN` header for login,
+refresh, logout, and other state-changing requests. Keep registration and
+email verification explicitly excluded until the public form flow has its own
+CSRF integration. Configure CORS as an explicit, environment-driven allowlist
+with credentials enabled; never use a wildcard origin with cookies.
 
 Complete JWT authorization integration:
 
@@ -224,15 +228,15 @@ initial ADRs now describe decisions that are implemented in the repository:
 6. [x] Single-module modular monolith (`006`).
 7. [x] Liquibase and Testcontainers integration-test strategy (`007`).
 8. [x] Mail delivery boundary and MVP email verification delivery (`008`).
-9. [x] JWT access and initial refresh-token delivery (`010`).
-10. [x] Refresh-token rotation and reuse detection (`011`).
-11. [x] Current-session logout (`012`).
+9. [x] Fixed role model with numeric enum codes and read-only `ADMIN` (`009`).
+10. [x] JWT access and initial refresh-token delivery (`010`).
+11. [x] Refresh-token rotation and reuse detection (`011`).
+12. [x] Current-session logout (`012`).
+13. [x] CSRF and CORS strategy (`013`).
 
 The following ADRs remain planned and must be created only when their decisions
 are implemented:
 
-- [ ] CSRF and CORS strategy for Angular and cookie-backed refresh operations.
-- [x] Fixed role model with numeric enum codes and read-only `ADMIN` (`009`).
 - [ ] OpenAPI as the contract source and generated Angular client.
 - [ ] Antora publishing to GitHub Pages.
 

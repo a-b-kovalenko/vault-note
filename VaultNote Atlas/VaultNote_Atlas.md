@@ -20,6 +20,7 @@
 - [@PreAuthorize на service-інтерфейсі](content/PreAuthorize-на-service-інтерфейсі.md): чому authorization для use case має бути на service boundary, а не лише в controller.
 - [Refresh token rotation і reuse detection](content/Refresh-token-rotation-і-reuse-detection.md): як оновлюються refresh tokens і чому reuse завершує всю token family.
 - [Logout-флоу](content/Logout-флоу.md): як завершується поточна refresh-сесія і чому access JWT ще живе до `exp`.
+- [CSRF та CORS](content/CSRF-та-CORS.md): чим відрізняються browser cross-origin правила і захист cookie-based запитів.
 
 ## Email
 

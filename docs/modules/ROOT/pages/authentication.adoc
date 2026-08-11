@@ -144,6 +144,37 @@ Logout does not immediately invalidate an already issued access JWT. The JWT
 remains valid until its `exp` timestamp; the refresh session is what prevents
 the client from obtaining a new access token.
 
+== CSRF and CORS
+
+The backend is prepared for a browser frontend at `http://localhost:4200` and
+does not use `Access-Control-Allow-Origin: *` because refresh credentials are
+stored in cookies. `CorsConfiguration` reads the allowed origins from
+`app.cors.allowed-origins`, which defaults to `http://localhost:4200` and can be
+overridden with `VAULTNOTE_CORS_ALLOWED_ORIGINS`.
+
+The frontend obtains an Angular-compatible CSRF token from `GET /csrf`:
+
+[source,http]
+----
+GET /csrf
+----
+
+The response contains the token and sets a non-`HttpOnly` `XSRF-TOKEN` cookie.
+Angular reads that cookie and sends the same value in the `X-XSRF-TOKEN`
+header. `CsrfConfiguration` uses the cookie repository and a plain token
+request handler so the cookie value and header value are directly comparable.
+
+Spring Security protects state-changing requests by default. Registration and
+email verification are explicitly excluded while those public flows remain
+outside the browser session lifecycle. Login, refresh, and logout therefore
+require the CSRF header even though they are `permitAll` with respect to Bearer
+authentication.
+
+The browser must also pass the CORS preflight. The configured origin is allowed
+with credentials, while an unknown origin is rejected. `CsrfCorsIntegrationTest`
+covers token issuance, missing-token rejection, allowed preflight, and
+unknown-origin rejection.
+
 == Configuration
 
 JWT and refresh-token settings are externalized through environment variables:
@@ -156,6 +187,7 @@ JWT and refresh-token settings are externalized through environment variables:
 * `VAULTNOTE_REFRESH_TOKEN_COOKIE_PATH`;
 * `VAULTNOTE_REFRESH_TOKEN_COOKIE_SECURE`;
 * `VAULTNOTE_REFRESH_TOKEN_COOKIE_SAME_SITE`.
+* `VAULTNOTE_CORS_ALLOWED_ORIGINS`.
 
 The local defaults are suitable only for development. A deployed environment
 must provide its own JWT secret and enable the `Secure` cookie flag.
@@ -182,10 +214,10 @@ and idempotent logout without a cookie.
 
 == Remaining authentication work
 
-Login, refresh rotation, reuse detection, and current-session logout are
-implemented. The following parts are intentionally still pending:
+Login, refresh rotation, reuse detection, current-session logout, CSRF, and
+CORS are implemented. The following parts are intentionally still pending:
 
-* CSRF, CORS, rate limiting, and authentication audit events.
+* rate limiting and authentication audit events.
 
 Swagger/OpenAPI remains the reference for the endpoint contract. This page
 documents the security behavior and token lifecycle around that contract.
