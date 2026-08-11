@@ -55,4 +55,9 @@ public class NoteEntity {
   @Column(name = "updated_at", nullable = false)
   @UpdateTimestamp
   Instant updatedAt;
+
+  public void update(String title, String content) {
+    this.title = title;
+    this.content = content;
+  }
 }

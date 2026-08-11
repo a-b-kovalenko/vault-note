@@ -44,7 +44,9 @@ The backend foundation is in progress. The repository currently contains:
 The following parts remain planned:
 
 * rate limiting and authentication audit events;
-* optimistic locking and safe Markdown rendering for notes;
+* safe Markdown HTML rendering and sanitization as the final step of the Angular
+  phase;
+* OAuth2/OIDC sign-in as the next phase;
 * administrator note views and profile workflows;
 * the Angular frontend and generated API client.
 
