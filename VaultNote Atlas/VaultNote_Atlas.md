@@ -34,6 +34,10 @@
 
 - [Інтеграційні тести Spring Boot](content/Інтеграційні-тести-Spring-Boot.md): RestAssured, Testcontainers, DBRider і перевірка persistence.
 
+## Frontend
+
+- [Структура Angular workspace](content/Структура-Angular-workspace.md): призначення конфігураційних, source, test і tooling-файлів.
+
 ## Workflows
 
 - [Gradle-модулі та пакетні межі](content/Gradle-модулі-та-пакетні-межі.md): коли достатньо одного проєкту, а коли потрібне розділення на модулі.
