@@ -49,5 +49,4 @@ yet.
 
 * enforce optimistic locking and return `409 Conflict` for stale updates;
 * sanitize rendered Markdown and define the safe Markdown subset;
-* add the read-only administrator notes view;
-* add PostgreSQL-backed integration coverage for the notes endpoints.
+* add the read-only administrator notes view.

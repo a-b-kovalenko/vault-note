@@ -107,6 +107,10 @@ cd backend
 SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
 ```
 
+Once the backend is running, open the [Swagger UI](http://localhost:8080/swagger-ui/index.html)
+to browse and try the REST API. The raw OpenAPI document is available at
+[`/v3/api-docs`](http://localhost:8080/v3/api-docs).
+
 Build the Antora documentation site locally:
 
 ```shell
@@ -223,8 +227,8 @@ Titles are limited to 200 characters and content to 20,000 characters. The
 service applies ownership through `CurrentUserProvider`; a missing or another user's
 note returns `404` with code `NOTE_NOT_FOUND`.
 
-Optimistic-lock conflict handling, safe Markdown rendering, administrator note
-views, and PostgreSQL-backed notes integration tests remain planned.
+Optimistic-lock conflict handling, safe Markdown rendering, and administrator
+note views remain planned.
 
 ## Planning and progress
 

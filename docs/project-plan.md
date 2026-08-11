@@ -176,7 +176,7 @@ endpoints, explicit request/response DTOs, pagination with `updatedAt DESC` as
 the default order, `CurrentUserProvider` ownership checks, and centralized
 `NOTE_NOT_FOUND` handling. The remaining notes work is optimistic-lock conflict
 handling, safe Markdown rendering, administrator read-only access, and
-PostgreSQL-backed endpoint integration coverage.
+the read-only administrator notes view.
 
 ## Angular frontend
 
