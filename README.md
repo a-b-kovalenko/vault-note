@@ -116,6 +116,10 @@ cd backend
 SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
 ```
 
+Once the backend is running, open the [Swagger UI](http://localhost:8080/swagger-ui/index.html)
+to browse and try the REST API. The raw OpenAPI document is available at
+[`/v3/api-docs`](http://localhost:8080/v3/api-docs).
+
 Build the Antora documentation site locally:
 
 ```shell
@@ -243,8 +247,7 @@ note returns `404` with code `NOTE_NOT_FOUND`.
 Optimistic locking is implemented through `ETag`/`If-Match`. The API currently
 returns source Markdown; safe HTML rendering is deferred until a preview or
 read-only mode is introduced at the end of the Angular phase. Administrator
-note views and broader
-PostgreSQL-backed notes integration coverage remain planned.
+note views remain planned.
 
 ## Planning and progress
 

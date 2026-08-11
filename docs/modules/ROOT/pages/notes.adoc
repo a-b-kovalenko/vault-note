@@ -61,5 +61,3 @@ when a preview or read-only mode is introduced.
 == Remaining notes work
 
 * add the read-only administrator notes view;
-* expand PostgreSQL-backed integration coverage for the remaining notes
-  endpoints.

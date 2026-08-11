@@ -39,7 +39,7 @@ The backend foundation is in progress. The repository currently contains:
   ownership checks;
 * unit coverage for the login, refresh, and token-generation services, plus
   PostgreSQL integration coverage for health, registration, email verification,
-  login, and refresh rotation.
+  login, refresh rotation, and Notes CRUD.
 
 The following parts remain planned:
 

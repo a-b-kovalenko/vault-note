@@ -171,11 +171,11 @@ change and global logout are deferred.
 
 The implemented notes baseline currently includes the owner-only REST CRUD
 endpoints, explicit request/response DTOs, pagination with `updatedAt DESC` as
-the default order, `CurrentUserProvider` ownership checks, centralized
-`NOTE_NOT_FOUND` handling, and optimistic locking through `ETag`/`If-Match`.
-The remaining notes work is administrator read-only access and broader
-PostgreSQL-backed endpoint integration coverage. Safe HTML rendering and
-sanitization are deferred until a preview or read-only mode is introduced.
+the default order, `CurrentUserProvider` ownership checks, and centralized
+`NOTE_NOT_FOUND` handling, optimistic locking through `ETag`/`If-Match`, and
+PostgreSQL-backed endpoint integration coverage. The remaining notes work is
+administrator read-only access. Safe HTML rendering and sanitization are
+deferred until a preview or read-only mode is introduced.
 
 ## Phase 4 — Minimal Angular
 

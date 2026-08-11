@@ -26,8 +26,8 @@ has been implemented and verified. Branch integration is tracked separately.
   verified.
 - CORS and SPA-compatible CSRF protection are implemented and verified.
 - The private Notes CRUD baseline is implemented: owner-only endpoints,
-  pagination, DTO boundaries, `CurrentUserProvider` ownership checks, and
-  `NOTE_NOT_FOUND` handling.
+  pagination, DTO boundaries, `CurrentUserProvider` ownership checks,
+  `NOTE_NOT_FOUND` handling, and PostgreSQL-backed integration coverage.
 - The Notes API currently returns source Markdown; safe HTML rendering is
   planned as the final step of the Angular phase, when a preview or read-only
   mode is introduced.
@@ -117,9 +117,12 @@ has been implemented and verified. Branch integration is tracked separately.
 - [x] Implement private notes CRUD, ownership checks, and pagination.
   - [x] Use `CurrentUserProvider` in note services for current-user ownership
     checks.
-- [x] Add optimistic locking through `ETag`/`If-Match`.
-  - [x] Return `409 Conflict` for stale note updates using `ETag`/`If-Match` and
-    verify the stale-update flow against PostgreSQL.
+  - [x] Add PostgreSQL-backed integration coverage for CRUD, pagination,
+    ownership isolation, validation, and authentication.
+  - [x] Add optimistic locking through `ETag`/`If-Match`.
+    - [x] Return `409 Conflict` for stale note updates using `ETag`/`If-Match`
+      and verify the stale-update flow against PostgreSQL.
+  - [ ] Sanitize rendered Markdown and enforce the safe Markdown subset.
 - [ ] Implement profile display-name updates.
 - [x] Implement the backend current-session logout endpoint.
 - [ ] Add read-only administrator user and note views.
