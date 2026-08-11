@@ -41,12 +41,23 @@ limited to 20,000 characters. Invalid input returns `400` with the standard
 validation error response.
 
 The response contains the note identifier, title, Markdown source, version,
-and creation/update timestamps. The `version` field is present for the planned
-optimistic-locking contract; stale-version conflict handling is not implemented
-yet.
+and creation/update timestamps. Single-note responses also expose the current
+version through the `ETag` header. Updates must send the same value in the
+`If-Match` header. A stale update returns `409 Conflict` with
+`NOTE_VERSION_CONFLICT` and does not overwrite the newer note.
+
+For example:
+
+[source,http]
+----
+ETag: "0"
+If-Match: "0"
+----
+
+The API currently returns source Markdown rather than rendered HTML. Safe HTML
+rendering and sanitization are planned as the final step of the Angular phase,
+when a preview or read-only mode is introduced.
 
 == Remaining notes work
 
-* enforce optimistic locking and return `409 Conflict` for stale updates;
-* sanitize rendered Markdown and define the safe Markdown subset;
-* add the read-only administrator notes view.
+* add the read-only administrator notes view;

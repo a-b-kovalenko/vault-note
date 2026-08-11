@@ -3,6 +3,7 @@ package com.andrii.vaultnote.app.service.impl;
 import com.andrii.vaultnote.app.security.CurrentUserProvider;
 import com.andrii.vaultnote.app.api.notes.dto.NoteInfoDto;
 import com.andrii.vaultnote.app.exception.NoteNotFoundException;
+import com.andrii.vaultnote.app.exception.NoteVersionConflictException;
 import com.andrii.vaultnote.app.mapper.NoteMapper;
 import com.andrii.vaultnote.app.service.NoteService;
 import com.andrii.vaultnote.notes.infrastructure.persistence.entity.NoteEntity;
@@ -64,15 +65,13 @@ public class NoteServiceImpl implements NoteService {
 
   @Override
   @Transactional
-  public NoteInfoDto updateNote(Long noteId, String title, String content) {
+  public NoteInfoDto updateNote(Long noteId, String title, String content, long expectedVersion) {
     var ownerId = currentUserProvider.currentUserId();
-    log.info("Updating note: noteId={}, ownerId={}", noteId, ownerId);
+    log.info("Updating note: noteId={}, ownerId={}, expectedVersion={}",
+        noteId, ownerId, expectedVersion);
     return noteRepository.findByIdAndOwner_Id(noteId, ownerId)
-        .map(note -> note.toBuilder()
-            .title(title)
-            .content(content)
-            .build())
-        .map(noteRepository::save)
+        .map(note -> updateNote(note, title, content, expectedVersion))
+        .map(noteRepository::saveAndFlush)
         .map(noteMapper::toNoteInfoDto)
         .orElseThrow(() -> new NoteNotFoundException(noteId));
   }
@@ -86,4 +85,14 @@ public class NoteServiceImpl implements NoteService {
         .orElseThrow(() -> new NoteNotFoundException(noteId));
     noteRepository.delete(note);
   }
+
+  private NoteEntity updateNote(
+      NoteEntity note, String title, String content, long expectedVersion) {
+    if (note.getVersion() != expectedVersion) {
+      throw new NoteVersionConflictException(note.getId(), expectedVersion, note.getVersion());
+    }
+    note.update(title, content);
+    return note;
+  }
+
 }

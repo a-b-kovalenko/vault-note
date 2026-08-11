@@ -4,12 +4,12 @@ VaultNote is a local learning project for private Markdown notes. It combines
 an Angular single-page application, a Spring Boot API, PostgreSQL, and a
 production-inspired authentication lifecycle.
 
-> **Project status:** backend authentication foundation in progress. The
-> repository currently contains registration, email verification, login, JWT
-> access tokens, rotating refresh sessions, current-session logout,
-> local/test profiles, CORS, SPA-compatible CSRF protection, and PostgreSQL
-> integration coverage. Rate limiting, audit events, and the frontend are
-> still planned.
+> **Project status:** the Angular workspace is ready for login-page work. The
+> repository contains registration, email verification, login, JWT access
+> tokens, rotating refresh sessions, current-session logout, users and Notes
+> APIs, optimistic locking, local/test profiles, CORS, SPA-compatible CSRF
+> protection, PostgreSQL integration coverage, and an Angular workspace. Rate
+> limiting, audit events, and the frontend login flow are still planned.
 
 ## Planned architecture
 
@@ -61,6 +61,14 @@ Raw HTML, attachments, note sharing, password reset, OAuth2, search, browser
 e2e tests, application CI, and production deployment are outside the first
 iteration.
 
+## Delivery phases
+
+- Phase 4: minimal Angular workspace with the email/password login page.
+- Phase 5: OAuth2/OIDC sign-in with provider buttons and a callback flow.
+- Phase 6: remaining Angular screens, route guards, refresh handling, and
+  frontend Markdown preview/read rendering.
+- Later phases: documentation maintenance and final email/security hardening.
+
 ## Engineering conventions
 
 The repository follows the shared personal engineering standards. Agent
@@ -73,8 +81,9 @@ cd backend
 ```
 
 This runs formatting, unit tests, PostgreSQL/Testcontainers integration tests,
-Liquibase validation, and an 80% JaCoCo coverage gate. Docker is required for
-the Testcontainers integration tests.
+Liquibase validation, the Angular frontend tests and production build, and an
+80% JaCoCo coverage gate. Docker is required for the Testcontainers integration
+tests.
 
 ## Local development
 
@@ -120,9 +129,17 @@ cd backend
 
 The Gradle build downloads the pinned Node.js runtime automatically, so a
 system-wide Node.js or npm installation is not required. The first run needs
-network access to download Node.js and install the locked Antora dependencies.
-The generated site is written to `docs/build/site`. The regular `check` task
-also includes the documentation build.
+network access to download Node.js and install the locked Antora and Angular
+dependencies. The generated site is written to `docs/build/site` and the
+frontend production bundle to `frontend/dist/frontend`. The regular `check` task
+includes both documentation and frontend verification.
+
+Run only the frontend checks when working on Angular:
+
+```shell
+cd backend
+./gradlew frontendTest frontendBuild
+```
 
 ## Implemented authentication API
 
@@ -227,7 +244,9 @@ Titles are limited to 200 characters and content to 20,000 characters. The
 service applies ownership through `CurrentUserProvider`; a missing or another user's
 note returns `404` with code `NOTE_NOT_FOUND`.
 
-Optimistic-lock conflict handling, safe Markdown rendering, and administrator
+Optimistic locking is implemented through `ETag`/`If-Match`. The API currently
+returns source Markdown; safe HTML rendering is deferred until a preview or
+read-only mode is introduced at the end of the Angular phase. Administrator
 note views remain planned.
 
 ## Planning and progress
