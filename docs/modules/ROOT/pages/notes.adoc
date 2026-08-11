@@ -1,0 +1,53 @@
+= Notes API
+:description: Current VaultNote private notes API and ownership behavior
+
+The first notes slice provides owner-only CRUD through the protected
+`/api/v1/notes` resource. The API uses explicit DTOs and never exposes the JPA
+entity.
+
+== Security and ownership
+
+Every request requires a valid bearer access token. State-changing requests
+also require the CSRF contract described in the authentication documentation.
+
+The service obtains the current user through `CurrentUserProvider`. Repository
+queries include the current user's identifier, so a user can read, update, or
+delete only their own notes. A missing note and a note owned by another user
+both result in `404 NOTE_NOT_FOUND`.
+
+== Endpoints
+
+* `GET /api/v1/notes` returns the current user's paginated notes. The default
+  page size is `20`, sorted by `updatedAt` descending.
+* `GET /api/v1/notes/\{noteId\}` returns one owned note.
+* `POST /api/v1/notes` creates a note and returns `201 Created`.
+* `PUT /api/v1/notes/\{noteId\}` replaces the title and Markdown content of an
+  owned note.
+* `DELETE /api/v1/notes/\{noteId\}` permanently deletes an owned note and
+  returns `204 No Content`.
+
+Create and update requests use the same JSON shape:
+
+[source,json]
+----
+{
+  "title": "My note",
+  "content": "# Markdown content"
+}
+----
+
+`title` is required and limited to 200 characters. `content` is required and
+limited to 20,000 characters. Invalid input returns `400` with the standard
+validation error response.
+
+The response contains the note identifier, title, Markdown source, version,
+and creation/update timestamps. The `version` field is present for the planned
+optimistic-locking contract; stale-version conflict handling is not implemented
+yet.
+
+== Remaining notes work
+
+* enforce optimistic locking and return `409 Conflict` for stale updates;
+* sanitize rendered Markdown and define the safe Markdown subset;
+* add the read-only administrator notes view;
+* add PostgreSQL-backed integration coverage for the notes endpoints.

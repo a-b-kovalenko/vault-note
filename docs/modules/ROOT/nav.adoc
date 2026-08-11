@@ -1,5 +1,6 @@
 * xref:index.adoc[Overview]
 * xref:authentication.adoc[Authentication]
+* xref:notes.adoc[Notes API]
 * Architecture Decision Records
 ** xref:adr/001-monorepo-layout.adoc[ADR 001: Monorepo layout]
 ** xref:adr/002-antora-documentation.adoc[ADR 002: Antora documentation]

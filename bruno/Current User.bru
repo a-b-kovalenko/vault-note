@@ -7,11 +7,15 @@ meta {
 get {
   url: {{apiUrl}}/api/v1/auth/me
   body: none
-  auth: inherit
+  auth: bearer
 }
 
 headers {
   Authorization: Bearer {{accessToken}}
+}
+
+auth:bearer {
+  token: {{accessToken}}
 }
 
 settings {
