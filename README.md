@@ -4,12 +4,12 @@ VaultNote is a local learning project for private Markdown notes. It combines
 an Angular single-page application, a Spring Boot API, PostgreSQL, and a
 production-inspired authentication lifecycle.
 
-> **Project status:** backend MVP is ready for frontend work. The repository
-> currently contains registration, email verification, login, JWT access
+> **Project status:** the Angular workspace is ready for login-page work. The
+> repository contains registration, email verification, login, JWT access
 > tokens, rotating refresh sessions, current-session logout, users and Notes
 > APIs, optimistic locking, local/test profiles, CORS, SPA-compatible CSRF
-> protection, and PostgreSQL integration coverage. Rate limiting, audit events,
-> and the frontend are still planned.
+> protection, PostgreSQL integration coverage, and an Angular workspace. Rate
+> limiting, audit events, and the frontend login flow are still planned.
 
 ## Planned architecture
 
@@ -81,8 +81,9 @@ cd backend
 ```
 
 This runs formatting, unit tests, PostgreSQL/Testcontainers integration tests,
-Liquibase validation, and an 80% JaCoCo coverage gate. Docker is required for
-the Testcontainers integration tests.
+Liquibase validation, the Angular frontend tests and production build, and an
+80% JaCoCo coverage gate. Docker is required for the Testcontainers integration
+tests.
 
 ## Local development
 
@@ -124,9 +125,17 @@ cd backend
 
 The Gradle build downloads the pinned Node.js runtime automatically, so a
 system-wide Node.js or npm installation is not required. The first run needs
-network access to download Node.js and install the locked Antora dependencies.
-The generated site is written to `docs/build/site`. The regular `check` task
-also includes the documentation build.
+network access to download Node.js and install the locked Antora and Angular
+dependencies. The generated site is written to `docs/build/site` and the
+frontend production bundle to `frontend/dist/frontend`. The regular `check` task
+includes both documentation and frontend verification.
+
+Run only the frontend checks when working on Angular:
+
+```shell
+cd backend
+./gradlew frontendTest frontendBuild
+```
 
 ## Implemented authentication API
 
