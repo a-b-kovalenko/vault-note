@@ -15,3 +15,4 @@
 ** xref:adr/011-refresh-token-rotation-and-reuse-detection.adoc[ADR 011: Refresh-token rotation and reuse detection]
 ** xref:adr/012-current-session-logout.adoc[ADR 012: Current-session logout]
 ** xref:adr/013-csrf-and-cors.adoc[ADR 013: CSRF and CORS]
+** xref:adr/014-oauth2-oidc-sign-in.adoc[ADR 014: OAuth2/OIDC sign-in]

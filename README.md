@@ -4,12 +4,12 @@ VaultNote is a local learning project for private Markdown notes. It combines
 an Angular single-page application, a Spring Boot API, PostgreSQL, and a
 production-inspired authentication lifecycle.
 
-> **Project status:** backend authentication foundation in progress. The
-> repository currently contains registration, email verification, login, JWT
-> access tokens, rotating refresh sessions, current-session logout,
-> local/test profiles, CORS, SPA-compatible CSRF protection, and PostgreSQL
-> integration coverage. Rate limiting, audit events, and the frontend are
-> still planned.
+> **Project status:** backend MVP is ready for frontend work. The repository
+> currently contains registration, email verification, login, JWT access
+> tokens, rotating refresh sessions, current-session logout, users and Notes
+> APIs, optimistic locking, local/test profiles, CORS, SPA-compatible CSRF
+> protection, and PostgreSQL integration coverage. Rate limiting, audit events,
+> and the frontend are still planned.
 
 ## Planned architecture
 
@@ -60,6 +60,14 @@ rules are in [.agents/AGENTS.md](.agents/AGENTS.md).
 Raw HTML, attachments, note sharing, password reset, OAuth2, search, browser
 e2e tests, application CI, and production deployment are outside the first
 iteration.
+
+## Delivery phases
+
+- Phase 4: minimal Angular workspace with the email/password login page.
+- Phase 5: OAuth2/OIDC sign-in with provider buttons and a callback flow.
+- Phase 6: remaining Angular screens, route guards, refresh handling, and
+  frontend Markdown preview/read rendering.
+- Later phases: documentation maintenance and final email/security hardening.
 
 ## Engineering conventions
 
@@ -223,8 +231,11 @@ Titles are limited to 200 characters and content to 20,000 characters. The
 service applies ownership through `CurrentUserProvider`; a missing or another user's
 note returns `404` with code `NOTE_NOT_FOUND`.
 
-Optimistic-lock conflict handling, safe Markdown rendering, administrator note
-views, and PostgreSQL-backed notes integration tests remain planned.
+Optimistic locking is implemented through `ETag`/`If-Match`. The API currently
+returns source Markdown; safe HTML rendering is deferred until a preview or
+read-only mode is introduced at the end of the Angular phase. Administrator
+note views and broader
+PostgreSQL-backed notes integration coverage remain planned.
 
 ## Planning and progress
 

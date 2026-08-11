@@ -78,14 +78,27 @@ standard:
 - This is a monorepo for an Angular SPA in `frontend/`, a Spring Boot backend
   in `backend/`, Antora documentation in `docs/`, and the Ukrainian Obsidian
   vault in `VaultNote Atlas/`.
-- The backend will be a Java 25 Gradle multi-module build: `common`, `users`,
-  `notes`, `security`, and runnable `app`. Keep dependencies directed toward
-  stable lower-level modules; do not put domain-specific code in `common`.
+- The backend is a Java 25 single-module Gradle build organized by package-level
+  feature boundaries: `common`, `users`, `notes`, `security`, and runnable
+  `app`. Keep dependencies directed toward stable lower-level packages; do not
+  put domain-specific code in `common`.
 - OpenAPI is the API source of truth. Do not expose JPA entities at REST
   boundaries; use explicit DTOs and RFC 9457 `ProblemDetail` errors.
 - PostgreSQL uses database `vault_note` and schema `vaultnote`. Docker is for
   Mailpit only. Schema changes are forward-only Liquibase migrations; Hibernate
   validates rather than creates or evolves schemas.
+
+## Delivery phases
+
+- Phase 4 is intentionally minimal: create the Angular workspace and implement
+  only the email/password login page plus the auth state needed for in-memory
+  access tokens, refresh, and CSRF.
+- Phase 5 adds OAuth2/OIDC sign-in. The backend owns the provider redirect and
+  callback, maps a verified provider identity to a local user, and then issues
+  VaultNote's existing JWT and refresh cookie. Never put either token in a URL.
+- Phase 6 adds the remaining Angular screens, guards, refresh/interceptor
+  behavior, and the final Markdown preview/read rendering. Until then, the API
+  returns source Markdown and the frontend does not render it as HTML.
 
 ## Security and data
 
@@ -97,6 +110,9 @@ standard:
   payloads.
 - Enforce authorization in backend services. Frontend guards and hidden UI are
   UX measures, not security controls.
+- OAuth2/OIDC identities must come from a verified provider response. Assign
+  `USER` by default, define account-linking rules explicitly, and reuse the
+  existing VaultNote token lifecycle after successful provider authentication.
 
 ## Verification
 

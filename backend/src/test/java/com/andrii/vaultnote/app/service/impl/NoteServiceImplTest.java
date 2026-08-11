@@ -2,6 +2,7 @@ package com.andrii.vaultnote.app.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -67,8 +68,7 @@ class NoteServiceImplTest {
 
     assertThat(result.getContent())
         .extracting(NoteInfoDto::id, NoteInfoDto::title, NoteInfoDto::content)
-        .containsExactly(org.assertj.core.groups.Tuple.tuple(NOTE_ID, TITLE, CONTENT));
-    verify(noteRepository).findByOwner_Id(USER_ID, pageable);
+        .containsExactly(tuple(NOTE_ID, TITLE, CONTENT));
     verify(noteMapper).toNoteInfoDto(note);
   }
 
@@ -81,9 +81,9 @@ class NoteServiceImplTest {
 
     var result = noteService.getNote(NOTE_ID);
 
-    assertThat(result.id()).isEqualTo(NOTE_ID);
-    assertThat(result.title()).isEqualTo(TITLE);
-    assertThat(result.content()).isEqualTo(CONTENT);
+    assertThat(result)
+        .extracting(NoteInfoDto::id, NoteInfoDto::title, NoteInfoDto::content)
+        .containsExactly(NOTE_ID, TITLE, CONTENT);
     verify(noteMapper).toNoteInfoDto(note);
   }
 
@@ -108,10 +108,12 @@ class NoteServiceImplTest {
 
     var result = noteService.createNote(TITLE, CONTENT);
 
-    assertThat(result.title()).isEqualTo(TITLE);
-    assertThat(result.content()).isEqualTo(CONTENT);
+    assertThat(result)
+        .extracting(NoteInfoDto::title, NoteInfoDto::content)
+        .containsExactly(TITLE, CONTENT);
     var noteCaptor = ArgumentCaptor.forClass(NoteEntity.class);
     verify(noteRepository).save(noteCaptor.capture());
+
     assertThat(noteCaptor.getValue().getOwner()).isSameAs(owner);
     verify(noteMapper).toNoteInfoDto(noteCaptor.getValue());
   }
@@ -124,15 +126,15 @@ class NoteServiceImplTest {
 
     when(currentUserProvider.currentUserId()).thenReturn(USER_ID);
     when(noteRepository.findByIdAndOwner_Id(NOTE_ID, USER_ID)).thenReturn(Optional.of(note));
-    when(noteRepository.save(any(NoteEntity.class)))
+    when(noteRepository.saveAndFlush(any(NoteEntity.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
-    var result = noteService.updateNote(NOTE_ID, updatedTitle, updatedContent);
+    var result = noteService.updateNote(NOTE_ID, updatedTitle, updatedContent, 0L);
 
-    assertThat(result.id()).isEqualTo(NOTE_ID);
-    assertThat(result.title()).isEqualTo(updatedTitle);
-    assertThat(result.content()).isEqualTo(updatedContent);
-    verify(noteRepository).save(any(NoteEntity.class));
+    assertThat(result)
+        .extracting(NoteInfoDto::id, NoteInfoDto::title, NoteInfoDto::content)
+        .containsExactly(NOTE_ID, updatedTitle, updatedContent);
+    verify(noteRepository).saveAndFlush(any(NoteEntity.class));
     verify(noteMapper).toNoteInfoDto(any(NoteEntity.class));
   }
 
@@ -141,7 +143,7 @@ class NoteServiceImplTest {
     when(currentUserProvider.currentUserId()).thenReturn(USER_ID);
     when(noteRepository.findByIdAndOwner_Id(NOTE_ID, USER_ID)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> noteService.updateNote(NOTE_ID, TITLE, CONTENT))
+    assertThatThrownBy(() -> noteService.updateNote(NOTE_ID, TITLE, CONTENT, 0L))
         .isInstanceOf(NoteNotFoundException.class);
     verify(noteRepository, never()).save(any(NoteEntity.class));
     verify(noteMapper, never()).toNoteInfoDto(any(NoteEntity.class));

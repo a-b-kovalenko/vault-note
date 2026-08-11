@@ -21,6 +21,8 @@
 - [Refresh token rotation і reuse detection](content/Refresh-token-rotation-і-reuse-detection.md): як оновлюються refresh tokens і чому reuse завершує всю token family.
 - [Logout-флоу](content/Logout-флоу.md): як завершується поточна refresh-сесія і чому access JWT ще живе до `exp`.
 - [CSRF та CORS](content/CSRF-та-CORS.md): чим відрізняються browser cross-origin правила і захист cookie-based запитів.
+- [OAuth2/OIDC простими словами](content/OAuth2-OIDC-простими-словами.md): як зовнішній login підтверджує identity і як VaultNote після цього видаватиме власні JWT.
+- [OAuth-провайдери: Google, Apple, Facebook і GitHub](content/OAuth-провайдери-Google-Apple-Facebook.md): вимоги провайдерів, локальне тестування і рішення почати з Google.
 
 ## Email
 

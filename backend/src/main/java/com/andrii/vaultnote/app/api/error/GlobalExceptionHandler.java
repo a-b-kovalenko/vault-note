@@ -5,6 +5,7 @@ import com.andrii.vaultnote.app.exception.EmailVerificationFailedException;
 import com.andrii.vaultnote.app.exception.EntityExistsException;
 import com.andrii.vaultnote.app.exception.RefreshTokenAuthenticationFailedException;
 import com.andrii.vaultnote.app.exception.NoteNotFoundException;
+import com.andrii.vaultnote.app.exception.NoteVersionConflictException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -83,6 +84,19 @@ public class GlobalExceptionHandler {
 
     return ResponseEntity
         .status(HttpStatus.NOT_FOUND)
+        .body(response);
+  }
+
+  @ExceptionHandler(NoteVersionConflictException.class)
+  public ResponseEntity<ApiErrorResponse> handleNoteVersionConflictException(
+      NoteVersionConflictException exception) {
+
+    log.warn("Note version conflict: {}", exception.getMessage());
+
+    var response = new ApiErrorResponse("NOTE_VERSION_CONFLICT", exception.getMessage());
+
+    return ResponseEntity
+        .status(HttpStatus.CONFLICT)
         .body(response);
   }
 

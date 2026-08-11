@@ -12,7 +12,7 @@ public interface NoteService {
 
   NoteInfoDto createNote(String title, String content);
 
-  NoteInfoDto updateNote(Long noteId, String title, String content);
+  NoteInfoDto updateNote(Long noteId, String title, String content, long expectedVersion);
 
   void deleteNote(Long noteId);
 }

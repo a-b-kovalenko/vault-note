@@ -113,11 +113,7 @@ Implement these flows:
    current session on logout, and clear the refresh-token cookie.
 5. When a rotated refresh token is reused, revoke every active token in the
    affected token family and record the security event.
-6. Add refresh-token cleanup that removes records only after `expires_at`.
-   Retain revoked but not-yet-expired records so reuse detection continues to
-   work. Cleanup may run as a scheduled job or an explicit maintenance task.
 
-Protect login by rate limiting on both IP and email, without account lockout.
 Implement Spring Security's SPA-compatible CSRF protection with
 `CookieCsrfTokenRepository`: expose `GET /csrf`, deliver the raw token in the
 `XSRF-TOKEN` cookie, and require it in the `X-XSRF-TOKEN` header for login,
@@ -137,9 +133,9 @@ Complete JWT authorization integration:
 - register the OpenAPI `bearerAuth` security scheme and annotate protected
   endpoints with `@SecurityRequirement`.
 
-Email delivery hardening is a later phase. It includes rate-limited resend,
-invalidation of older verification tokens, cleanup of expired tokens, audit
-events, and an outbox when reliable delivery and retry semantics become
+Email delivery hardening is a later phase. It includes verification-email
+resend, invalidation of older verification tokens, cleanup of expired tokens,
+audit events, and an outbox when reliable delivery and retry semantics become
 necessary.
 
 Use production-like cookie settings where possible. The `local` profile may omit
@@ -158,8 +154,10 @@ the `Secure` flag for HTTP localhost; document the required production setting.
 
 Build CRUD for notes with `BIGINT` IDs, title limited to 200 characters, and
 Markdown content limited to 20,000 characters. Store source Markdown only;
-disallow raw HTML, attachments, and images. Render a safe Markdown subset,
-sanitize output, and permit only safe link protocols.
+the current API returns that source Markdown directly. HTML rendering and
+sanitization are deferred until the final step of the Angular phase, when a
+preview or read-only mode is introduced.
+Attachments and images are outside this iteration.
 
 Use `CurrentUserProvider` in note services for current-user ownership checks.
 
@@ -173,31 +171,81 @@ change and global logout are deferred.
 
 The implemented notes baseline currently includes the owner-only REST CRUD
 endpoints, explicit request/response DTOs, pagination with `updatedAt DESC` as
-the default order, `CurrentUserProvider` ownership checks, and centralized
-`NOTE_NOT_FOUND` handling. The remaining notes work is optimistic-lock conflict
-handling, safe Markdown rendering, administrator read-only access, and
-PostgreSQL-backed endpoint integration coverage.
+the default order, `CurrentUserProvider` ownership checks, centralized
+`NOTE_NOT_FOUND` handling, and optimistic locking through `ETag`/`If-Match`.
+The remaining notes work is administrator read-only access and broader
+PostgreSQL-backed endpoint integration coverage. Safe HTML rendering and
+sanitization are deferred until a preview or read-only mode is introduced.
 
-## Angular frontend
+## Phase 4 — Minimal Angular
 
-Create `frontend/` as a standalone Angular application with lazy-loaded routes,
-simple local styles, and no UI component library.
+Create `frontend/` as a standalone Angular application with simple local
+styles and the generated client for the authentication endpoints.
 
-Implement screens for:
+Implement only the email/password login page and the minimum auth state needed
+to hold the access token in memory and call the existing refresh and CSRF
+flows. Do not add Notes, profile, administrator, or Markdown screens yet.
+
+## Phase 4.5 — Password management prerequisite
+
+Complete local password management before starting OAuth2/OIDC. This lets a
+user who initially signs in through Google establish a second, local login
+method without creating a second VaultNote account:
+
+- make `users.password_hash` nullable for passwordless provider accounts;
+- add one authenticated `set/change password` use case and endpoint;
+- when a password already exists, require and verify `currentPassword`;
+- when no password exists, allow the authenticated user to set one without a
+  current password;
+- validate and hash the new password through the existing password policy and
+  `PasswordEncoder`;
+- keep password reset through email as a separate unauthenticated flow;
+- prevent removing the last available authentication method;
+- add unit and PostgreSQL integration coverage for both set and change
+  scenarios.
+
+## Phase 5 — OAuth2/OIDC sign-in
+
+After password management is complete and the minimal Angular login flow is
+working, add external sign-in through an OAuth2/OIDC provider such as Google or
+GitHub:
+
+- add Spring Security OAuth2 Client support and provider configuration;
+- implement the authorization redirect and callback flow;
+- keep the application stateless after login, using a short-lived
+  cookie-based authorization state for the OAuth handshake;
+- map a verified provider identity to a local `User`, assigning `USER` by
+  default and requiring explicit rules for account linking;
+- issue VaultNote's existing JWT access token and refresh-token cookie after
+  successful provider authentication;
+- never place access or refresh tokens in redirect URLs;
+- add login buttons and an OAuth callback route in Angular;
+- obtain the access token through the existing refresh flow and keep it only in
+  frontend memory;
+- add provider-mocked integration coverage and a local manual verification flow.
+
+## Phase 6 — Remaining Angular frontend
+
+Complete the rest of the Angular application with lazy-loaded routes, simple
+local styles, and no UI component library:
 
 - registration and email verification;
-- login;
-- paginated notes list and create/edit/delete flows;
+- paginated Notes list and create/edit/delete flows;
 - profile and display-name editing;
-- read-only admin users and notes lists.
+- read-only administrator users and Notes lists;
+- authenticated and administrator route guards;
+- access-token attachment, single-flight refresh, CSRF handling, and standard
+  `ProblemDetail` error presentation.
 
-Add route guards for authenticated and administrator routes. Add HTTP logic for
-access-token attachment, a single-flight refresh flow, CSRF handling, and
-standard `ProblemDetail` error presentation. Never persist access tokens in
-local storage or session storage.
+As the final step of this phase, add Markdown preview/read rendering:
 
-Generate the TypeScript client from OpenAPI. Add focused Angular unit tests for
-auth state, HTTP interceptors, and route guards; defer browser e2e tests.
+- parse the raw Markdown returned by the API;
+- sanitize generated HTML before inserting it into the DOM;
+- allow only safe link protocols such as `http` and `https`.
+
+Generate the TypeScript client from OpenAPI and add focused Angular unit tests
+for auth state, HTTP interceptors, route guards, and Notes flows. Defer browser
+e2e tests. Never persist access tokens in local storage or session storage.
 
 Keep Java tests deterministic and behavior-focused. Use AssertJ for assertions,
 Mockito only for direct collaborators, and a shared PostgreSQL Testcontainer for
@@ -241,11 +289,13 @@ initial ADRs now describe decisions that are implemented in the repository:
 12. [x] Current-session logout (`012`).
 13. [x] CSRF and CORS strategy (`013`).
 
-The following ADRs remain planned and must be created only when their decisions
-are implemented:
+The following ADRs remain planned. Proposed ADRs may capture an important
+upcoming decision before implementation and become accepted after verification:
 
 - [ ] OpenAPI as the contract source and generated Angular client.
 - [ ] Antora publishing to GitHub Pages.
+- [ ] OAuth2/OIDC sign-in, provider identity mapping, and handoff to VaultNote
+  tokens (`014`, proposed).
 
 ## Verification sequence
 
@@ -255,12 +305,11 @@ are implemented:
 3. Start Mailpit, backend, and frontend locally.
 4. Manually verify registration, email confirmation, login, refresh, logout,
    session reuse detection, notes ownership, admin read-only access, CSRF, CORS,
-   pagination, optimistic-lock conflicts, and Markdown XSS resistance.
+   pagination, and optimistic-lock conflicts.
 
 ## Deferred ideas
 
 - Password reset with single-use expiring tokens.
-- OAuth2 sign-in.
 - `SUPER_ADMIN`, tenant-aware roles, and granular permissions.
 - Note sharing through explicit per-note permissions.
 - Note trash, restore, and search.
@@ -268,3 +317,21 @@ are implemented:
 - Complete audit records for privileged data access.
 - A dedicated least-privilege DB user for production-like setups.
 - Browser e2e tests, application CI, production deployment, TLS, and real SMTP.
+
+## Final priority — Rate limiting
+
+Implement rate limiting only after the core product, frontend, and deployment
+work are complete. Protect login and verification-email resend from abuse with
+IP- and email-aware limits, without locking user accounts. Prefer Cloudflare or
+another edge/WAF rule for public traffic; add application-level limits only for
+direct-origin or internal traffic, or for email-specific rules the edge cannot
+enforce.
+
+Add authentication audit events in the same final hardening phase. Cover
+successful and failed login, refresh-token reuse, logout, and email-verification
+security events without coupling the audit trail to authorization checks.
+
+Add refresh-token cleanup in the same final hardening phase. Remove records only
+after `expires_at`; retain revoked but not-yet-expired records so reuse
+detection continues to work. The cleanup may run as a scheduled job or an
+explicit maintenance task.
