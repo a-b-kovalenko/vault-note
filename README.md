@@ -6,9 +6,9 @@ production-inspired authentication lifecycle.
 
 > **Project status:** backend authentication foundation in progress. The
 > repository currently contains registration, email verification, login, JWT
-> access tokens, rotating refresh sessions, local/test profiles, and PostgreSQL
-> integration coverage. Logout, the remaining hardening, and the frontend are
-> still planned.
+> access tokens, rotating refresh sessions, current-session logout,
+> local/test profiles, and PostgreSQL integration coverage. The remaining
+> hardening and the frontend are still planned.
 
 ## Planned architecture
 
@@ -119,8 +119,9 @@ also includes the documentation build.
 
 ## Implemented authentication API
 
-The backend currently supports registration, email verification, login, and
-refresh-token rotation. A verified user can log in with:
+The backend currently supports registration, email verification, login,
+refresh-token rotation, and current-session logout. A verified user can log in
+with:
 
 ```shell
 curl --include --request POST http://localhost:8080/api/v1/auth/login \
@@ -140,6 +141,17 @@ curl --include --request POST http://localhost:8080/api/v1/auth/refresh \
 Each successful refresh revokes the old refresh token, creates a replacement in
 the same token family, and returns a new cookie. Reusing an already rotated
 token revokes the active family and returns `401`.
+
+Logout the current refresh session with:
+
+```shell
+curl --include --request POST http://localhost:8080/api/v1/auth/logout \
+  --cookie 'vaultnote_refresh_token=<raw-refresh-token>'
+```
+
+The endpoint returns `204`, revokes the matching refresh token, and clears the
+cookie with `Max-Age=0`. An absent or already invalid cookie is handled
+idempotently. An issued access JWT remains valid until its expiration.
 
 ## Implemented registration API
 

@@ -94,6 +94,19 @@ public class AuthController {
     return authenticationResponse(refreshTokenService.refresh(rawRefreshToken));
   }
 
+  @Operation(summary = "Logout")
+  @ApiResponse(responseCode = "204", description = "Logout user")
+  @PostMapping("/logout")
+  public ResponseEntity<Void> logout(
+      @CookieValue(name = "vaultnote_refresh_token", required = false) String rawRefreshToken) {
+    refreshTokenService.logout(rawRefreshToken);
+
+    return ResponseEntity
+        .noContent()
+        .header(HttpHeaders.SET_COOKIE, refreshTokenCookieFactory.clear().toString())
+        .build();
+  }
+
   @Operation
   @ApiResponse(responseCode = "200", description = "Get authenticated user", content = {
       @Content(mediaType = "application/json", schema = @Schema(implementation = CurrentUserResponse.class))})

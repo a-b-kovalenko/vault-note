@@ -184,4 +184,73 @@ class RefreshTokenServiceImplTest {
     verify(clock).instant();
     verifyNoInteractions(refreshTokenProperties, authenticationResultFactory);
   }
+
+  @Test
+  void shouldRevokeActiveRefreshTokenOnLogout() {
+    var token = RefreshTokenEntity.builder()
+        .id(1L)
+        .tokenHash(REFRESH_TOKEN_HASH)
+        .expiresAt(NOW.plus(REFRESH_TOKEN_TTL))
+        .build();
+    when(secureTokenGenerator.hash(RAW_REFRESH_TOKEN)).thenReturn(REFRESH_TOKEN_HASH);
+    when(refreshTokenRepository.findByTokenHash(REFRESH_TOKEN_HASH))
+        .thenReturn(Optional.of(token));
+    when(clock.instant()).thenReturn(NOW);
+    when(refreshTokenRepository.revokeActiveById(token.getId(), NOW)).thenReturn(1);
+
+    refreshTokenService.logout(RAW_REFRESH_TOKEN);
+
+    verify(secureTokenGenerator).hash(RAW_REFRESH_TOKEN);
+    verify(refreshTokenRepository).findByTokenHash(REFRESH_TOKEN_HASH);
+    verify(clock).instant();
+    verify(refreshTokenRepository).revokeActiveById(token.getId(), NOW);
+    verifyNoMoreInteractions(secureTokenGenerator, refreshTokenRepository, clock);
+    verifyNoInteractions(refreshTokenProperties, authenticationResultFactory);
+  }
+
+  @Test
+  void shouldIgnoreUnknownRefreshTokenOnLogout() {
+    when(secureTokenGenerator.hash(RAW_REFRESH_TOKEN)).thenReturn(REFRESH_TOKEN_HASH);
+    when(refreshTokenRepository.findByTokenHash(REFRESH_TOKEN_HASH))
+        .thenReturn(Optional.empty());
+
+    refreshTokenService.logout(RAW_REFRESH_TOKEN);
+
+    verify(secureTokenGenerator).hash(RAW_REFRESH_TOKEN);
+    verify(refreshTokenRepository).findByTokenHash(REFRESH_TOKEN_HASH);
+    verifyNoMoreInteractions(secureTokenGenerator, refreshTokenRepository);
+    verifyNoInteractions(clock, refreshTokenProperties, authenticationResultFactory);
+  }
+
+  @Test
+  void shouldIgnoreAlreadyRevokedRefreshTokenOnLogout() {
+    var token = RefreshTokenEntity.builder()
+        .id(1L)
+        .tokenHash(REFRESH_TOKEN_HASH)
+        .expiresAt(NOW.plus(REFRESH_TOKEN_TTL))
+        .revokedAt(NOW.minusSeconds(1))
+        .build();
+    when(secureTokenGenerator.hash(RAW_REFRESH_TOKEN)).thenReturn(REFRESH_TOKEN_HASH);
+    when(refreshTokenRepository.findByTokenHash(REFRESH_TOKEN_HASH))
+        .thenReturn(Optional.of(token));
+
+    refreshTokenService.logout(RAW_REFRESH_TOKEN);
+
+    verify(secureTokenGenerator).hash(RAW_REFRESH_TOKEN);
+    verify(refreshTokenRepository).findByTokenHash(REFRESH_TOKEN_HASH);
+    verifyNoMoreInteractions(secureTokenGenerator, refreshTokenRepository);
+    verifyNoInteractions(clock, refreshTokenProperties, authenticationResultFactory);
+  }
+
+  @Test
+  void shouldIgnoreMissingRefreshTokenOnLogout() {
+    refreshTokenService.logout(null);
+
+    verifyNoInteractions(
+        secureTokenGenerator,
+        refreshTokenRepository,
+        refreshTokenProperties,
+        authenticationResultFactory,
+        clock);
+  }
 }

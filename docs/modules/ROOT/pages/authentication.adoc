@@ -122,6 +122,28 @@ tokens in its family are revoked and the client must authenticate again. The
 family-wide update is implemented by
 `RefreshTokenJpaRepository.revokeActiveByTokenFamilyId(...)`.
 
+== Logout flow
+
+The logout endpoint is `POST /api/v1/auth/logout`. The client may send the
+current refresh cookie, but the endpoint is idempotent and also succeeds when
+the cookie is missing, unknown, or already revoked:
+
+[source,http]
+----
+POST /api/v1/auth/logout
+Cookie: vaultnote_refresh_token=<raw-refresh-token>
+----
+
+When the cookie identifies an active token, `RefreshTokenServiceImpl` revokes
+that token. `RefreshTokenCookieFactory` always returns a replacement cookie
+with an empty value and `Max-Age=0`, which instructs the client to remove it.
+The endpoint returns `204 No Content` and is `permitAll` because the refresh
+cookie, rather than a Bearer access token, identifies the session.
+
+Logout does not immediately invalidate an already issued access JWT. The JWT
+remains valid until its `exp` timestamp; the refresh session is what prevents
+the client from obtaining a new access token.
+
 == Configuration
 
 JWT and refresh-token settings are externalized through environment variables:
@@ -155,12 +177,14 @@ PostgreSQL. It verifies that the old token is revoked, the replacement belongs
 to the same family, only the replacement remains active, and the new raw value
 is delivered in the cookie.
 
+The same test also verifies logout, refresh-token revocation, cookie clearing,
+and idempotent logout without a cookie.
+
 == Remaining authentication work
 
-Login, refresh rotation, and reuse detection are implemented. The following
-parts are intentionally still pending:
+Login, refresh rotation, reuse detection, and current-session logout are
+implemented. The following parts are intentionally still pending:
 
-* logout and refresh-cookie clearing;
 * CSRF, CORS, rate limiting, and authentication audit events.
 
 Swagger/OpenAPI remains the reference for the endpoint contract. This page
