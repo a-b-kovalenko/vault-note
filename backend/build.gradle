@@ -16,7 +16,9 @@ description = 'VaultNote Spring Boot application.'
 
 def docsProjectDir = rootProject.file('../docs')
 def docsSiteDir = new File(docsProjectDir, 'build/site')
-def docsNodeVersion = '22.14.0'
+def frontendProjectDir = rootProject.file('../frontend')
+def frontendDistDir = new File(frontendProjectDir, 'dist/frontend')
+def docsNodeVersion = '22.22.3'
 
 node {
   version = docsNodeVersion
@@ -148,6 +150,50 @@ tasks.register('antoraBuild', NpmTask) {
   outputs.dir(docsSiteDir)
 }
 
+tasks.register('frontendNpmInstall', NpmTask) {
+  description = 'Installs the pinned Angular frontend dependencies.'
+  group = 'frontend'
+  workingDir = frontendProjectDir
+  args = ['ci']
+  inputs.files(
+      new File(frontendProjectDir, 'package.json'),
+      new File(frontendProjectDir, 'package-lock.json'))
+  outputs.dir(new File(frontendProjectDir, 'node_modules'))
+}
+
+tasks.register('frontendTest', NpmTask) {
+  description = 'Runs Angular frontend unit tests once.'
+  group = 'verification'
+  dependsOn tasks.named('frontendNpmInstall')
+  workingDir = frontendProjectDir
+  args = ['run', 'test', '--', '--watch=false']
+  inputs.files(
+      new File(frontendProjectDir, 'angular.json'),
+      new File(frontendProjectDir, 'package.json'),
+      new File(frontendProjectDir, 'package-lock.json'),
+      new File(frontendProjectDir, 'tsconfig.json'),
+      new File(frontendProjectDir, 'tsconfig.app.json'),
+      new File(frontendProjectDir, 'tsconfig.spec.json'))
+  inputs.dir(new File(frontendProjectDir, 'src'))
+}
+
+tasks.register('frontendBuild', NpmTask) {
+  description = 'Builds the Angular frontend for production.'
+  group = 'build'
+  dependsOn tasks.named('frontendNpmInstall')
+  workingDir = frontendProjectDir
+  args = ['run', 'build', '--', '--no-progress']
+  inputs.files(
+      new File(frontendProjectDir, 'angular.json'),
+      new File(frontendProjectDir, 'package.json'),
+      new File(frontendProjectDir, 'package-lock.json'),
+      new File(frontendProjectDir, 'tsconfig.json'),
+      new File(frontendProjectDir, 'tsconfig.app.json'))
+  inputs.dir(new File(frontendProjectDir, 'public'))
+  inputs.dir(new File(frontendProjectDir, 'src'))
+  outputs.dir(frontendDistDir)
+}
+
 spotless {
   java {
     target 'src/*/java/**/*.java'
@@ -181,14 +227,17 @@ tasks.named('jacocoTestCoverageVerification') {
 
 tasks.named('check') {
   group = 'verification'
-  description = 'Runs the required verification tasks for the backend.'
+  description = 'Runs the required verification tasks for the backend and frontend.'
   dependsOn tasks.named('spotlessCheck')
   dependsOn tasks.named('integrationTest')
   dependsOn tasks.named('jacocoTestReport')
   dependsOn tasks.named('jacocoTestCoverageVerification')
   dependsOn tasks.named('antoraBuild')
+  dependsOn tasks.named('frontendTest')
+  dependsOn tasks.named('frontendBuild')
 }
 
 tasks.named('clean') {
   delete docsSiteDir
+  delete frontendDistDir
 }

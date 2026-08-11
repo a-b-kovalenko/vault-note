@@ -30,6 +30,28 @@ frontend/
 Angular CLI. Він ігнорується Git і не є частиною workspace, який ми передаємо
 іншим розробникам або CI.
 
+## Запуск через Gradle
+
+Frontend залишається окремим npm-проєктом, але backend Gradle build запускає
+його перевірки через Node Gradle plugin. Це дає один quality gate для всього
+репозиторію.
+
+- `frontendNpmInstall` встановлює залежності через `npm ci` і
+  `package-lock.json`;
+- `frontendTest` запускає unit-тести Angular один раз, без watch-режиму;
+- `frontendBuild` створює production bundle у `frontend/dist/frontend`;
+- `check` запускає frontend-тести та production build разом із backend і
+  Antora-перевірками.
+
+Ті самі frontend-задачі можна запускати окремо з каталогу `backend`:
+
+```shell
+./gradlew frontendTest frontendBuild
+```
+
+Gradle автоматично завантажує зафіксовану версію Node.js. Системні `node` та
+`npm` для цього сценарію не потрібні.
+
 ## Файли кореня workspace
 
 ### `.editorconfig`
