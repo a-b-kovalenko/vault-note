@@ -108,7 +108,8 @@ class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
     verify(mailSender).send(mailCaptor.capture());
     assertThat(mailCaptor.getValue().to()).isEqualTo(email);
     assertThat(mailCaptor.getValue().text())
-        .startsWith("Please verify your VaultNote email by opening this link:")
+        .startsWith("Hello Integration User,\n\n"
+            + "Please verify your VaultNote email by opening this link:")
         .contains("http://localhost:4200/verify-email?token=");
   }
 

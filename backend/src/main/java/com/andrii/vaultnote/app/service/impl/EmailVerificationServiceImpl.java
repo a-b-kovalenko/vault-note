@@ -31,6 +31,8 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
 
   private static final String VERIFICATION_PATH = "/verify-email";
   private static final String EMAIL_SUBJECT = "Verify your VaultNote email";
+  private static final String EMAIL_BODY = "Hello %s,\n\n"
+      + "Please verify your VaultNote email by opening this link:\n%s";
 
   UserJpaRepository userJpaRepository;
   EmailVerificationTokenJpaRepository tokenRepository;
@@ -60,7 +62,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     var message = new MailMessage(
         user.getEmail(),
         EMAIL_SUBJECT,
-        "Please verify your VaultNote email by opening this link:\n" + verificationUrl);
+        EMAIL_BODY.formatted(user.getDisplayName(), verificationUrl));
 
     mailSender.send(message);
   }

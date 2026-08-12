@@ -198,9 +198,26 @@ with credentials, while an unknown origin is rejected. `CsrfCorsIntegrationTest`
 covers token issuance, missing-token rejection, allowed preflight, and
 unknown-origin rejection.
 
+== Public registration and email verification
+
+The public browser flow is:
+
+. `RegisterPage` validates the display name, email, password policy, and
+  password confirmation locally, then calls
+  `POST /api/v1/auth/registrations`.
+. The backend creates an unverified user, assigns the `USER` role, and sends a
+  single-use verification link whose plain-text greeting includes the user's
+  display name.
+. The link opens `/verify-email?token=<raw-token>`. `VerifyEmailPage` submits
+  the token to `POST /api/v1/auth/email-verification`, without putting an
+  access or refresh token in the URL.
+. The page exposes loading, success, and invalid/expired-link states. A
+  successful verification does not create a session; it offers navigation to
+  `/login`, where the user can authenticate normally.
+
 == Angular browser flow
 
-The implemented frontend flow is:
+The implemented authenticated frontend flow is:
 
 . `LoginPage` validates the form and calls `POST /api/v1/auth/login` after the
   CSRF bootstrap.

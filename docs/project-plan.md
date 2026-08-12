@@ -190,14 +190,17 @@ deferred until a preview or read-only mode is introduced.
 Create `frontend/` as a standalone Angular application with simple local
 styles and the generated client for the authentication endpoints.
 
-Implement the minimal authentication surface: the email/password login page,
-the authenticated `/me` screen, and current-session logout. Keep the access
-token in memory and use the existing CSRF, bearer, and refresh flows. The
-resulting model is stateless access authentication with a stateful rotating
-refresh session: no `HttpSession`, a per-request `SecurityContext`, an access
-JWT in Angular memory, and a hashed refresh session in PostgreSQL behind an
-`HttpOnly` cookie. Do not add Notes, profile editing, administrator, or
-Markdown screens yet.
+Implement the minimal authentication surface: public email/password
+registration, email verification, the email/password login page, the
+authenticated `/me` screen, and current-session logout. Registration sends a
+display-name-personalized verification email; `/verify-email` consumes the
+one-time token and exposes loading, success, and invalid-link states before
+returning the user to login. Keep the access token in memory and use the
+existing CSRF, bearer, and refresh flows. The resulting model is stateless
+access authentication with a stateful rotating refresh session: no
+`HttpSession`, a per-request `SecurityContext`, an access JWT in Angular
+memory, and a hashed refresh session in PostgreSQL behind an `HttpOnly` cookie.
+Do not add Notes, profile editing, administrator, or Markdown screens yet.
 
 ## Phase 4.5 — Password management prerequisite
 
@@ -212,10 +215,36 @@ method without creating a second VaultNote account:
   current password;
 - validate and hash the new password through the existing password policy and
   `PasswordEncoder`;
-- keep password reset through email as a separate unauthenticated flow;
 - prevent removing the last available authentication method;
 - add unit and PostgreSQL integration coverage for both set and change
   scenarios.
+
+Add password recovery as a separate unauthenticated email flow:
+
+1. The Angular `Forgot password` page sends the email address to the planned
+   `POST /api/v1/auth/password-reset/request` endpoint.
+2. The backend always returns the same generic response, whether the account
+   exists, is verified, or is eligible for recovery. This prevents account
+   enumeration.
+3. For an eligible account, invalidate older active reset records, generate a
+   cryptographically random one-time token, store only its hash with the user,
+   expiry, and used-at metadata, then send the raw token only in a Mailpit/email
+   link to the planned `/reset-password` route. Never log the token.
+4. The Angular reset page submits the token and the new password to the planned
+   `POST /api/v1/auth/password-reset/confirm` endpoint. The backend validates
+   the token hash, expiry, and one-time state atomically, then applies the
+   existing password policy and `PasswordEncoder`.
+5. If the account has no local password yet, confirmation establishes one
+   without removing its provider identity. Otherwise it replaces the existing
+   password.
+6. A successful reset marks the token used, revokes all active refresh
+   sessions for the user, clears any presented refresh cookie, and requires a
+   fresh login. Access JWTs are not placed in the email link or reset response.
+7. Invalid or expired tokens return a stable `ProblemDetail` error without
+   revealing account information; the frontend offers a fresh recovery request.
+8. Add backend unit and PostgreSQL integration coverage for generic responses,
+   token expiry/reuse, passwordless accounts, session revocation, and the
+   concurrent one-time-use race.
 
 ## Phase 5 — OAuth2/OIDC sign-in
 
@@ -250,9 +279,10 @@ GitHub:
 ## Phase 6 — Remaining Angular frontend
 
 Complete the rest of the Angular application with lazy-loaded routes, simple
-local styles, and no UI component library:
+local styles, and no UI component library. Public registration and email
+verification were delivered with the minimal authentication surface in Phase
+4. The remaining work is:
 
-- registration and email verification;
 - paginated Notes list and create/edit/delete flows;
 - profile and display-name editing;
 - read-only administrator users and Notes lists;
@@ -332,7 +362,6 @@ upcoming decision before implementation and become accepted after verification:
 
 ## Deferred ideas
 
-- Password reset with single-use expiring tokens.
 - `SUPER_ADMIN`, tenant-aware roles, and granular permissions.
 - Note sharing through explicit per-note permissions.
 - Note trash, restore, and search.
@@ -344,11 +373,11 @@ upcoming decision before implementation and become accepted after verification:
 ## Final priority — Rate limiting
 
 Implement rate limiting only after the core product, frontend, and deployment
-work are complete. Protect login and verification-email resend from abuse with
-IP- and email-aware limits, without locking user accounts. Prefer Cloudflare or
-another edge/WAF rule for public traffic; add application-level limits only for
-direct-origin or internal traffic, or for email-specific rules the edge cannot
-enforce.
+work are complete. Protect login, password-reset requests, and
+verification-email resend from abuse with IP- and email-aware limits, without
+locking user accounts. Prefer Cloudflare or another edge/WAF rule for public
+traffic; add application-level limits only for direct-origin or internal
+traffic, or for email-specific rules the edge cannot enforce.
 
 Add authentication audit events in the same final hardening phase. Cover
 successful and failed login, refresh-token reuse, logout, and email-verification

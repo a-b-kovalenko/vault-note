@@ -15,6 +15,8 @@ import { ApiErrorResponse, LoginRequest, ValidationViolation } from './auth.mode
 type LoginField = keyof LoginRequest;
 
 const GENERIC_LOGIN_ERROR = 'Unable to sign in right now. Please try again.';
+const LOGIN_VERIFICATION_HINT =
+  ' If you registered recently, check your inbox and verify your email before signing in.';
 
 @Component({
   selector: 'app-login-page',
@@ -43,6 +45,10 @@ export class LoginPage {
 
   protected togglePasswordVisibility(): void {
     this.isPasswordVisible.update((isVisible) => !isVisible);
+  }
+
+  protected navigateToRegistration(): void {
+    void this.router.navigate(['/register']);
   }
 
   protected onSubmit(): void {
@@ -84,7 +90,9 @@ export class LoginPage {
     }
 
     if (httpError?.status === HttpStatusCode.Unauthorized) {
-      this.loginError.set(apiError?.message ?? 'Invalid email or password.');
+      this.loginError.set(
+        `${apiError?.message ?? 'Invalid email or password.'}${LOGIN_VERIFICATION_HINT}`,
+      );
       return;
     }
 

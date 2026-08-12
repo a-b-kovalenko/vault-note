@@ -64,6 +64,7 @@ class EmailVerificationServiceImplTest {
     var user = UserEntity.builder()
         .id(1L)
         .email(EMAIL)
+        .displayName("Test User")
         .build();
     var generatedToken = new SecureTokenGenerator.GeneratedToken(RAW_TOKEN, TOKEN_HASH);
     when(tokenGenerator.generate()).thenReturn(generatedToken);
@@ -91,7 +92,9 @@ class EmailVerificationServiceImplTest {
         .toUriString();
     assertThat(sentMessage.to()).isEqualTo(EMAIL);
     assertThat(sentMessage.subject()).isEqualTo("Verify your VaultNote email");
-    assertThat(sentMessage.text()).contains(expectedUrl);
+    assertThat(sentMessage.text())
+        .startsWith("Hello Test User,\n\n")
+        .contains("Please verify your VaultNote email by opening this link:\n" + expectedUrl);
   }
 
   @Test

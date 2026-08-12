@@ -1,5 +1,6 @@
 * xref:index.adoc[Overview]
 * xref:authentication.adoc[Authentication]
+* xref:auth-visual-style.adoc[Authentication visual style]
 * xref:notes.adoc[Notes API]
 * Architecture Decision Records
 ** xref:adr/001-monorepo-layout.adoc[ADR 001: Monorepo layout]

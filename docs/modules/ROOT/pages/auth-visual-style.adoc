@@ -1,0 +1,207 @@
+= Authentication visual style
+:description: Visual language and responsive rules for the VaultNote login, registration, and email-verification screens
+
+VaultNote authentication screens use a calm, editorial visual style. The
+interface should feel like a private writing space: quiet, focused, warm, and
+structured without looking corporate or overly technical.
+
+The style applies to `/login`, `/register`, and `/verify-email`. The screens
+share the same shell, spacing system, controls, and responsive behavior; the
+verification page replaces the form with a focused status card and recovery
+actions.
+
+== Design intent
+
+The authentication surface has three goals:
+
+* make the first action obvious: sign in or create an account;
+* communicate privacy without making unsupported security claims;
+* keep the form comfortable on a standard laptop viewport and usable on a
+  narrow mobile screen.
+
+The visual direction is a soft split editorial layout rather than a dense
+dashboard or a marketing landing page. Decorative elements support the idea of
+personal notes but do not carry functional information.
+
+== Composition
+
+On a wide viewport, the page is an `auth-shell` with two panels:
+
+* The left panel is a forest-green visual panel. It contains the VaultNote
+  brand, a short editorial headline, supporting copy, a decorative stack of
+  note cards, and a small footer line.
+* The right panel is the functional form surface. It contains the page
+  heading, validation feedback, fields, primary action, secondary actions,
+  account navigation, and the privacy note.
+
+The shell uses these layout characteristics:
+
+* maximum width: `70rem`;
+* flexible visual panel plus a form panel of approximately `27rem`;
+* `1.5rem` outer radius;
+* a thin neutral border and a soft blue-gray shadow;
+* a white form surface and a pale green page canvas.
+
+The note-card stack is CSS-only. It uses three rotated cards with muted lines
+that suggest note content without presenting fake user data. The stack is
+decorative and is marked as hidden from assistive technology.
+
+On narrow viewports, the visual panel is removed and the form becomes a single
+card. The brand is shown inside the form card so the page retains a clear
+identity after the decorative panel disappears.
+
+== Color system
+
+[cols="1,1,2"]
+|===
+|Token |Value |Use
+
+|Canvas
+|`#f4f8f4`
+|Page background with subtle green radial lighting.
+
+|Forest
+|`#2f6b4f`
+|Primary action, accent text, focus color, and brand mark.
+
+|Forest dark
+|`#24543e`
+|Primary-action hover state and the deeper end of the visual-panel gradient.
+
+|Ink
+|`#172033`
+|Main headings and high-emphasis text.
+
+|Slate
+|`#344767`
+|Labels, brand text, and supporting high-emphasis text.
+
+|Muted slate
+|`#6e7b91`
+|Subtitles and secondary explanatory text.
+
+|Border
+|`#d7deea`
+|Input and secondary-button borders.
+
+|Surface border
+|`#dfe8e1`
+|Outer shell border with a slight green tint.
+
+|Error
+|`#b54747`
+|Invalid fields and field-level error text.
+
+|Error surface
+|`#fff5f5`
+|Page-level error message background.
+
+|===
+
+The palette intentionally combines forest green with blue-gray text. Green
+signals action and privacy; blue-gray keeps long-form text calm and readable.
+Error styling is red but restrained, so it is distinguishable without
+dominating the page.
+
+== Typography
+
+The application uses a system-first sans-serif stack with Inter as the
+preferred font when available:
+
+[source,css]
+----
+Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif
+----
+
+Typography rules:
+
+* Page headings use a heavy weight, tight letter spacing, and a responsive
+  `clamp()` size.
+* Eyebrows are uppercase, green, small, and widely tracked. They establish
+  context before the main heading.
+* Subtitles use muted slate and generous line height.
+* Labels are compact, semibold, and slate-colored.
+* Button labels are semibold and sentence case.
+
+The left-panel headline is deliberately larger and more editorial than the
+form heading. It should create a visual anchor without competing with the
+primary form action.
+
+== Controls and states
+
+Inputs share one control language on both screens:
+
+* white or near-white surface;
+* rounded corners of approximately `0.7rem`;
+* neutral border in the resting state;
+* forest-green border and soft ring on focus;
+* red border and red focus ring for invalid fields;
+* inline labels and field-level messages rather than placeholder-only labels.
+
+The login and registration screens use the same input height in every layout
+mode. In the compact short-screen mode, the shared vertical input padding is
+`0.65rem`; the registration form reduces inter-field spacing instead of
+making its inputs shorter. The verification page uses the same card width and
+vertical rhythm without introducing an input control.
+
+The primary button is forest green with a subtle shadow. Its disabled state is
+muted green and removes the shadow. Password visibility controls are compact
+text buttons inside the input wrapper and expose their state through
+`aria-label` and `aria-pressed`.
+
+OAuth buttons are visually secondary and currently disabled until the backend
+OAuth2/OIDC flow is implemented. They use the same border radius and border
+language as inputs, with provider icons separated from the label.
+
+Page-level errors use a bordered pale-red message surface with `role="alert"`.
+Field-level errors are attached to their controls through
+`aria-describedby`. Decorative panel content does not replace semantic form
+labels or accessible status messages.
+
+== Responsive rules
+
+The shared shell is responsive in three steps:
+
+* Above `50rem`, show the split shell with the visual panel and the form panel
+  side by side.
+* At or below `50rem`, hide the visual panel, show the mobile brand, and use a
+  single form card capped at `30rem`.
+* At or below `30rem`, stack login OAuth buttons into one column. The
+  registration form is already single-column.
+* The verification page keeps the same single-card composition and presents
+  its loading, success, or error message without requiring horizontal space.
+
+Short viewport heights use a separate compact rhythm at or below `52rem`:
+
+* reduce shell and panel vertical padding;
+* tighten form gaps and divider spacing;
+* keep input heights equal between login and registration;
+* keep the decorative panel readable while preventing avoidable page-level
+  overflow.
+
+The layout is tested against a laptop-like `1510x829` viewport and a narrow
+`521x1121` viewport. Very short devices may still scroll naturally when the
+  complete form cannot physically fit; content must never be clipped or made
+  inaccessible to remove that scroll.
+
+== Implementation boundaries
+
+The current implementation is split between component templates/styles and the
+shared stylesheet:
+
+* `frontend/src/app/auth/login-page.html` — login structure;
+* `frontend/src/app/auth/register-page.html` — registration structure and
+  registration success state;
+* `frontend/src/app/auth/verify-email-page.html` — email-verification status
+  structure;
+* `frontend/src/app/auth/login-page.scss` — login form controls and states;
+* `frontend/src/app/auth/register-page.scss` — registration form controls and
+  states;
+* `frontend/src/app/auth/verify-email-page.scss` — verification status card
+  and responsive states;
+* `frontend/src/styles.scss` — shared auth shell, visual panel, responsive
+  breakpoints, and compact spacing rules.
+
+The visual panel is presentation-only. Authentication state, CSRF handling,
+refresh behavior, validation, and navigation remain owned by the existing
+Angular services and page components.

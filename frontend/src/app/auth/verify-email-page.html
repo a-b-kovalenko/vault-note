@@ -1,0 +1,92 @@
+<main class="verify-email-page auth-page">
+  <div class="auth-shell">
+    <aside class="auth-visual" aria-label="About VaultNote">
+      <div class="brand" aria-label="VaultNote">
+        <span class="brand-mark" aria-hidden="true">V</span>
+        <span>VaultNote</span>
+      </div>
+
+      <div class="auth-visual-copy">
+        <p class="eyebrow">Keep your ideas yours</p>
+        <h1>Your private space is almost ready.</h1>
+        <p>Confirm your email, then come back to the notes you want to keep close.</p>
+      </div>
+
+      <div class="auth-note-stack" aria-hidden="true">
+        <div class="auth-note-card auth-note-card-back"></div>
+        <div class="auth-note-card auth-note-card-middle">
+          <span class="auth-note-line auth-note-line-short"></span>
+          <span class="auth-note-line"></span>
+          <span class="auth-note-line auth-note-line-medium"></span>
+        </div>
+        <div class="auth-note-card auth-note-card-front">
+          <span class="auth-note-pin">✦</span>
+          <span class="auth-note-title">Ready when you are</span>
+          <span class="auth-note-line"></span>
+          <span class="auth-note-line auth-note-line-medium"></span>
+          <span class="auth-note-line auth-note-line-short"></span>
+        </div>
+      </div>
+
+      <p class="auth-visual-footer">Private by design.</p>
+    </aside>
+
+    <section class="verify-email-card" aria-labelledby="verify-email-title">
+      <div class="mobile-brand brand" aria-label="VaultNote">
+        <span class="brand-mark" aria-hidden="true">V</span>
+        <span>VaultNote</span>
+      </div>
+
+      @if (status() === 'loading') {
+        <div class="verify-email-heading">
+          <p class="eyebrow">One moment</p>
+          <h1 id="verify-email-title">Verifying your email</h1>
+          <p class="verify-email-copy">We are checking your verification link.</p>
+        </div>
+
+        <div class="verification-status" role="status" aria-live="polite">
+          <span class="verification-spinner" aria-hidden="true"></span>
+          <span>Checking your link…</span>
+        </div>
+      } @else if (status() === 'success') {
+        <div class="verify-email-heading">
+          <p class="eyebrow">You are all set</p>
+          <h1 id="verify-email-title">Email verified</h1>
+          <p class="verify-email-copy">
+            Your VaultNote account is ready. Sign in to start keeping your ideas close.
+          </p>
+        </div>
+
+        <button class="submit-button verify-login-button" type="button" (click)="navigateToLogin()">
+          <span>Go to sign in</span>
+          <span aria-hidden="true">→</span>
+        </button>
+      } @else {
+        <div class="verify-email-heading">
+          <p class="eyebrow">Verification link</p>
+          <h1 id="verify-email-title">We could not verify your email</h1>
+          <p class="verify-email-copy" role="alert">{{ errorMessage() }}</p>
+        </div>
+
+        <div class="verification-actions">
+          <button
+            class="submit-button verify-login-button"
+            type="button"
+            (click)="navigateToLogin()"
+          >
+            <span>Back to sign in</span>
+            <span aria-hidden="true">→</span>
+          </button>
+          <button class="secondary-button" type="button" (click)="navigateToRegistration()">
+            Create a new account
+          </button>
+        </div>
+      }
+
+      <p class="security-note">
+        <span aria-hidden="true">🔒</span>
+        Your notes stay private and secure.
+      </p>
+    </section>
+  </div>
+</main>

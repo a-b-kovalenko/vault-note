@@ -10,6 +10,9 @@ import {
   LoginApiResponse,
   LoginRequest,
   LoginResponse,
+  RegisterUserApiResponse,
+  RegisterUserRequest,
+  RegisterUserResponse,
 } from './auth.models';
 
 @Injectable({ providedIn: 'root' })
@@ -26,6 +29,32 @@ export class AuthApiService {
       ),
       map(AuthApiService.toLoginResponse),
     );
+  }
+
+  register(request: RegisterUserRequest): Observable<RegisterUserResponse> {
+    return this.csrfService.ensureToken().pipe(
+      switchMap(() =>
+        this.http.post<RegisterUserApiResponse>(
+          `${API_BASE_URL}/api/v1/auth/registrations`,
+          {
+            email: request.email,
+            display_name: request.displayName,
+            password: request.password,
+          },
+          {
+            withCredentials: true,
+          },
+        ),
+      ),
+      map(AuthApiService.toRegisterUserResponse),
+    );
+  }
+
+  verifyEmail(token: string): Observable<void> {
+    return this.http.post<void>(`${API_BASE_URL}/api/v1/auth/email-verification`, null, {
+      params: { token },
+      withCredentials: true,
+    });
   }
 
   refresh(): Observable<LoginResponse> {
@@ -62,6 +91,16 @@ export class AuthApiService {
       accessToken: response.access_token,
       tokenType: response.token_type,
       expiresIn: response.expires_in,
+    };
+  }
+
+  private static toRegisterUserResponse(response: RegisterUserApiResponse): RegisterUserResponse {
+    if (response.userId === undefined) {
+      throw new Error('The registration response did not contain a user identity.');
+    }
+
+    return {
+      userId: response.userId,
     };
   }
 

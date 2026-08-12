@@ -10,7 +10,7 @@ import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '../api/api-config';
 import { csrfInterceptor } from './csrf.interceptor';
 import { AuthApiService } from './auth-api.service';
-import { CurrentUserResponse, LoginResponse } from './auth.models';
+import { CurrentUserResponse, LoginResponse, RegisterUserResponse } from './auth.models';
 
 describe('AuthApiService', () => {
   let service: AuthApiService;
@@ -86,6 +86,53 @@ describe('AuthApiService', () => {
     });
 
     expect(response?.accessToken).toBe('refreshed-access-token');
+  });
+
+  it('bootstraps CSRF before registration and maps the response', () => {
+    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
+    let response: RegisterUserResponse | undefined;
+
+    service
+      .register({
+        email: 'new-user@example.com',
+        displayName: 'New User',
+        password: 'Password1234',
+      })
+      .subscribe((value) => {
+        response = value;
+      });
+
+    const csrfRequest = httpMock.expectOne(`${API_BASE_URL}/csrf`);
+    csrfRequest.flush({ token: 'csrf-token' });
+
+    const registrationRequest = httpMock.expectOne(`${API_BASE_URL}/api/v1/auth/registrations`);
+    expect(registrationRequest.request.method).toBe('POST');
+    expect(registrationRequest.request.withCredentials).toBe(true);
+    expect(registrationRequest.request.headers.get('X-XSRF-TOKEN')).toBe('csrf-token');
+    expect(registrationRequest.request.body).toEqual({
+      email: 'new-user@example.com',
+      display_name: 'New User',
+      password: 'Password1234',
+    });
+    registrationRequest.flush({ userId: 7 });
+
+    expect(response).toEqual({ userId: 7 });
+  });
+
+  it('sends the email verification token without requiring a session', () => {
+    let completed = false;
+
+    service.verifyEmail('raw-token').subscribe({ complete: () => (completed = true) });
+
+    const request = httpMock.expectOne(
+      `${API_BASE_URL}/api/v1/auth/email-verification?token=raw-token`,
+    );
+    expect(request.request.method).toBe('POST');
+    expect(request.request.withCredentials).toBe(true);
+    expect(request.request.body).toBe(null);
+    request.flush(null);
+
+    expect(completed).toBe(true);
   });
 
   it('loads the current user and maps the generated API response', () => {
