@@ -36,7 +36,12 @@
 
 ## Frontend
 
-- [Структура Angular workspace](content/Структура-Angular-workspace.md): призначення конфігураційних, source, test і tooling-файлів.
+- [Структура Angular workspace](content/Структура-Angular-workspace.md): короткий огляд і навігація по frontend workspace.
+- [Конфігурація та tooling Angular workspace](content/Angular-workspace-конфігурація-та-tooling.md): конфігураційні файли, npm, TypeScript, IDE і статичні ресурси.
+- [Gradle-інтеграція Angular frontend](content/Angular-frontend-Gradle-інтеграція.md): запуск frontend-команд і спільний quality gate.
+- [Bootstrap, routing та application shell](content/Angular-bootstrap-routing-та-application-shell.md): запуск Angular, providers, маршрути і root shell.
+- [Providers, browser routing та root shell](content/Angular-application-providers-routing-root-shell.md): пояснення базових Angular application-концепцій і їхнього lifecycle.
+- [Auth feature Angular frontend](content/Angular-auth-feature.md): поточна структура login feature і наступні кроки.
 
 ## Workflows
 
