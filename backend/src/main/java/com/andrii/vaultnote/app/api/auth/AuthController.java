@@ -5,6 +5,7 @@ import com.andrii.vaultnote.app.api.auth.dto.LoginResponse;
 import com.andrii.vaultnote.app.api.auth.dto.CurrentUserResponse;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserRequest;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserResponse;
+import com.andrii.vaultnote.app.api.error.ApiErrorResponse;
 import com.andrii.vaultnote.app.service.EmailVerificationService;
 import com.andrii.vaultnote.app.service.LoginResult;
 import com.andrii.vaultnote.app.service.LoginService;
@@ -76,8 +77,10 @@ public class AuthController {
   @Operation
   @ApiResponse(responseCode = "200", description = "Login user", content = {
       @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class))})
-  @ApiResponse(responseCode = "400", description = "Invalid request", content = {@Content})
-  @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
+  @ApiResponse(responseCode = "400", description = "Invalid request", content = {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))})
+  @ApiResponse(responseCode = "401", description = "Unauthorized", content = {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))})
   @ApiResponse(responseCode = "500", description = "Server error", content = {@Content})
 
   @PostMapping("/login")
@@ -88,7 +91,8 @@ public class AuthController {
   @Operation(summary = "Refresh access token")
   @ApiResponse(responseCode = "200", description = "Refresh access token", content = {
       @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class))})
-  @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token", content = {@Content})
+  @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token", content = {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))})
   @PostMapping("/refresh")
   public ResponseEntity<LoginResponse> refresh(@CookieValue(name = "vaultnote_refresh_token") String rawRefreshToken) {
     return authenticationResponse(refreshTokenService.refresh(rawRefreshToken));

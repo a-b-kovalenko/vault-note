@@ -71,6 +71,17 @@ h1 {
   font-size: 0.95rem;
 }
 
+.form-error {
+  margin: 1.25rem 0 0;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #e3a7a7;
+  border-radius: 0.7rem;
+  color: #8c3d3d;
+  background: #fff5f5;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
 .login-form {
   display: grid;
   gap: 1.15rem;

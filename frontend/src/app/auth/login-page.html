@@ -11,6 +11,10 @@
       <p class="subtitle">Your ideas are waiting for you.</p>
     </div>
 
+    @if (loginError(); as errorMessage) {
+      <p class="form-error" id="login-error" role="alert">{{ errorMessage }}</p>
+    }
+
     <form class="login-form" [formGroup]="loginForm" novalidate (ngSubmit)="onSubmit()">
       <label
         class="field"
@@ -41,6 +45,8 @@
               Enter a valid email address.
             } @else if (loginForm.controls.email.hasError('maxlength')) {
               Email must be 320 characters or fewer.
+            } @else if (loginForm.controls.email.hasError('server')) {
+              {{ loginForm.controls.email.getError('server') }}
             }
           </span>
         }
@@ -73,6 +79,8 @@
               Password is required.
             } @else if (loginForm.controls.password.hasError('maxlength')) {
               Password must be 256 characters or fewer.
+            } @else if (loginForm.controls.password.hasError('server')) {
+              {{ loginForm.controls.password.getError('server') }}
             }
           </span>
         }

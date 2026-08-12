@@ -1,7 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Observable, of } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, throwError } from 'rxjs';
 
 import { AuthApiService } from './auth-api.service';
+import { AuthStateService } from './auth-state.service';
 import { LoginRequest, LoginResponse } from './auth.models';
 import { LoginPage } from './login-page';
 
@@ -9,17 +11,20 @@ describe('LoginPage', () => {
   let fixture: ComponentFixture<LoginPage>;
   let page: LoginPage;
   let loginRequests: LoginRequest[];
+  let loginResponse: Observable<LoginResponse>;
+  let authState: AuthStateService;
 
   beforeEach(async () => {
     loginRequests = [];
+    loginResponse = of({
+      accessToken: 'test-access-token',
+      tokenType: 'Bearer',
+      expiresIn: 900,
+    });
     const authApiService = {
       login(request: LoginRequest): Observable<LoginResponse> {
         loginRequests.push(request);
-        return of({
-          accessToken: 'test-access-token',
-          tokenType: 'Bearer',
-          expiresIn: 900,
-        });
+        return loginResponse;
       },
     };
 
@@ -30,6 +35,7 @@ describe('LoginPage', () => {
 
     fixture = TestBed.createComponent(LoginPage);
     page = fixture.componentInstance;
+    authState = TestBed.inject(AuthStateService);
     fixture.detectChanges();
   });
 
@@ -52,9 +58,7 @@ describe('LoginPage', () => {
     });
     fixture.detectChanges();
 
-    const submitButton = fixture.nativeElement.querySelector(
-      '.submit-button',
-    ) as HTMLButtonElement;
+    const submitButton = fixture.nativeElement.querySelector('.submit-button') as HTMLButtonElement;
 
     expect(page.loginForm.valid).toBe(true);
     expect(submitButton.disabled).toBe(false);
@@ -85,6 +89,84 @@ describe('LoginPage', () => {
         password: 'password',
       },
     ]);
+    expect(authState.accessToken()).toBe('test-access-token');
+    expect(page.isSubmitting()).toBe(false);
+  });
+
+  it('should show the backend authentication message for an unauthorized response', () => {
+    loginResponse = throwError(
+      () =>
+        new HttpErrorResponse({
+          status: 401,
+          error: {
+            code: 'AUTHENTICATION_FAILED',
+            message: 'Invalid email or password.',
+            violations: [],
+          },
+        }),
+    );
+    page.loginForm.setValue({
+      email: 'user@example.com',
+      password: 'wrong-password',
+    });
+
+    const form = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+
+    expect(page.loginError()).toBe('Invalid email or password.');
+    expect(
+      (fixture.nativeElement.querySelector('#login-error') as HTMLElement).textContent,
+    ).toContain('Invalid email or password.');
+    expect(page.isSubmitting()).toBe(false);
+  });
+
+  it('should apply backend validation messages to the matching controls', () => {
+    loginResponse = throwError(
+      () =>
+        new HttpErrorResponse({
+          status: 400,
+          error: {
+            code: 'VALIDATION_FAILED',
+            message: 'Request validation failed',
+            violations: [
+              {
+                field: 'email',
+                code: 'INVALID_FORMAT',
+                message: 'Email format is not accepted.',
+              },
+            ],
+          },
+        }),
+    );
+    page.loginForm.setValue({
+      email: 'user@example.com',
+      password: 'password',
+    });
+
+    const form = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+
+    expect(page.loginForm.controls.email.getError('server')).toBe('Email format is not accepted.');
+    expect(
+      (fixture.nativeElement.querySelector('#email-error') as HTMLElement).textContent,
+    ).toContain('Email format is not accepted.');
+    expect(page.loginError()).toBe(null);
+  });
+
+  it('should show a generic message for an unexpected login failure', () => {
+    loginResponse = throwError(() => new HttpErrorResponse({ status: 500 }));
+    page.loginForm.setValue({
+      email: 'user@example.com',
+      password: 'password',
+    });
+
+    const form = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+
+    expect(page.loginError()).toBe('Unable to sign in right now. Please try again.');
     expect(page.isSubmitting()).toBe(false);
   });
 });

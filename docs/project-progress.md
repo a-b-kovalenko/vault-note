@@ -131,11 +131,11 @@ has been implemented and verified. Branch integration is tracked separately.
 
 ## Phase 4 — Minimal Angular
 
-- [ ] Create the standalone Angular workspace and generated auth client.
-- [ ] Implement the email/password login page.
-- [ ] Add the minimum auth state for in-memory access-token storage, refresh,
+- [x] Create the standalone Angular workspace and generated auth client.
+- [x] Implement the email/password login page.
+- [x] Add the minimum auth state for in-memory access-token storage, refresh,
   and CSRF handling.
-- [ ] Add focused frontend unit tests for the minimal login flow.
+- [x] Add focused frontend unit tests for the minimal login flow.
 
 ## Phase 4.5 — Password management prerequisite
 
@@ -173,8 +173,8 @@ has been implemented and verified. Branch integration is tracked separately.
 - [ ] Implement registration, email verification, Notes, profile, and
   administrator screens.
 - [ ] Add authenticated and administrator route guards.
-- [ ] Add access-token attachment, single-flight refresh, CSRF handling, and
-  standard `ProblemDetail` error presentation.
+- [x] Add access-token attachment, single-flight refresh, and CSRF handling.
+- [ ] Add standard `ProblemDetail` error presentation.
 - [ ] Add focused frontend unit tests and production-build verification.
 - [ ] As the final frontend task, add Markdown preview/read rendering.
   - [ ] Parse the raw Markdown returned by the API.

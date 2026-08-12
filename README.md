@@ -4,12 +4,13 @@ VaultNote is a local learning project for private Markdown notes. It combines
 an Angular single-page application, a Spring Boot API, PostgreSQL, and a
 production-inspired authentication lifecycle.
 
-> **Project status:** the Angular workspace is ready for login-page work. The
-> repository contains registration, email verification, login, JWT access
+> **Project status:** the Angular workspace includes the OpenAPI-generated
+> authentication client and the email/password login page. The repository
+> contains registration, email verification, login, JWT access
 > tokens, rotating refresh sessions, current-session logout, users and Notes
 > APIs, optimistic locking, local/test profiles, CORS, SPA-compatible CSRF
 > protection, PostgreSQL integration coverage, and an Angular workspace. Rate
-> limiting, audit events, and the frontend login flow are still planned.
+> limiting, audit events, and the remaining frontend screens are still planned.
 
 ## Planned architecture
 
@@ -22,8 +23,9 @@ vault-note/
 ```
 
 The backend uses package-level boundaries for `common`, `users`, `notes`,
-`security`, and the runnable `app` package. OpenAPI will define the API
-contract and generate the frontend client.
+`security`, and the runnable `app` package. OpenAPI is the API source of truth;
+the frontend client and its TypeScript models are generated from the backend
+document.
 
 ## Obsidian knowledge vault
 
@@ -119,6 +121,24 @@ SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
 Once the backend is running, open the [Swagger UI](http://localhost:8080/swagger-ui/index.html)
 to browse and try the REST API. The raw OpenAPI document is available at
 [`/v3/api-docs`](http://localhost:8080/v3/api-docs).
+
+Regenerate the frontend client after an API contract change. Keep the backend
+running in one terminal and run the generator from another:
+
+```shell
+cd frontend
+npm run api:generate
+```
+
+The generated sources are written to `frontend/src/app/api/generated` and are
+tracked in Git. Do not edit generated files manually; update the backend
+contract and regenerate them instead.
+
+At runtime, `CsrfService` bootstraps the `XSRF-TOKEN` cookie before login or
+refresh. Angular's auth interceptors send the CSRF header and credentials to
+the backend, keep the access token in memory, attach its bearer header to
+protected requests, and share one refresh request when concurrent requests
+receive `401`.
 
 Build the Antora documentation site locally:
 
