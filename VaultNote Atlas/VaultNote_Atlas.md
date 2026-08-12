@@ -22,6 +22,7 @@
 - [Logout-флоу](content/Logout-флоу.md): як завершується поточна refresh-сесія і чому access JWT ще живе до `exp`.
 - [CSRF та CORS](content/CSRF-та-CORS.md): чим відрізняються browser cross-origin правила і захист cookie-based запитів.
 - [OAuth2/OIDC простими словами](content/OAuth2-OIDC-простими-словами.md): як зовнішній login підтверджує identity і як VaultNote після цього видаватиме власні JWT.
+- [OAuth identity та account linking](content/OAuth-identity-та-account-linking.md): чому email не є достатньою підставою для автоматичного об'єднання акаунтів.
 - [OAuth-провайдери: Google, Apple, Facebook і GitHub](content/OAuth-провайдери-Google-Apple-Facebook.md): вимоги провайдерів, локальне тестування і рішення почати з Google.
 
 ## Email
@@ -32,6 +33,7 @@
 
 ## Testing
 
+- [Основні поняття тестування](content/Основні-поняття-тестування.md): рівні тестів, Angular `TestBed`, `ComponentFixture`, assertions, mocks і межа між frontend та backend-валідацією.
 - [Інтеграційні тести Spring Boot](content/Інтеграційні-тести-Spring-Boot.md): RestAssured, Testcontainers, DBRider і перевірка persistence.
 
 ## Frontend

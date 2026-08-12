@@ -1,0 +1,155 @@
+<main class="login-page">
+  <section class="login-card" aria-labelledby="login-title">
+    <div class="brand" aria-label="VaultNote">
+      <span class="brand-mark" aria-hidden="true">V</span>
+      <span>VaultNote</span>
+    </div>
+
+    <div class="login-heading">
+      <p class="eyebrow">Welcome back</p>
+      <h1 id="login-title">Sign in to your notes</h1>
+      <p class="subtitle">Your ideas are waiting for you.</p>
+    </div>
+
+    <form class="login-form" [formGroup]="loginForm" novalidate (ngSubmit)="onSubmit()">
+      <label
+        class="field"
+        [class.field-invalid]="isInvalid(loginForm.controls.email)"
+        for="email"
+      >
+        <span class="field-label">Email</span>
+        <input
+          class="field-input"
+          [class.field-input-invalid]="isInvalid(loginForm.controls.email)"
+          id="email"
+          type="email"
+          formControlName="email"
+          autocomplete="email"
+          maxlength="320"
+          placeholder="you@example.com"
+          required
+          [attr.aria-describedby]="
+            isInvalid(loginForm.controls.email) ? 'email-error' : null
+          "
+          [attr.aria-invalid]="isInvalid(loginForm.controls.email)"
+        />
+        @if (isInvalid(loginForm.controls.email)) {
+          <span class="field-error" id="email-error" role="alert">
+            @if (loginForm.controls.email.hasError('required')) {
+              Email is required.
+            } @else if (loginForm.controls.email.hasError('email')) {
+              Enter a valid email address.
+            } @else if (loginForm.controls.email.hasError('maxlength')) {
+              Email must be 320 characters or fewer.
+            }
+          </span>
+        }
+      </label>
+
+      <label
+        class="field"
+        [class.field-invalid]="isInvalid(loginForm.controls.password)"
+        for="password"
+      >
+        <span class="field-label">Password</span>
+        <input
+          class="field-input"
+          [class.field-input-invalid]="isInvalid(loginForm.controls.password)"
+          id="password"
+          type="password"
+          formControlName="password"
+          autocomplete="current-password"
+          maxlength="256"
+          placeholder="Enter your password"
+          required
+          [attr.aria-describedby]="
+            isInvalid(loginForm.controls.password) ? 'password-error' : null
+          "
+          [attr.aria-invalid]="isInvalid(loginForm.controls.password)"
+        />
+        @if (isInvalid(loginForm.controls.password)) {
+          <span class="field-error" id="password-error" role="alert">
+            @if (loginForm.controls.password.hasError('required')) {
+              Password is required.
+            } @else if (loginForm.controls.password.hasError('maxlength')) {
+              Password must be 256 characters or fewer.
+            }
+          </span>
+        }
+      </label>
+
+      <button
+        class="submit-button"
+        type="submit"
+        [disabled]="loginForm.invalid || isSubmitting()"
+      >
+        <span>{{ isSubmitting() ? 'Signing in…' : 'Sign in' }}</span>
+        <span aria-hidden="true">→</span>
+      </button>
+    </form>
+
+    <div class="account-actions">
+      <button class="text-button" type="button" disabled>
+        Forgot password?
+      </button>
+    </div>
+
+    <div class="oauth-divider" aria-hidden="true">
+      <span>or</span>
+    </div>
+
+    <div class="oauth-buttons">
+      <button class="oauth-button" type="button" disabled>
+        <svg
+          class="oauth-icon oauth-icon-google"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            fill="#4285F4"
+            d="M21.35 12.27c0-.79-.07-1.55-.22-2.27H12v4.3h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.42Z"
+          />
+          <path
+            fill="#34A853"
+            d="M12 21.75c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.54 0-4.7-1.72-5.47-4.03H3.29v2.53A9.75 9.75 0 0 0 12 21.75Z"
+          />
+          <path
+            fill="#FBBC05"
+            d="M6.53 13.83A5.86 5.86 0 0 1 6.22 12c0-.64.11-1.26.31-1.83V7.64H3.29A9.75 9.75 0 0 0 2.25 12c0 1.57.38 3.05 1.04 4.36l3.24-2.53Z"
+          />
+          <path
+            fill="#EA4335"
+            d="M12 6.14c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.84 3.22 14.63 2.25 12 2.25a9.75 9.75 0 0 0-8.71 5.39l3.24 2.53c.77-2.31 2.93-4.03 5.47-4.03Z"
+          />
+        </svg>
+        <span>Continue with Google</span>
+      </button>
+
+      <button class="oauth-button" type="button" disabled>
+        <svg
+          class="oauth-icon oauth-icon-github"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            fill="currentColor"
+            d="M12 .3a12 12 0 0 0-3.79 23.39c.6.11.82-.26.82-.58v-2.04c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.33-1.76-1.33-1.76-1.09-.75.08-.74.08-.74 1.2.09 1.83 1.23 1.83 1.23 1.07 1.83 2.8 1.3 3.48 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.23-3.22-.12-.3-.53-1.52.12-3.18 0 0 1-.32 3.3 1.23a11.4 11.4 0 0 1 6 0c2.3-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.62-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58A12 12 0 0 0 12 .3Z"
+          />
+        </svg>
+        <span>Continue with GitHub</span>
+      </button>
+    </div>
+
+    <p class="registration-prompt">
+      <span>Don't have an account?</span>
+      <button class="text-button registration-button" type="button" disabled>
+        Create an account
+      </button>
+    </p>
+
+    <p class="security-note">
+      <span aria-hidden="true">🔒</span>
+      Your notes stay private and secure.
+    </p>
+  </section>
+</main>

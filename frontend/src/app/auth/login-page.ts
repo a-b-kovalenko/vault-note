@@ -1,13 +1,45 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import {
+  AbstractControl,
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+
+import { AuthApiService } from './auth-api.service';
 
 @Component({
   selector: 'app-login-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <main>
-      <h1>Sign in to VaultNote</h1>
-      <p>The login form will be added in the next step.</p>
-    </main>
-  `,
+  imports: [ReactiveFormsModule],
+  templateUrl: './login-page.html',
+  styleUrl: './login-page.scss',
 })
-export class LoginPage {}
+export class LoginPage {
+  private readonly authApiService = inject(AuthApiService);
+
+  readonly loginForm = inject(NonNullableFormBuilder).group({
+    email: ['', [Validators.required, Validators.email, Validators.maxLength(320)]],
+    password: ['', [Validators.required, Validators.maxLength(256)]],
+  });
+
+  readonly isSubmitting = signal(false);
+
+  protected isInvalid(control: AbstractControl): boolean {
+    return control.invalid && (control.dirty || control.touched);
+  }
+
+  protected onSubmit(): void {
+    this.loginForm.markAllAsTouched();
+
+    if (this.loginForm.invalid || this.isSubmitting()) {
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    this.authApiService.login(this.loginForm.getRawValue()).subscribe({
+      complete: () => this.isSubmitting.set(false),
+      error: () => this.isSubmitting.set(false),
+    });
+  }
+}
