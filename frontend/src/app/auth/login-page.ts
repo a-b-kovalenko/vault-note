@@ -7,6 +7,7 @@ import {
 } from '@angular/forms';
 
 import { AuthApiService } from './auth-api.service';
+import { AuthState } from './auth-state.service';
 
 @Component({
   selector: 'app-login-page',
@@ -17,6 +18,7 @@ import { AuthApiService } from './auth-api.service';
 })
 export class LoginPage {
   private readonly authApiService = inject(AuthApiService);
+  private readonly authState = inject(AuthState);
 
   readonly loginForm = inject(NonNullableFormBuilder).group({
     email: ['', [Validators.required, Validators.email, Validators.maxLength(320)]],
@@ -38,6 +40,7 @@ export class LoginPage {
 
     this.isSubmitting.set(true);
     this.authApiService.login(this.loginForm.getRawValue()).subscribe({
+      next: (response) => this.authState.setSession(response),
       complete: () => this.isSubmitting.set(false),
       error: () => this.isSubmitting.set(false),
     });

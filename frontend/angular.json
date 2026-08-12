@@ -2,6 +2,9 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
+    "cache": {
+      "enabled": false
+    },
     "packageManager": "npm",
     "analytics": "4dc0e4f6-17c9-4b87-b529-181f2d03be5f"
   },
@@ -30,9 +33,7 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.scss"
-            ]
+            "styles": ["src/styles.scss"]
           },
           "configurations": {
             "production": {

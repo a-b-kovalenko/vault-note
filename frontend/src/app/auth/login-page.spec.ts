@@ -2,12 +2,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Observable, of } from 'rxjs';
 
 import { AuthApiService } from './auth-api.service';
+import { AuthState } from './auth-state.service';
 import { LoginRequest, LoginResponse } from './auth.models';
 import { LoginPage } from './login-page';
 
 describe('LoginPage', () => {
   let fixture: ComponentFixture<LoginPage>;
   let page: LoginPage;
+  let authState: AuthState;
   let loginRequests: LoginRequest[];
 
   beforeEach(async () => {
@@ -30,6 +32,7 @@ describe('LoginPage', () => {
 
     fixture = TestBed.createComponent(LoginPage);
     page = fixture.componentInstance;
+    authState = TestBed.inject(AuthState);
     fixture.detectChanges();
   });
 
@@ -52,9 +55,7 @@ describe('LoginPage', () => {
     });
     fixture.detectChanges();
 
-    const submitButton = fixture.nativeElement.querySelector(
-      '.submit-button',
-    ) as HTMLButtonElement;
+    const submitButton = fixture.nativeElement.querySelector('.submit-button') as HTMLButtonElement;
 
     expect(page.loginForm.valid).toBe(true);
     expect(submitButton.disabled).toBe(false);
@@ -86,5 +87,25 @@ describe('LoginPage', () => {
       },
     ]);
     expect(page.isSubmitting()).toBe(false);
+  });
+
+  it('should keep the access token in AuthState after a successful login', () => {
+    page.loginForm.setValue({
+      email: 'user@example.com',
+      password: 'password',
+    });
+
+    const submittedAt = Date.now();
+    const form = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+    expect(authState.session()).toEqual({
+      accessToken: 'test-access-token',
+      tokenType: 'Bearer',
+      expiresAt: expect.any(Number),
+    });
+    expect(authState.accessToken()).toBe('test-access-token');
+    expect(authState.isAuthenticated()).toBe(true);
+    expect(authState.session()?.expiresAt).toBeGreaterThanOrEqual(submittedAt + 900 * 1000);
   });
 });
