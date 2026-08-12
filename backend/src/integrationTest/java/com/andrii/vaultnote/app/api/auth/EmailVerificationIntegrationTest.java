@@ -50,10 +50,10 @@ class EmailVerificationIntegrationTest extends AbstractBaseIntegrationTest {
 
   @Autowired
   EmailVerificationIntegrationTest(
-      UserJpaRepository userRepository,
-      EmailVerificationTokenJpaRepository tokenRepository,
-      SecureTokenGenerator tokenGenerator,
-      Clock clock) {
+    UserJpaRepository userRepository,
+    EmailVerificationTokenJpaRepository tokenRepository,
+    SecureTokenGenerator tokenGenerator,
+    Clock clock) {
     this.userRepository = userRepository;
     this.tokenRepository = tokenRepository;
     this.tokenGenerator = tokenGenerator;
@@ -72,21 +72,21 @@ class EmailVerificationIntegrationTest extends AbstractBaseIntegrationTest {
     var user = userRepository.findByEmail(USER_EMAIL).orElseThrow();
     GeneratedToken generatedToken = tokenGenerator.generate();
     var token = EmailVerificationTokenEntity.builder()
-        .user(user)
-        .tokenHash(generatedToken.hash())
-        .expiresAt(clock.instant().plus(Duration.ofHours(1)))
-        .build();
+      .user(user)
+      .tokenHash(generatedToken.hash())
+      .expiresAt(clock.instant().plus(Duration.ofHours(1)))
+      .build();
     tokenRepository.saveAndFlush(token);
 
     var response = given()
-        .port(port)
-        .queryParam("token", generatedToken.rawValue())
-        .when()
-        .post(EMAIL_VERIFICATION_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.NO_CONTENT.value())
-        .extract()
-        .response();
+      .port(port)
+      .queryParam("token", generatedToken.rawValue())
+      .when()
+      .post(EMAIL_VERIFICATION_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.NO_CONTENT.value())
+      .extract()
+      .response();
 
     assertThat(response.asByteArray()).isEmpty();
 
@@ -94,9 +94,9 @@ class EmailVerificationIntegrationTest extends AbstractBaseIntegrationTest {
     assertThat(verifiedUser.isEmailVerified()).isTrue();
 
     assertThat(tokenRepository.findAll())
-        .singleElement()
-        .extracting(EmailVerificationTokenEntity::getUsedAt)
-        .isNotNull();
+      .singleElement()
+      .extracting(EmailVerificationTokenEntity::getUsedAt)
+      .isNotNull();
   }
 
   /**
@@ -111,14 +111,14 @@ class EmailVerificationIntegrationTest extends AbstractBaseIntegrationTest {
     var invalidToken = UUID.randomUUID().toString();
 
     var response = given()
-        .port(port)
-        .queryParam("token", invalidToken)
-        .when()
-        .post(EMAIL_VERIFICATION_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.BAD_REQUEST.value())
-        .extract()
-        .as(ApiErrorResponse.class);
+      .port(port)
+      .queryParam("token", invalidToken)
+      .when()
+      .post(EMAIL_VERIFICATION_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.BAD_REQUEST.value())
+      .extract()
+      .as(ApiErrorResponse.class);
 
     assertThat(response.code()).isEqualTo("EMAIL_VERIFICATION_FAILED");
 
@@ -139,30 +139,30 @@ class EmailVerificationIntegrationTest extends AbstractBaseIntegrationTest {
     var user = userRepository.findByEmail(USER_EMAIL).orElseThrow();
     GeneratedToken generatedToken = tokenGenerator.generate();
     var token = EmailVerificationTokenEntity.builder()
-        .user(user)
-        .tokenHash(generatedToken.hash())
-        .expiresAt(clock.instant().minus(Duration.ofHours(1)))
-        .build();
+      .user(user)
+      .tokenHash(generatedToken.hash())
+      .expiresAt(clock.instant().minus(Duration.ofHours(1)))
+      .build();
     tokenRepository.saveAndFlush(token);
 
     var response = given()
-        .port(port)
-        .queryParam("token", generatedToken.rawValue())
-        .when()
-        .post(EMAIL_VERIFICATION_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.BAD_REQUEST.value())
-        .extract()
-        .as(ApiErrorResponse.class);
+      .port(port)
+      .queryParam("token", generatedToken.rawValue())
+      .when()
+      .post(EMAIL_VERIFICATION_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.BAD_REQUEST.value())
+      .extract()
+      .as(ApiErrorResponse.class);
 
     assertThat(response.code()).isEqualTo("EMAIL_VERIFICATION_FAILED");
 
     var unchangedUser = userRepository.findByEmail(USER_EMAIL).orElseThrow();
     assertThat(unchangedUser.isEmailVerified()).isFalse();
     assertThat(tokenRepository.findAll())
-        .singleElement()
-        .extracting(EmailVerificationTokenEntity::getUsedAt)
-        .isNull();
+      .singleElement()
+      .extracting(EmailVerificationTokenEntity::getUsedAt)
+      .isNull();
   }
 
   /**
@@ -178,42 +178,42 @@ class EmailVerificationIntegrationTest extends AbstractBaseIntegrationTest {
     var user = userRepository.findByEmail(USER_EMAIL).orElseThrow();
     GeneratedToken generatedToken = tokenGenerator.generate();
     var token = EmailVerificationTokenEntity.builder()
-        .user(user)
-        .tokenHash(generatedToken.hash())
-        .expiresAt(clock.instant().plus(Duration.ofHours(1)))
-        .build();
+      .user(user)
+      .tokenHash(generatedToken.hash())
+      .expiresAt(clock.instant().plus(Duration.ofHours(1)))
+      .build();
     tokenRepository.saveAndFlush(token);
 
     given()
-        .port(port)
-        .queryParam("token", generatedToken.rawValue())
-        .when()
-        .post(EMAIL_VERIFICATION_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.NO_CONTENT.value());
+      .port(port)
+      .queryParam("token", generatedToken.rawValue())
+      .when()
+      .post(EMAIL_VERIFICATION_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.NO_CONTENT.value());
 
     var tokenAfterFirstUse = tokenRepository.findAll().stream().findFirst().orElseThrow();
     var usedAtAfterFirstUse = tokenAfterFirstUse.getUsedAt();
     assertThat(usedAtAfterFirstUse).isNotNull();
 
     var response = given()
-        .port(port)
-        .queryParam("token", generatedToken.rawValue())
-        .when()
-        .post(EMAIL_VERIFICATION_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.BAD_REQUEST.value())
-        .extract()
-        .as(ApiErrorResponse.class);
+      .port(port)
+      .queryParam("token", generatedToken.rawValue())
+      .when()
+      .post(EMAIL_VERIFICATION_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.BAD_REQUEST.value())
+      .extract()
+      .as(ApiErrorResponse.class);
 
     assertThat(response.code()).isEqualTo("EMAIL_VERIFICATION_FAILED");
 
     var verifiedUser = userRepository.findByEmail(USER_EMAIL).orElseThrow();
     assertThat(verifiedUser.isEmailVerified()).isTrue();
     assertThat(tokenRepository.findAll())
-        .singleElement()
-        .extracting(EmailVerificationTokenEntity::getUsedAt)
-        .isEqualTo(usedAtAfterFirstUse);
+      .singleElement()
+      .extracting(EmailVerificationTokenEntity::getUsedAt)
+      .isEqualTo(usedAtAfterFirstUse);
   }
 
   /**
@@ -229,22 +229,22 @@ class EmailVerificationIntegrationTest extends AbstractBaseIntegrationTest {
     var user = userRepository.findByEmail(USER_EMAIL).orElseThrow();
     GeneratedToken generatedToken = tokenGenerator.generate();
     var token = EmailVerificationTokenEntity.builder()
-        .user(user)
-        .tokenHash(generatedToken.hash())
-        .expiresAt(clock.instant().plus(Duration.ofHours(1)))
-        .build();
+      .user(user)
+      .tokenHash(generatedToken.hash())
+      .expiresAt(clock.instant().plus(Duration.ofHours(1)))
+      .build();
     tokenRepository.saveAndFlush(token);
 
     var ready = new CountDownLatch(2);
     var start = new CountDownLatch(1);
     try (var executor = Executors.newFixedThreadPool(2)) {
       var futures = IntStream.range(0, 2)
-          .mapToObj(ignored -> executor.submit(() -> {
-            ready.countDown();
-            start.await();
-            return sendVerificationRequest(generatedToken.rawValue());
-          }))
-          .toList();
+        .mapToObj(ignored -> executor.submit(() -> {
+          ready.countDown();
+          start.await();
+          return sendVerificationRequest(generatedToken.rawValue());
+        }))
+        .toList();
 
       try {
         assertThat(awaitReady(ready)).isTrue();
@@ -253,40 +253,40 @@ class EmailVerificationIntegrationTest extends AbstractBaseIntegrationTest {
       }
 
       var responses = futures.stream()
-          .map(EmailVerificationIntegrationTest::awaitResponse)
-          .toList();
+        .map(EmailVerificationIntegrationTest::awaitResponse)
+        .toList();
 
       assertThat(responses)
-          .extracting(Response::statusCode)
-          .containsExactlyInAnyOrder(
-              HttpStatus.NO_CONTENT.value(),
-              HttpStatus.BAD_REQUEST.value());
+        .extracting(Response::statusCode)
+        .containsExactlyInAnyOrder(
+          HttpStatus.NO_CONTENT.value(),
+          HttpStatus.BAD_REQUEST.value());
 
       var failedResponse = responses.stream()
-          .filter(response -> response.statusCode() == HttpStatus.BAD_REQUEST.value())
-          .findFirst()
-          .orElseThrow()
-          .as(ApiErrorResponse.class);
+        .filter(response -> response.statusCode() == HttpStatus.BAD_REQUEST.value())
+        .findFirst()
+        .orElseThrow()
+        .as(ApiErrorResponse.class);
       assertThat(failedResponse.code()).isEqualTo("EMAIL_VERIFICATION_FAILED");
     }
 
     var verifiedUser = userRepository.findByEmail(USER_EMAIL).orElseThrow();
     assertThat(verifiedUser.isEmailVerified()).isTrue();
     assertThat(tokenRepository.findAll())
-        .singleElement()
-        .extracting(EmailVerificationTokenEntity::getUsedAt)
-        .isNotNull();
+      .singleElement()
+      .extracting(EmailVerificationTokenEntity::getUsedAt)
+      .isNotNull();
   }
 
   private Response sendVerificationRequest(String rawToken) {
     return given()
-        .port(port)
-        .queryParam("token", rawToken)
-        .when()
-        .post(EMAIL_VERIFICATION_ENDPOINT)
-        .then()
-        .extract()
-        .response();
+      .port(port)
+      .queryParam("token", rawToken)
+      .when()
+      .post(EMAIL_VERIFICATION_ENDPOINT)
+      .then()
+      .extract()
+      .response();
   }
 
   private static Response awaitResponse(Future<Response> future) {

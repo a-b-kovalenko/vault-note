@@ -73,14 +73,14 @@ class LoginServiceImplTest {
     var user = verifiedUser();
     var request = loginRequest();
     var generatedRefreshToken = new SecureTokenGenerator.GeneratedToken(
-        RAW_REFRESH_TOKEN, REFRESH_TOKEN_HASH);
+      RAW_REFRESH_TOKEN, REFRESH_TOKEN_HASH);
     var expectedResult = new LoginResult(
-        LoginResponse.builder()
-            .accessToken(ACCESS_TOKEN)
-            .tokenType(TokenType.BEARER)
-            .expiresIn(ACCESS_TOKEN_TTL.toSeconds())
-            .build(),
-        RAW_REFRESH_TOKEN);
+      LoginResponse.builder()
+        .accessToken(ACCESS_TOKEN)
+        .tokenType(TokenType.BEARER)
+        .expiresIn(ACCESS_TOKEN_TTL.toSeconds())
+        .build(),
+      RAW_REFRESH_TOKEN);
 
     when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
     when(passwordEncoder.matches(PASSWORD, PASSWORD_HASH)).thenReturn(true);
@@ -111,36 +111,36 @@ class LoginServiceImplTest {
     when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
 
     assertThatExceptionOfType(AuthenticationFailedException.class)
-        .isThrownBy(() -> loginService.login(loginRequest()))
-        .withMessage("Invalid email or password.");
+      .isThrownBy(() -> loginService.login(loginRequest()))
+      .withMessage("Invalid email or password.");
 
     verifyNoInteractions(
-        passwordEncoder,
-        secureTokenGenerator,
-        refreshTokenRepository,
-        authenticationResultFactory,
-        refreshTokenProperties,
-        clock);
+      passwordEncoder,
+      secureTokenGenerator,
+      refreshTokenRepository,
+      authenticationResultFactory,
+      refreshTokenProperties,
+      clock);
   }
 
   @Test
   void shouldRejectUnverifiedUser() {
     var user = verifiedUser().toBuilder()
-        .emailVerified(false)
-        .build();
+      .emailVerified(false)
+      .build();
     when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
 
     assertThatExceptionOfType(AuthenticationFailedException.class)
-        .isThrownBy(() -> loginService.login(loginRequest()))
-        .withMessage("Invalid email or password.");
+      .isThrownBy(() -> loginService.login(loginRequest()))
+      .withMessage("Invalid email or password.");
 
     verifyNoInteractions(
-        passwordEncoder,
-        secureTokenGenerator,
-        refreshTokenRepository,
-        authenticationResultFactory,
-        refreshTokenProperties,
-        clock);
+      passwordEncoder,
+      secureTokenGenerator,
+      refreshTokenRepository,
+      authenticationResultFactory,
+      refreshTokenProperties,
+      clock);
   }
 
   @Test
@@ -150,33 +150,33 @@ class LoginServiceImplTest {
     when(passwordEncoder.matches(PASSWORD, PASSWORD_HASH)).thenReturn(false);
 
     assertThatExceptionOfType(AuthenticationFailedException.class)
-        .isThrownBy(() -> loginService.login(loginRequest()))
-        .withMessage("Invalid email or password.");
+      .isThrownBy(() -> loginService.login(loginRequest()))
+      .withMessage("Invalid email or password.");
 
     verify(passwordEncoder).matches(PASSWORD, PASSWORD_HASH);
     verifyNoInteractions(
-        secureTokenGenerator,
-        refreshTokenRepository,
-        authenticationResultFactory,
-        refreshTokenProperties,
-        clock);
+      secureTokenGenerator,
+      refreshTokenRepository,
+      authenticationResultFactory,
+      refreshTokenProperties,
+      clock);
     verify(refreshTokenRepository, never()).save(any(RefreshTokenEntity.class));
   }
 
   private static LoginRequest loginRequest() {
     return LoginRequest.builder()
-        .email(EMAIL)
-        .password(PASSWORD)
-        .build();
+      .email(EMAIL)
+      .password(PASSWORD)
+      .build();
   }
 
   private static UserEntity verifiedUser() {
     return UserEntity.builder()
-        .id(1L)
-        .email(EMAIL)
-        .passwordHash(PASSWORD_HASH)
-        .emailVerified(true)
-        .roles(EnumSet.of(UserRole.USER))
-        .build();
+      .id(1L)
+      .email(EMAIL)
+      .passwordHash(PASSWORD_HASH)
+      .emailVerified(true)
+      .roles(EnumSet.of(UserRole.USER))
+      .build();
   }
 }

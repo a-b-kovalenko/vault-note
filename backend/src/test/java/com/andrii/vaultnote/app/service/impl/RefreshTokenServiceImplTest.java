@@ -61,36 +61,36 @@ class RefreshTokenServiceImplTest {
   @Test
   void shouldRotateRefreshToken() {
     var user = UserEntity.builder()
-        .id(1L)
-        .build();
+      .id(1L)
+      .build();
     var tokenFamilyId = UUID.randomUUID();
     var token = RefreshTokenEntity.builder()
-        .id(1L)
-        .user(user)
-        .tokenHash(REFRESH_TOKEN_HASH)
-        .tokenFamilyId(tokenFamilyId)
-        .expiresAt(NOW.plus(REFRESH_TOKEN_TTL))
-        .build();
+      .id(1L)
+      .user(user)
+      .tokenHash(REFRESH_TOKEN_HASH)
+      .tokenFamilyId(tokenFamilyId)
+      .expiresAt(NOW.plus(REFRESH_TOKEN_TTL))
+      .build();
     var generatedRefreshToken = new SecureTokenGenerator.GeneratedToken(
-        NEXT_RAW_REFRESH_TOKEN,
-        NEXT_REFRESH_TOKEN_HASH);
+      NEXT_RAW_REFRESH_TOKEN,
+      NEXT_REFRESH_TOKEN_HASH);
     var expectedResult = new LoginResult(
-        LoginResponse.builder()
-            .accessToken(ACCESS_TOKEN)
-            .tokenType(TokenType.BEARER)
-            .expiresIn(900L)
-            .build(),
-        NEXT_RAW_REFRESH_TOKEN);
+      LoginResponse.builder()
+        .accessToken(ACCESS_TOKEN)
+        .tokenType(TokenType.BEARER)
+        .expiresIn(900L)
+        .build(),
+      NEXT_RAW_REFRESH_TOKEN);
 
     when(secureTokenGenerator.hash(RAW_REFRESH_TOKEN)).thenReturn(REFRESH_TOKEN_HASH);
     when(refreshTokenRepository.findByTokenHash(REFRESH_TOKEN_HASH))
-        .thenReturn(Optional.of(token));
+      .thenReturn(Optional.of(token));
     when(clock.instant()).thenReturn(NOW);
     when(refreshTokenRepository.revokeActiveById(token.getId(), NOW)).thenReturn(1);
     when(secureTokenGenerator.generate()).thenReturn(generatedRefreshToken);
     when(refreshTokenProperties.ttl()).thenReturn(REFRESH_TOKEN_TTL);
     when(authenticationResultFactory.create(user, NEXT_RAW_REFRESH_TOKEN))
-        .thenReturn(expectedResult);
+      .thenReturn(expectedResult);
 
     var result = refreshTokenService.refresh(RAW_REFRESH_TOKEN);
 
@@ -114,11 +114,11 @@ class RefreshTokenServiceImplTest {
   void shouldRejectUnknownRefreshToken() {
     when(secureTokenGenerator.hash(RAW_REFRESH_TOKEN)).thenReturn(REFRESH_TOKEN_HASH);
     when(refreshTokenRepository.findByTokenHash(REFRESH_TOKEN_HASH))
-        .thenReturn(Optional.empty());
+      .thenReturn(Optional.empty());
 
     assertThatExceptionOfType(RefreshTokenAuthenticationFailedException.class)
-        .isThrownBy(() -> refreshTokenService.refresh(RAW_REFRESH_TOKEN))
-        .withMessage("Invalid or expired refresh token.");
+      .isThrownBy(() -> refreshTokenService.refresh(RAW_REFRESH_TOKEN))
+      .withMessage("Invalid or expired refresh token.");
 
     verify(secureTokenGenerator).hash(RAW_REFRESH_TOKEN);
     verify(secureTokenGenerator, never()).generate();
@@ -131,19 +131,19 @@ class RefreshTokenServiceImplTest {
   @Test
   void shouldRejectExpiredRefreshToken() {
     var token = RefreshTokenEntity.builder()
-        .id(1L)
-        .tokenHash(REFRESH_TOKEN_HASH)
-        .tokenFamilyId(UUID.randomUUID())
-        .expiresAt(NOW.minusSeconds(1))
-        .build();
+      .id(1L)
+      .tokenHash(REFRESH_TOKEN_HASH)
+      .tokenFamilyId(UUID.randomUUID())
+      .expiresAt(NOW.minusSeconds(1))
+      .build();
     when(secureTokenGenerator.hash(RAW_REFRESH_TOKEN)).thenReturn(REFRESH_TOKEN_HASH);
     when(refreshTokenRepository.findByTokenHash(REFRESH_TOKEN_HASH))
-        .thenReturn(Optional.of(token));
+      .thenReturn(Optional.of(token));
     when(clock.instant()).thenReturn(NOW);
 
     assertThatExceptionOfType(RefreshTokenAuthenticationFailedException.class)
-        .isThrownBy(() -> refreshTokenService.refresh(RAW_REFRESH_TOKEN))
-        .withMessage("Invalid or expired refresh token.");
+      .isThrownBy(() -> refreshTokenService.refresh(RAW_REFRESH_TOKEN))
+      .withMessage("Invalid or expired refresh token.");
 
     verify(secureTokenGenerator).hash(RAW_REFRESH_TOKEN);
     verify(secureTokenGenerator, never()).generate();
@@ -158,22 +158,22 @@ class RefreshTokenServiceImplTest {
   void shouldRevokeTokenFamilyWhenRefreshTokenIsReused() {
     var tokenFamilyId = UUID.randomUUID();
     var token = RefreshTokenEntity.builder()
-        .id(1L)
-        .tokenHash(REFRESH_TOKEN_HASH)
-        .tokenFamilyId(tokenFamilyId)
-        .expiresAt(NOW.plus(REFRESH_TOKEN_TTL))
-        .revokedAt(NOW.minusSeconds(1))
-        .build();
+      .id(1L)
+      .tokenHash(REFRESH_TOKEN_HASH)
+      .tokenFamilyId(tokenFamilyId)
+      .expiresAt(NOW.plus(REFRESH_TOKEN_TTL))
+      .revokedAt(NOW.minusSeconds(1))
+      .build();
     when(secureTokenGenerator.hash(RAW_REFRESH_TOKEN)).thenReturn(REFRESH_TOKEN_HASH);
     when(refreshTokenRepository.findByTokenHash(REFRESH_TOKEN_HASH))
-        .thenReturn(Optional.of(token));
+      .thenReturn(Optional.of(token));
     when(clock.instant()).thenReturn(NOW);
     when(refreshTokenRepository.revokeActiveByTokenFamilyId(tokenFamilyId, NOW))
-        .thenReturn(1);
+      .thenReturn(1);
 
     assertThatExceptionOfType(RefreshTokenAuthenticationFailedException.class)
-        .isThrownBy(() -> refreshTokenService.refresh(RAW_REFRESH_TOKEN))
-        .withMessage("Invalid or expired refresh token.");
+      .isThrownBy(() -> refreshTokenService.refresh(RAW_REFRESH_TOKEN))
+      .withMessage("Invalid or expired refresh token.");
 
     verify(secureTokenGenerator).hash(RAW_REFRESH_TOKEN);
     verify(secureTokenGenerator, never()).generate();
@@ -188,13 +188,13 @@ class RefreshTokenServiceImplTest {
   @Test
   void shouldRevokeActiveRefreshTokenOnLogout() {
     var token = RefreshTokenEntity.builder()
-        .id(1L)
-        .tokenHash(REFRESH_TOKEN_HASH)
-        .expiresAt(NOW.plus(REFRESH_TOKEN_TTL))
-        .build();
+      .id(1L)
+      .tokenHash(REFRESH_TOKEN_HASH)
+      .expiresAt(NOW.plus(REFRESH_TOKEN_TTL))
+      .build();
     when(secureTokenGenerator.hash(RAW_REFRESH_TOKEN)).thenReturn(REFRESH_TOKEN_HASH);
     when(refreshTokenRepository.findByTokenHash(REFRESH_TOKEN_HASH))
-        .thenReturn(Optional.of(token));
+      .thenReturn(Optional.of(token));
     when(clock.instant()).thenReturn(NOW);
     when(refreshTokenRepository.revokeActiveById(token.getId(), NOW)).thenReturn(1);
 
@@ -212,7 +212,7 @@ class RefreshTokenServiceImplTest {
   void shouldIgnoreUnknownRefreshTokenOnLogout() {
     when(secureTokenGenerator.hash(RAW_REFRESH_TOKEN)).thenReturn(REFRESH_TOKEN_HASH);
     when(refreshTokenRepository.findByTokenHash(REFRESH_TOKEN_HASH))
-        .thenReturn(Optional.empty());
+      .thenReturn(Optional.empty());
 
     refreshTokenService.logout(RAW_REFRESH_TOKEN);
 
@@ -225,14 +225,14 @@ class RefreshTokenServiceImplTest {
   @Test
   void shouldIgnoreAlreadyRevokedRefreshTokenOnLogout() {
     var token = RefreshTokenEntity.builder()
-        .id(1L)
-        .tokenHash(REFRESH_TOKEN_HASH)
-        .expiresAt(NOW.plus(REFRESH_TOKEN_TTL))
-        .revokedAt(NOW.minusSeconds(1))
-        .build();
+      .id(1L)
+      .tokenHash(REFRESH_TOKEN_HASH)
+      .expiresAt(NOW.plus(REFRESH_TOKEN_TTL))
+      .revokedAt(NOW.minusSeconds(1))
+      .build();
     when(secureTokenGenerator.hash(RAW_REFRESH_TOKEN)).thenReturn(REFRESH_TOKEN_HASH);
     when(refreshTokenRepository.findByTokenHash(REFRESH_TOKEN_HASH))
-        .thenReturn(Optional.of(token));
+      .thenReturn(Optional.of(token));
 
     refreshTokenService.logout(RAW_REFRESH_TOKEN);
 
@@ -247,10 +247,10 @@ class RefreshTokenServiceImplTest {
     refreshTokenService.logout(null);
 
     verifyNoInteractions(
-        secureTokenGenerator,
-        refreshTokenRepository,
-        refreshTokenProperties,
-        authenticationResultFactory,
-        clock);
+      secureTokenGenerator,
+      refreshTokenRepository,
+      refreshTokenProperties,
+      authenticationResultFactory,
+      clock);
   }
 }

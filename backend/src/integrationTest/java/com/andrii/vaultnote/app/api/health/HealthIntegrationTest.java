@@ -13,15 +13,15 @@ class HealthIntegrationTest extends AbstractBaseIntegrationTest {
   @Test
   void shouldReportApplicationAsHealthy() {
     var status = given()
-        .port(port)
-        .accept(ContentType.JSON)
-        .when()
-        .get("/actuator/health")
-        .then()
-        .statusCode(HttpStatus.OK.value())
-        .extract()
-        .jsonPath()
-        .getString("status");
+      .port(port)
+      .accept(ContentType.JSON)
+      .when()
+      .get("/actuator/health")
+      .then()
+      .statusCode(HttpStatus.OK.value())
+      .extract()
+      .jsonPath()
+      .getString("status");
 
     assertThat(status).isEqualTo("UP");
   }

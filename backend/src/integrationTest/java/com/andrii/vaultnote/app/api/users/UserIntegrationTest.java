@@ -27,8 +27,8 @@ class UserIntegrationTest extends AbstractBaseIntegrationTest {
 
   @Autowired
   UserIntegrationTest(
-      UserJpaRepository userRepository,
-      AccessTokenGenerator accessTokenGenerator) {
+    UserJpaRepository userRepository,
+    AccessTokenGenerator accessTokenGenerator) {
     this.userRepository = userRepository;
     this.accessTokenGenerator = accessTokenGenerator;
   }
@@ -47,18 +47,18 @@ class UserIntegrationTest extends AbstractBaseIntegrationTest {
     var accessToken = accessTokenGenerator.generate(admin).rawValue();
 
     var response = given()
-        .port(port)
-        .auth()
-        .oauth2(accessToken)
-        .queryParam("page", 0)
-        .queryParam("size", 1)
-        .queryParam("sort", "displayName,asc")
-        .when()
-        .get(USERS_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.OK.value())
-        .extract()
-        .response();
+      .port(port)
+      .auth()
+      .oauth2(accessToken)
+      .queryParam("page", 0)
+      .queryParam("size", 1)
+      .queryParam("sort", "displayName,asc")
+      .when()
+      .get(USERS_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.OK.value())
+      .extract()
+      .response();
 
     assertThat(response.jsonPath().getInt("number")).isZero();
     assertThat(response.jsonPath().getInt("size")).isEqualTo(1);
@@ -66,8 +66,8 @@ class UserIntegrationTest extends AbstractBaseIntegrationTest {
     assertThat(response.jsonPath().getInt("totalElements")).isEqualTo(3);
     assertThat(response.jsonPath().getString("content[0].email")).isEqualTo(admin.getEmail());
     assertThat(response.getBody().asString())
-        .doesNotContain("passwordHash")
-        .doesNotContain("password_hash");
+      .doesNotContain("passwordHash")
+      .doesNotContain("password_hash");
   }
 
   /**
@@ -83,13 +83,13 @@ class UserIntegrationTest extends AbstractBaseIntegrationTest {
     var accessToken = accessTokenGenerator.generate(user).rawValue();
 
     given()
-        .port(port)
-        .auth()
-        .oauth2(accessToken)
-        .when()
-        .get(USERS_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.FORBIDDEN.value());
+      .port(port)
+      .auth()
+      .oauth2(accessToken)
+      .when()
+      .get(USERS_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.FORBIDDEN.value());
   }
 
   /**
@@ -103,20 +103,20 @@ class UserIntegrationTest extends AbstractBaseIntegrationTest {
   @Test
   void shouldRejectRequestWithoutAccessToken() {
     given()
-        .port(port)
-        .when()
-        .get(USERS_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.UNAUTHORIZED.value());
+      .port(port)
+      .when()
+      .get(USERS_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.UNAUTHORIZED.value());
   }
 
   private UserEntity saveUser(String email, String displayName, UserRole role) {
     return userRepository.saveAndFlush(UserEntity.builder()
-        .email(email)
-        .displayName(displayName)
-        .passwordHash("password-hash")
-        .emailVerified(true)
-        .roles(EnumSet.of(role))
-        .build());
+      .email(email)
+      .displayName(displayName)
+      .passwordHash("password-hash")
+      .emailVerified(true)
+      .roles(EnumSet.of(role))
+      .build());
   }
 }

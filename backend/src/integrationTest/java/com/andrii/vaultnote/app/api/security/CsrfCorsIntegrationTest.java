@@ -43,13 +43,13 @@ class CsrfCorsIntegrationTest extends AbstractBaseIntegrationTest {
   @Test
   void shouldIssueCsrfTokenForSpaClient() {
     var response = given()
-        .port(port)
-        .when()
-        .get(CSRF_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.OK.value())
-        .extract()
-        .response();
+      .port(port)
+      .when()
+      .get(CSRF_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.OK.value())
+      .extract()
+      .response();
 
     var token = response.jsonPath().getString("token");
     assertThat(token).isNotBlank();
@@ -57,10 +57,10 @@ class CsrfCorsIntegrationTest extends AbstractBaseIntegrationTest {
     assertThat(response.jsonPath().getString("parameterName")).isEqualTo("_csrf");
     assertThat(response.getCookie("XSRF-TOKEN")).isEqualTo(token);
     assertThat(response.getHeader("Set-Cookie"))
-        .contains("XSRF-TOKEN=" + token)
-        .contains("Path=/")
-        .contains("SameSite=Lax")
-        .doesNotContain("HttpOnly");
+      .contains("XSRF-TOKEN=" + token)
+      .contains("Path=/")
+      .contains("SameSite=Lax")
+      .doesNotContain("HttpOnly");
   }
 
   /**
@@ -69,29 +69,29 @@ class CsrfCorsIntegrationTest extends AbstractBaseIntegrationTest {
   @Test
   void shouldRejectLoginWithoutCsrfToken() {
     userRepository.saveAndFlush(UserEntity.builder()
-        .email(USER_EMAIL)
-        .displayName("CSRF User")
-        .passwordHash(passwordEncoder.encode(USER_PASSWORD))
-        .emailVerified(true)
-        .roles(EnumSet.of(UserRole.USER))
-        .build());
+      .email(USER_EMAIL)
+      .displayName("CSRF User")
+      .passwordHash(passwordEncoder.encode(USER_PASSWORD))
+      .emailVerified(true)
+      .roles(EnumSet.of(UserRole.USER))
+      .build());
 
     var response = given()
-        .port(port)
-        .contentType("application/json")
-        .body(LoginRequest.builder()
-            .email(USER_EMAIL)
-            .password(USER_PASSWORD)
-            .build())
-        .when()
-        .post(LOGIN_ENDPOINT)
-        .then()
-        .extract()
-        .response();
+      .port(port)
+      .contentType("application/json")
+      .body(LoginRequest.builder()
+        .email(USER_EMAIL)
+        .password(USER_PASSWORD)
+        .build())
+      .when()
+      .post(LOGIN_ENDPOINT)
+      .then()
+      .extract()
+      .response();
 
     assertThat(response.statusCode())
-        .as("response body: %s; headers: %s", response.asString(), response.headers())
-        .isEqualTo(HttpStatus.FORBIDDEN.value());
+      .as("response body: %s; headers: %s", response.asString(), response.headers())
+      .isEqualTo(HttpStatus.FORBIDDEN.value());
   }
 
   /**
@@ -103,13 +103,13 @@ class CsrfCorsIntegrationTest extends AbstractBaseIntegrationTest {
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.OK.value());
     assertThat(response.getHeader("Access-Control-Allow-Origin"))
-        .isEqualTo(FRONTEND_ORIGIN);
+      .isEqualTo(FRONTEND_ORIGIN);
     assertThat(response.getHeader("Access-Control-Allow-Credentials"))
-        .isEqualTo("true");
+      .isEqualTo("true");
     assertThat(response.getHeader("Access-Control-Allow-Methods"))
-        .contains("POST");
+      .contains("POST");
     assertThat(response.getHeader("Access-Control-Allow-Headers"))
-        .containsIgnoringCase("X-XSRF-TOKEN");
+      .containsIgnoringCase("X-XSRF-TOKEN");
   }
 
   /**
@@ -125,14 +125,14 @@ class CsrfCorsIntegrationTest extends AbstractBaseIntegrationTest {
 
   private Response corsPreflight(String origin) {
     return given()
-        .port(port)
-        .header("Origin", origin)
-        .header("Access-Control-Request-Method", "POST")
-        .header("Access-Control-Request-Headers", "content-type,x-xsrf-token")
-        .when()
-        .options(LOGIN_ENDPOINT)
-        .then()
-        .extract()
-        .response();
+      .port(port)
+      .header("Origin", origin)
+      .header("Access-Control-Request-Method", "POST")
+      .header("Access-Control-Request-Headers", "content-type,x-xsrf-token")
+      .when()
+      .options(LOGIN_ENDPOINT)
+      .then()
+      .extract()
+      .response();
   }
 }

@@ -28,8 +28,8 @@ class AuthenticatedUserIntegrationTest extends AbstractBaseIntegrationTest {
 
   @Autowired
   AuthenticatedUserIntegrationTest(
-      UserJpaRepository userRepository,
-      AccessTokenGenerator accessTokenGenerator) {
+    UserJpaRepository userRepository,
+    AccessTokenGenerator accessTokenGenerator) {
     this.userRepository = userRepository;
     this.accessTokenGenerator = accessTokenGenerator;
   }
@@ -44,24 +44,24 @@ class AuthenticatedUserIntegrationTest extends AbstractBaseIntegrationTest {
   @Test
   void shouldReturnAuthenticatedUserFromValidAccessToken() {
     var user = userRepository.saveAndFlush(UserEntity.builder()
-        .email("authenticated@example.com")
-        .displayName("Authenticated User")
-        .passwordHash("password-hash")
-        .emailVerified(true)
-        .roles(EnumSet.of(UserRole.USER))
-        .build());
+      .email("authenticated@example.com")
+      .displayName("Authenticated User")
+      .passwordHash("password-hash")
+      .emailVerified(true)
+      .roles(EnumSet.of(UserRole.USER))
+      .build());
     var accessToken = accessTokenGenerator.generate(user).rawValue();
 
     var response = given()
-        .port(port)
-        .auth()
-        .oauth2(accessToken)
-        .when()
-        .get(CURRENT_USER_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.OK.value())
-        .extract()
-        .as(CurrentUserResponse.class);
+      .port(port)
+      .auth()
+      .oauth2(accessToken)
+      .when()
+      .get(CURRENT_USER_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.OK.value())
+      .extract()
+      .as(CurrentUserResponse.class);
 
     assertThat(response.userId()).isEqualTo(user.getId());
     assertThat(response.roles()).containsExactly(UserRole.USER.name());
@@ -76,10 +76,10 @@ class AuthenticatedUserIntegrationTest extends AbstractBaseIntegrationTest {
   @Test
   void shouldRejectRequestWithoutAccessToken() {
     given()
-        .port(port)
-        .when()
-        .get(CURRENT_USER_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.UNAUTHORIZED.value());
+      .port(port)
+      .when()
+      .get(CURRENT_USER_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.UNAUTHORIZED.value());
   }
 }

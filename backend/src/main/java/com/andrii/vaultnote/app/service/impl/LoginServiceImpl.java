@@ -41,18 +41,18 @@ public class LoginServiceImpl implements LoginService {
     log.info("Received request to login user");
 
     var user = userRepository.findByEmail(request.email())
-        .filter(UserEntity::isEmailVerified)
-        .filter(userEntity -> passwordEncoder.matches(
-            request.password(), userEntity.getPasswordHash()))
-        .orElseThrow(AuthenticationFailedException::new);
+      .filter(UserEntity::isEmailVerified)
+      .filter(userEntity -> passwordEncoder.matches(
+        request.password(), userEntity.getPasswordHash()))
+      .orElseThrow(AuthenticationFailedException::new);
 
     var generatedRefreshToken = secureTokenGenerator.generate();
     var refreshToken = RefreshTokenEntity.builder()
-        .user(user)
-        .tokenHash(generatedRefreshToken.hash())
-        .tokenFamilyId(UUID.randomUUID())
-        .expiresAt(clock.instant().plus(refreshTokenProperties.ttl()))
-        .build();
+      .user(user)
+      .tokenHash(generatedRefreshToken.hash())
+      .tokenFamilyId(UUID.randomUUID())
+      .expiresAt(clock.instant().plus(refreshTokenProperties.ttl()))
+      .build();
     refreshTokenRepository.save(refreshToken);
 
     return authenticationResultFactory.create(user, generatedRefreshToken.rawValue());

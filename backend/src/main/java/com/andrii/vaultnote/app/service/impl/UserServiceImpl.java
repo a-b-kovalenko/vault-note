@@ -26,8 +26,8 @@ public class UserServiceImpl implements UserService {
   @Transactional(readOnly = true)
   public Page<UserInfoDto> getUsers(Pageable pageable) {
     log.info("Getting users: page={}, size={}, sort={}",
-        pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+      pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
     return userRepository.findAll(pageable)
-        .map(userMapper::toUserInfoDto);
+      .map(userMapper::toUserInfoDto);
   }
 }

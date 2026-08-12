@@ -22,8 +22,8 @@ public class SecureTokenGenerator {
     secureRandom.nextBytes(randomBytes);
 
     var rawValue = Base64.getUrlEncoder()
-        .withoutPadding()
-        .encodeToString(randomBytes);
+      .withoutPadding()
+      .encodeToString(randomBytes);
 
     return new GeneratedToken(rawValue, hash(rawValue));
   }
@@ -41,7 +41,7 @@ public class SecureTokenGenerator {
   }
 
   public record GeneratedToken(
-      String rawValue,
-      String hash) {
+    String rawValue,
+    String hash) {
   }
 }

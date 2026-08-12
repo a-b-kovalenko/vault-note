@@ -91,20 +91,20 @@ class PasswordResetServiceImplTest {
     var tokenCaptor = ArgumentCaptor.forClass(PasswordResetTokenEntity.class);
     verify(passwordResetTokenRepository).save(tokenCaptor.capture());
     assertThat(tokenCaptor.getValue())
-        .extracting(PasswordResetTokenEntity::getUser, PasswordResetTokenEntity::getTokenHash,
-            PasswordResetTokenEntity::getExpiresAt)
-        .containsExactly(user, TOKEN_HASH, NOW.plus(Duration.ofHours(1)));
+      .extracting(PasswordResetTokenEntity::getUser, PasswordResetTokenEntity::getTokenHash,
+        PasswordResetTokenEntity::getExpiresAt)
+      .containsExactly(user, TOKEN_HASH, NOW.plus(Duration.ofHours(1)));
     var messageCaptor = ArgumentCaptor.forClass(MailMessage.class);
     verify(mailSender).send(messageCaptor.capture());
     assertThat(messageCaptor.getValue())
-        .extracting(MailMessage::to, MailMessage::subject, MailMessage::text)
-        .containsExactly(
-            EMAIL,
-            "Reset your VaultNote password",
-            "Hello Vault User,\n\n"
-                + "Reset your VaultNote password and verify your email by opening this link:\n"
-                + "http://localhost:4200/reset-password?token=raw-reset-token\n\n"
-                + "If you did not request this, you can ignore this email.");
+      .extracting(MailMessage::to, MailMessage::subject, MailMessage::text)
+      .containsExactly(
+        EMAIL,
+        "Reset your VaultNote password",
+        "Hello Vault User,\n\n"
+          + "Reset your VaultNote password and verify your email by opening this link:\n"
+          + "http://localhost:4200/reset-password?token=raw-reset-token\n\n"
+          + "If you did not request this, you can ignore this email.");
   }
 
   @Test
@@ -115,27 +115,27 @@ class PasswordResetServiceImplTest {
     passwordResetService.requestPasswordReset(request);
 
     verifyNoInteractions(
-        passwordResetTokenRepository,
-        emailVerificationTokenRepository,
-        refreshTokenRepository,
-        tokenGenerator,
-        mailSender,
-        passwordEncoder);
+      passwordResetTokenRepository,
+      emailVerificationTokenRepository,
+      refreshTokenRepository,
+      tokenGenerator,
+      mailSender,
+      passwordEncoder);
   }
 
   @Test
   void shouldConfirmPasswordResetAndRevokeSessions() {
     var user = user(false);
     var token = PasswordResetTokenEntity.builder()
-        .id(17L)
-        .user(user)
-        .tokenHash(TOKEN_HASH)
-        .expiresAt(NOW.plus(Duration.ofHours(1)))
-        .build();
+      .id(17L)
+      .user(user)
+      .tokenHash(TOKEN_HASH)
+      .expiresAt(NOW.plus(Duration.ofHours(1)))
+      .build();
     var request = PasswordResetConfirmRequest.builder()
-        .token(RAW_TOKEN)
-        .newPassword("newPassword1234")
-        .build();
+      .token(RAW_TOKEN)
+      .newPassword("newPassword1234")
+      .build();
 
     when(clock.instant()).thenReturn(NOW);
     when(tokenGenerator.hash(RAW_TOKEN)).thenReturn(TOKEN_HASH);
@@ -148,13 +148,13 @@ class PasswordResetServiceImplTest {
     var userCaptor = ArgumentCaptor.forClass(UserEntity.class);
     verify(userRepository).save(userCaptor.capture());
     assertThat(userCaptor.getValue())
-        .extracting(UserEntity::getPasswordHash, UserEntity::isEmailVerified)
-        .containsExactly(NEW_PASSWORD_HASH, true);
+      .extracting(UserEntity::getPasswordHash, UserEntity::isEmailVerified)
+      .containsExactly(NEW_PASSWORD_HASH, true);
     var tokenCaptor = ArgumentCaptor.forClass(PasswordResetTokenEntity.class);
     verify(passwordResetTokenRepository).save(tokenCaptor.capture());
     assertThat(tokenCaptor.getValue().getUsedAt()).isEqualTo(NOW);
     verify(emailVerificationTokenRepository)
-        .invalidateActiveByUserId(user.getId(), NOW);
+      .invalidateActiveByUserId(user.getId(), NOW);
     verify(refreshTokenRepository).revokeActiveByUserId(user.getId(), NOW);
   }
 
@@ -162,21 +162,21 @@ class PasswordResetServiceImplTest {
   void shouldRejectExpiredPasswordResetToken() {
     var user = user(false);
     var token = PasswordResetTokenEntity.builder()
-        .user(user)
-        .tokenHash(TOKEN_HASH)
-        .expiresAt(NOW.minusSeconds(1))
-        .build();
+      .user(user)
+      .tokenHash(TOKEN_HASH)
+      .expiresAt(NOW.minusSeconds(1))
+      .build();
     var request = PasswordResetConfirmRequest.builder()
-        .token(RAW_TOKEN)
-        .newPassword("newPassword1234")
-        .build();
+      .token(RAW_TOKEN)
+      .newPassword("newPassword1234")
+      .build();
     when(clock.instant()).thenReturn(NOW);
     when(tokenGenerator.hash(RAW_TOKEN)).thenReturn(TOKEN_HASH);
     when(passwordResetTokenRepository.findByTokenHash(TOKEN_HASH)).thenReturn(Optional.of(token));
 
     assertThatExceptionOfType(PasswordResetFailedException.class)
-        .isThrownBy(() -> passwordResetService.confirmPasswordReset(request))
-        .withMessage("Password reset link is invalid or has expired.");
+      .isThrownBy(() -> passwordResetService.confirmPasswordReset(request))
+      .withMessage("Password reset link is invalid or has expired.");
 
     verify(userRepository, never()).save(any(UserEntity.class));
     verify(passwordResetTokenRepository, never()).save(any(PasswordResetTokenEntity.class));
@@ -185,12 +185,12 @@ class PasswordResetServiceImplTest {
 
   private static UserEntity user(boolean emailVerified) {
     return UserEntity.builder()
-        .id(42L)
-        .email(EMAIL)
-        .displayName(DISPLAY_NAME)
-        .passwordHash(OLD_PASSWORD_HASH)
-        .emailVerified(emailVerified)
-        .roles(EnumSet.of(UserRole.USER))
-        .build();
+      .id(42L)
+      .email(EMAIL)
+      .displayName(DISPLAY_NAME)
+      .passwordHash(OLD_PASSWORD_HASH)
+      .emailVerified(emailVerified)
+      .roles(EnumSet.of(UserRole.USER))
+      .build();
   }
 }

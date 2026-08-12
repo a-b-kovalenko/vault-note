@@ -34,7 +34,7 @@ class UserRoleConverterTest {
   @Test
   void shouldRejectUnknownRoleCode() {
     assertThatThrownBy(() -> converter.convertToEntityAttribute((short) 99))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("Unknown user role code: 99");
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessage("Unknown user role code: 99");
   }
 }

@@ -25,9 +25,9 @@ class SmtpMailSenderTest {
   void shouldMapMessageToSmtpMail() {
     var sender = new SmtpMailSender(javaMailSender, new MailProperties(FROM));
     var message = new MailMessage(
-        "user@example.com",
-        "Verify your email",
-        "Open the verification link.");
+      "user@example.com",
+      "Verify your email",
+      "Open the verification link.");
 
     sender.send(message);
 

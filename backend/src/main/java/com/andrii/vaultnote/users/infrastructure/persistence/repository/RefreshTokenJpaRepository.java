@@ -20,35 +20,35 @@ public interface RefreshTokenJpaRepository extends JpaRepository<RefreshTokenEnt
 
   @Modifying
   @Query("""
-      update RefreshTokenEntity token
-         set token.revokedAt = :revokedAt
-       where token.tokenFamilyId = :tokenFamilyId
-         and token.revokedAt is null
-      """)
+    update RefreshTokenEntity token
+       set token.revokedAt = :revokedAt
+     where token.tokenFamilyId = :tokenFamilyId
+       and token.revokedAt is null
+    """)
   int revokeActiveByTokenFamilyId(
-      @Param("tokenFamilyId") UUID tokenFamilyId,
-      @Param("revokedAt") Instant revokedAt);
+    @Param("tokenFamilyId") UUID tokenFamilyId,
+    @Param("revokedAt") Instant revokedAt);
 
   @Modifying
   @Query("""
-      update RefreshTokenEntity token
-         set token.revokedAt = :revokedAt
-       where token.id = :tokenId
-         and token.revokedAt is null
-      """)
+    update RefreshTokenEntity token
+       set token.revokedAt = :revokedAt
+     where token.id = :tokenId
+       and token.revokedAt is null
+    """)
   int revokeActiveById(
-      @Param("tokenId") Long tokenId,
-      @Param("revokedAt") Instant revokedAt);
+    @Param("tokenId") Long tokenId,
+    @Param("revokedAt") Instant revokedAt);
 
   @Modifying
   @Query("""
-      update RefreshTokenEntity token
-         set token.revokedAt = :revokedAt
-       where token.user.id = :userId
-         and token.revokedAt is null
-      """)
+    update RefreshTokenEntity token
+       set token.revokedAt = :revokedAt
+     where token.user.id = :userId
+       and token.revokedAt is null
+    """)
   int revokeActiveByUserId(
-      @Param("userId") Long userId,
-      @Param("revokedAt") Instant revokedAt);
+    @Param("userId") Long userId,
+    @Param("revokedAt") Instant revokedAt);
 
 }

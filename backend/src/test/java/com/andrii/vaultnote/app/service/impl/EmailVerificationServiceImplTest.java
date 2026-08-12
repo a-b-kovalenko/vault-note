@@ -62,10 +62,10 @@ class EmailVerificationServiceImplTest {
   @Test
   void shouldPersistTokenAndSendVerificationEmail() {
     var user = UserEntity.builder()
-        .id(1L)
-        .email(EMAIL)
-        .displayName("Test User")
-        .build();
+      .id(1L)
+      .email(EMAIL)
+      .displayName("Test User")
+      .build();
     var generatedToken = new SecureTokenGenerator.GeneratedToken(RAW_TOKEN, TOKEN_HASH);
     when(tokenGenerator.generate()).thenReturn(generatedToken);
     when(properties.baseUrl()).thenReturn(BASE_URL);
@@ -85,37 +85,37 @@ class EmailVerificationServiceImplTest {
     verify(mailSender).send(messageCaptor.capture());
     var sentMessage = messageCaptor.getValue();
     var expectedUrl = UriComponentsBuilder
-        .fromUriString(BASE_URL)
-        .path("/verify-email")
-        .queryParam("token", RAW_TOKEN)
-        .build()
-        .toUriString();
+      .fromUriString(BASE_URL)
+      .path("/verify-email")
+      .queryParam("token", RAW_TOKEN)
+      .build()
+      .toUriString();
     assertThat(sentMessage.to()).isEqualTo(EMAIL);
     assertThat(sentMessage.subject()).isEqualTo("Verify your VaultNote email");
     assertThat(sentMessage.text())
-        .startsWith("Hello Test User,\n\n")
-        .contains("Please verify your VaultNote email by opening this link:\n" + expectedUrl);
+      .startsWith("Hello Test User,\n\n")
+      .contains("Please verify your VaultNote email by opening this link:\n" + expectedUrl);
   }
 
   @Test
   void shouldVerifyEmailAndMarkTokenAndUser() {
     var user = UserEntity.builder()
-        .id(1L)
-        .email(EMAIL)
-        .emailVerified(false)
-        .build();
+      .id(1L)
+      .email(EMAIL)
+      .emailVerified(false)
+      .build();
     var token = EmailVerificationTokenEntity.builder()
-        .user(user)
-        .tokenHash(TOKEN_HASH)
-        .expiresAt(NOW.plus(TOKEN_TTL))
-        .build();
+      .user(user)
+      .tokenHash(TOKEN_HASH)
+      .expiresAt(NOW.plus(TOKEN_TTL))
+      .build();
     when(tokenGenerator.hash(RAW_TOKEN)).thenReturn(TOKEN_HASH);
     when(clock.instant()).thenReturn(NOW);
     when(tokenRepository.findByTokenHash(TOKEN_HASH)).thenReturn(Optional.of(token));
     when(tokenRepository.save(any(EmailVerificationTokenEntity.class)))
-        .thenAnswer(invocation -> invocation.getArgument(0));
+      .thenAnswer(invocation -> invocation.getArgument(0));
     when(userJpaRepository.save(any(UserEntity.class)))
-        .thenAnswer(invocation -> invocation.getArgument(0));
+      .thenAnswer(invocation -> invocation.getArgument(0));
 
     emailVerificationService.verifyEmail(RAW_TOKEN);
 
@@ -131,8 +131,8 @@ class EmailVerificationServiceImplTest {
   @Test
   void shouldRejectNullToken() {
     assertThatThrownBy(() -> emailVerificationService.verifyEmail(null))
-        .isInstanceOf(EmailVerificationFailedException.class)
-        .hasMessage("Email verification link is invalid or has expired.");
+      .isInstanceOf(EmailVerificationFailedException.class)
+      .hasMessage("Email verification link is invalid or has expired.");
 
     verifyNoInteractions(tokenGenerator, tokenRepository, userJpaRepository, clock);
   }
@@ -143,7 +143,7 @@ class EmailVerificationServiceImplTest {
     when(tokenRepository.findByTokenHash(TOKEN_HASH)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> emailVerificationService.verifyEmail(RAW_TOKEN))
-        .isInstanceOf(EmailVerificationFailedException.class);
+      .isInstanceOf(EmailVerificationFailedException.class);
 
     verifyNoInteractions(userJpaRepository);
   }
@@ -151,16 +151,16 @@ class EmailVerificationServiceImplTest {
   @Test
   void shouldRejectExpiredToken() {
     var token = EmailVerificationTokenEntity.builder()
-        .user(UserEntity.builder().email(EMAIL).build())
-        .tokenHash(TOKEN_HASH)
-        .expiresAt(NOW.minusSeconds(1))
-        .build();
+      .user(UserEntity.builder().email(EMAIL).build())
+      .tokenHash(TOKEN_HASH)
+      .expiresAt(NOW.minusSeconds(1))
+      .build();
     when(tokenGenerator.hash(RAW_TOKEN)).thenReturn(TOKEN_HASH);
     when(clock.instant()).thenReturn(NOW);
     when(tokenRepository.findByTokenHash(TOKEN_HASH)).thenReturn(Optional.of(token));
 
     assertThatThrownBy(() -> emailVerificationService.verifyEmail(RAW_TOKEN))
-        .isInstanceOf(EmailVerificationFailedException.class);
+      .isInstanceOf(EmailVerificationFailedException.class);
 
     verify(tokenRepository).findByTokenHash(TOKEN_HASH);
     verifyNoInteractions(userJpaRepository);
@@ -169,17 +169,17 @@ class EmailVerificationServiceImplTest {
   @Test
   void shouldRejectUsedToken() {
     var token = EmailVerificationTokenEntity.builder()
-        .user(UserEntity.builder().email(EMAIL).build())
-        .tokenHash(TOKEN_HASH)
-        .expiresAt(NOW.plus(TOKEN_TTL))
-        .usedAt(NOW.minusSeconds(1))
-        .build();
+      .user(UserEntity.builder().email(EMAIL).build())
+      .tokenHash(TOKEN_HASH)
+      .expiresAt(NOW.plus(TOKEN_TTL))
+      .usedAt(NOW.minusSeconds(1))
+      .build();
     when(tokenGenerator.hash(RAW_TOKEN)).thenReturn(TOKEN_HASH);
     when(clock.instant()).thenReturn(NOW);
     when(tokenRepository.findByTokenHash(TOKEN_HASH)).thenReturn(Optional.of(token));
 
     assertThatThrownBy(() -> emailVerificationService.verifyEmail(RAW_TOKEN))
-        .isInstanceOf(EmailVerificationFailedException.class);
+      .isInstanceOf(EmailVerificationFailedException.class);
 
     verify(tokenRepository).findByTokenHash(TOKEN_HASH);
     verifyNoInteractions(userJpaRepository);

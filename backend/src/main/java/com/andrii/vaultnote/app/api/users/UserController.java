@@ -34,9 +34,9 @@ public class UserController {
   @SecurityRequirement(name = "bearerAuth")
   @GetMapping
   public Page<UserInfoDto> getUsers(
-      @PageableDefault(size = 20) @SortDefault(
-          sort = "displayName",
-          direction = Sort.Direction.ASC) @ParameterObject Pageable pageable) {
+    @PageableDefault(size = 20) @SortDefault(
+      sort = "displayName",
+      direction = Sort.Direction.ASC) @ParameterObject Pageable pageable) {
     return userService.getUsers(pageable);
   }
 }

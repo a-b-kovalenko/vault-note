@@ -39,7 +39,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     var tokenHash = secureTokenGenerator.hash(rawRefreshToken);
     var token = refreshTokenRepository.findByTokenHash(tokenHash)
-        .orElseThrow(RefreshTokenAuthenticationFailedException::new);
+      .orElseThrow(RefreshTokenAuthenticationFailedException::new);
 
     var now = clock.instant();
 
@@ -59,11 +59,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     var generatedRefreshToken = secureTokenGenerator.generate();
     var nextRefreshToken = RefreshTokenEntity.builder()
-        .user(token.getUser())
-        .tokenHash(generatedRefreshToken.hash())
-        .tokenFamilyId(token.getTokenFamilyId())
-        .expiresAt(now.plus(refreshTokenProperties.ttl()))
-        .build();
+      .user(token.getUser())
+      .tokenHash(generatedRefreshToken.hash())
+      .tokenFamilyId(token.getTokenFamilyId())
+      .expiresAt(now.plus(refreshTokenProperties.ttl()))
+      .build();
     refreshTokenRepository.save(nextRefreshToken);
 
     return authenticationResultFactory.create(token.getUser(), generatedRefreshToken.rawValue());
@@ -81,9 +81,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     var tokenHash = secureTokenGenerator.hash(rawRefreshToken);
     var revokedTokens = refreshTokenRepository.findByTokenHash(tokenHash)
-        .filter(token -> isNull(token.getRevokedAt()))
-        .map(token -> refreshTokenRepository.revokeActiveById(token.getId(), clock.instant()))
-        .orElse(0);
+      .filter(token -> isNull(token.getRevokedAt()))
+      .map(token -> refreshTokenRepository.revokeActiveById(token.getId(), clock.instant()))
+      .orElse(0);
 
     log.info("Logout completed; revoked {} refresh token(s)", revokedTokens);
   }

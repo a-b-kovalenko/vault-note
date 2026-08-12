@@ -11,6 +11,6 @@ import lombok.Builder;
 @Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record LoginRequest(
-    @Schema(requiredMode = Schema.RequiredMode.REQUIRED) @NotBlank @Email @Size(max = 320) String email,
-    @Schema(requiredMode = Schema.RequiredMode.REQUIRED) @NotBlank @Size(max = 256) String password) {
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED) @NotBlank @Email @Size(max = 320) String email,
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED) @NotBlank @Size(max = 256) String password) {
 }

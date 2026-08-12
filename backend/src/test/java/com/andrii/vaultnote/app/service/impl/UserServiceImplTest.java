@@ -41,10 +41,10 @@ class UserServiceImplTest {
   void shouldReturnMappedUsers() {
     var pageable = PageRequest.of(0, 20);
     var user = UserEntity.builder()
-        .id(1L)
-        .email("user@example.com")
-        .displayName("User")
-        .build();
+      .id(1L)
+      .email("user@example.com")
+      .displayName("User")
+      .build();
     Page<UserEntity> users = new PageImpl<>(List.of(user), pageable, 1);
 
     when(userRepository.findAll(pageable)).thenReturn(users);
@@ -52,9 +52,9 @@ class UserServiceImplTest {
     var result = userService.getUsers(pageable);
 
     assertThat(result.getContent())
-        .hasSize(1)
-        .extracting(UserInfoDto::id, UserInfoDto::email, UserInfoDto::displayName)
-        .containsExactly(tuple(1L, "user@example.com", "User"));
+      .hasSize(1)
+      .extracting(UserInfoDto::id, UserInfoDto::email, UserInfoDto::displayName)
+      .containsExactly(tuple(1L, "user@example.com", "User"));
 
     assertThat(result.getTotalElements()).isEqualTo(1);
 

@@ -32,7 +32,7 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
   private static final String VERIFICATION_PATH = "/verify-email";
   private static final String EMAIL_SUBJECT = "Verify your VaultNote email";
   private static final String EMAIL_BODY = "Hello %s,\n\n"
-      + "Please verify your VaultNote email by opening this link:\n%s";
+    + "Please verify your VaultNote email by opening this link:\n%s";
 
   UserJpaRepository userJpaRepository;
   EmailVerificationTokenJpaRepository tokenRepository;
@@ -47,22 +47,22 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
     log.info("Issuing email verification for userId={}", user.getId());
     var generatedToken = tokenGenerator.generate();
     var token = EmailVerificationTokenEntity.builder()
-        .user(user)
-        .tokenHash(generatedToken.hash())
-        .expiresAt(clock.instant().plus(properties.tokenTtl()))
-        .build();
+      .user(user)
+      .tokenHash(generatedToken.hash())
+      .expiresAt(clock.instant().plus(properties.tokenTtl()))
+      .build();
     tokenRepository.save(token);
 
     var verificationUrl = UriComponentsBuilder
-        .fromUriString(properties.baseUrl())
-        .path(VERIFICATION_PATH)
-        .queryParam("token", generatedToken.rawValue())
-        .build()
-        .toUriString();
+      .fromUriString(properties.baseUrl())
+      .path(VERIFICATION_PATH)
+      .queryParam("token", generatedToken.rawValue())
+      .build()
+      .toUriString();
     var message = new MailMessage(
-        user.getEmail(),
-        EMAIL_SUBJECT,
-        EMAIL_BODY.formatted(user.getDisplayName(), verificationUrl));
+      user.getEmail(),
+      EMAIL_SUBJECT,
+      EMAIL_BODY.formatted(user.getDisplayName(), verificationUrl));
 
     mailSender.send(message);
   }
@@ -71,30 +71,30 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
   @Transactional
   public void verifyEmail(String rawToken) {
     var tokenHash = Optional.ofNullable(rawToken)
-        .map(tokenGenerator::hash)
-        .orElseThrow(EmailVerificationFailedException::new);
+      .map(tokenGenerator::hash)
+      .orElseThrow(EmailVerificationFailedException::new);
     var now = clock.instant();
     var verifiedUser = tokenRepository.findByTokenHash(tokenHash)
-        .filter(t -> isNull(t.getUsedAt()) && t.getExpiresAt().isAfter(now))
-        .map(token -> markTokenUsed(token, now))
-        .map(EmailVerificationTokenEntity::getUser)
-        .map(this::markEmailVerified)
-        .orElseThrow(EmailVerificationFailedException::new);
+      .filter(t -> isNull(t.getUsedAt()) && t.getExpiresAt().isAfter(now))
+      .map(token -> markTokenUsed(token, now))
+      .map(EmailVerificationTokenEntity::getUser)
+      .map(this::markEmailVerified)
+      .orElseThrow(EmailVerificationFailedException::new);
     log.info("Email verified for userId={}", verifiedUser.getId());
   }
 
   private EmailVerificationTokenEntity markTokenUsed(
-      EmailVerificationTokenEntity token, Instant usedAt) {
+    EmailVerificationTokenEntity token, Instant usedAt) {
     var usedToken = token.toBuilder()
-        .usedAt(usedAt)
-        .build();
+      .usedAt(usedAt)
+      .build();
     return tokenRepository.save(usedToken);
   }
 
   private UserEntity markEmailVerified(UserEntity user) {
     var verifiedUser = user.toBuilder()
-        .emailVerified(true)
-        .build();
+      .emailVerified(true)
+      .build();
     return userJpaRepository.save(verifiedUser);
   }
 }

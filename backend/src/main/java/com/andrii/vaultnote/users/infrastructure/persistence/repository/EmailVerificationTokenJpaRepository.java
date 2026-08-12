@@ -13,20 +13,20 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface EmailVerificationTokenJpaRepository
-    extends
-      JpaRepository<EmailVerificationTokenEntity, Long> {
+  extends
+    JpaRepository<EmailVerificationTokenEntity, Long> {
 
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   Optional<EmailVerificationTokenEntity> findByTokenHash(String tokenHash);
 
   @Modifying
   @Query("""
-      update EmailVerificationTokenEntity token
-         set token.usedAt = :usedAt
-       where token.user.id = :userId
-         and token.usedAt is null
-      """)
+    update EmailVerificationTokenEntity token
+       set token.usedAt = :usedAt
+     where token.user.id = :userId
+       and token.usedAt is null
+    """)
   int invalidateActiveByUserId(
-      @Param("userId") Long userId,
-      @Param("usedAt") Instant usedAt);
+    @Param("userId") Long userId,
+    @Param("usedAt") Instant usedAt);
 }

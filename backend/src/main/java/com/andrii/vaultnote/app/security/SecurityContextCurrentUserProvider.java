@@ -18,8 +18,8 @@ public class SecurityContextCurrentUserProvider implements CurrentUserProvider {
   public long currentUserId() {
     var authentication = SecurityContextHolder.getContext().getAuthentication();
     if (isNull(authentication)
-        || !authentication.isAuthenticated()
-        || authentication instanceof AnonymousAuthenticationToken) {
+      || !authentication.isAuthenticated()
+      || authentication instanceof AnonymousAuthenticationToken) {
       throw new AuthenticationCredentialsNotFoundException(AUTHENTICATED_USER_REQUIRED);
     }
 

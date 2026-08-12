@@ -46,8 +46,8 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
     var passwordHash = passwordEncoder.encode(request.password());
     var newEntity = userMapper.toUserEntity(request, passwordHash).toBuilder()
-        .roles(EnumSet.of(UserRole.USER))
-        .build();
+      .roles(EnumSet.of(UserRole.USER))
+      .build();
 
     UserEntity savedEntity;
     try {
@@ -67,6 +67,6 @@ public class RegistrationServiceImpl implements RegistrationService {
   private static boolean isUniqueViolation(DataIntegrityViolationException e) {
     var cause = e.getMostSpecificCause();
     return cause instanceof SQLException sqlException
-        && SQLSTATE_UNIQUE_VIOLATION.equals(sqlException.getSQLState());
+      && SQLSTATE_UNIQUE_VIOLATION.equals(sqlException.getSQLState());
   }
 }

@@ -31,9 +31,9 @@ class JwtRolesValidatorTest {
   @Test
   void shouldRejectMissingRoles() {
     var jwt = Jwt.withTokenValue("token")
-        .header("alg", "HS256")
-        .subject("1")
-        .build();
+      .header("alg", "HS256")
+      .subject("1")
+      .build();
 
     var result = validator.validate(jwt);
 
@@ -42,9 +42,9 @@ class JwtRolesValidatorTest {
 
   private Jwt jwtWithRoles(List<String> roles) {
     return Jwt.withTokenValue("token")
-        .header("alg", "HS256")
-        .subject("1")
-        .claim("roles", roles)
-        .build();
+      .header("alg", "HS256")
+      .subject("1")
+      .claim("roles", roles)
+      .build();
   }
 }

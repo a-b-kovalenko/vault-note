@@ -9,6 +9,6 @@ import tools.jackson.databind.annotation.JsonNaming;
 @Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record CurrentUserResponse(
-    long userId,
-    List<String> roles) {
+  long userId,
+  List<String> roles) {
 }

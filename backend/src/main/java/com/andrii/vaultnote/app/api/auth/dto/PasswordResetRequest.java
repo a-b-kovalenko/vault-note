@@ -11,7 +11,7 @@ import tools.jackson.databind.annotation.JsonNaming;
 @Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record PasswordResetRequest(
-    @Schema(
-        description = "Email address for the password reset request.",
-        requiredMode = Schema.RequiredMode.REQUIRED) @NotBlank @Email @Size(max = 320) String email) {
+  @Schema(
+    description = "Email address for the password reset request.",
+    requiredMode = Schema.RequiredMode.REQUIRED) @NotBlank @Email @Size(max = 320) String email) {
 }
