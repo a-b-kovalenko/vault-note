@@ -12,7 +12,9 @@ export class AuthApiService {
 
   login(request: LoginRequest): Observable<LoginResponse> {
     return this.http
-      .post<LoginApiResponse>(`${API_BASE_URL}/api/v1/auth/login`, request)
+      .post<LoginApiResponse>(`${API_BASE_URL}/api/v1/auth/login`, request, {
+        withCredentials: true,
+      })
       .pipe(map(AuthApiService.toLoginResponse));
   }
 

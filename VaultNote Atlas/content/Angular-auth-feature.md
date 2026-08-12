@@ -3,8 +3,9 @@
 ## 📝 TL;DR
 
 `src/app/auth/` — перша feature-папка Angular frontend для authentication flow.
-Зараз вона містить контракт даних, API service і тимчасову login page; reactive
-form та повний auth state будуть додані наступним кроком.
+Зараз вона містить контракт даних, API service і login page з reactive form,
+frontend-валідацією та підключеним submit до backend; access-token state,
+CSRF flow і повна обробка помилок будуть додані наступними кроками.
 
 Це частина нотатки [про структуру Angular workspace](Структура-Angular-workspace.md).
 
@@ -21,7 +22,8 @@ Frontend-моделі login request/response та raw API response. Вони о�
 ### `auth-api.service.ts`
 
 HTTP client для `POST /api/v1/auth/login`. Service також мапить backend
-`snake_case` у frontend `camelCase`.
+`snake_case` у frontend `camelCase` і використовує `withCredentials`, щоб
+браузер міг прийняти refresh-token cookie.
 
 Його можна порівняти з невеликим gateway над `RestClient` або `WebClient`: він
 відповідає за HTTP-виклик і мапінг відповіді, але не повинен перетворюватися на
@@ -29,7 +31,23 @@ backend-style сервіс із бізнес-workflow.
 
 ### `login-page.ts`
 
-Тимчасовий routed placeholder, який завантажується маршрутом `/login`.
+Клас і presentation logic login page, яка завантажується маршрутом `/login`.
+
+Компонент використовує окремий `templateUrl` і `styleUrl`, тому TypeScript-файл
+не містить великого inline HTML-шаблону.
+
+Вона містить:
+
+- reactive form з `email` і `password`;
+- frontend-валідацію, синхронізовану з базовими обмеженнями `LoginRequest`;
+- submit через `AuthApiService.login()`;
+- loading-стан кнопки під час HTTP-запиту.
+
+### `login-page.html`
+
+Зовнішній Angular template login page. Він містить form controls, validation
+messages, submit button, OAuth placeholders і доступні атрибути на кшталт
+`aria-invalid` та `aria-describedby`.
 
 Це UI view із presentation logic, а не аналог `@RestController`: компонент
 працює у браузері й відображає стан форми.
@@ -38,9 +56,7 @@ backend-style сервіс із бізнес-workflow.
 
 У login feature потрібно додати:
 
-- reactive form для email і password;
-- виклик `auth-api.service.ts` після submit;
-- обробку loading та validation errors;
+- обробку backend validation errors, `401` та інших невдалих login responses;
 - збереження access token лише в пам'яті Angular application;
 - підготовку до refresh через `HttpOnly` cookie та CSRF flow.
 

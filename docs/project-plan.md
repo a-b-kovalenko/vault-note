@@ -216,6 +216,16 @@ GitHub:
   cookie-based authorization state for the OAuth handshake;
 - map a verified provider identity to a local `User`, assigning `USER` by
   default and requiring explicit rules for account linking;
+- handle a new provider identity through an explicit onboarding flow rather
+  than an opaque login failure: show the verified provider email as read-only,
+  collect or confirm `displayName`, create the local `User` with
+  `email_verified = true`, `password_hash = null`, and role `USER`, persist the
+  provider identity, and then issue VaultNote tokens;
+- do not require a phone number for OAuth onboarding; phone-based
+  authentication is outside the current VaultNote scope;
+- never silently link a new provider identity to an existing local account
+  using only a matching email; require an authenticated local login and an
+  explicit account-linking action;
 - issue VaultNote's existing JWT access token and refresh-token cookie after
   successful provider authentication;
 - never place access or refresh tokens in redirect URLs;
