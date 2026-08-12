@@ -161,6 +161,14 @@ tasks.register('frontendNpmInstall', NpmTask) {
   outputs.dir(new File(frontendProjectDir, 'node_modules'))
 }
 
+tasks.register('frontendStart', NpmTask) {
+  description = 'Starts the Angular frontend development server.'
+  group = 'frontend'
+  dependsOn tasks.named('frontendNpmInstall')
+  workingDir = frontendProjectDir
+  args = ['run', 'start']
+}
+
 tasks.register('frontendTest', NpmTask) {
   description = 'Runs Angular frontend unit tests once.'
   group = 'verification'

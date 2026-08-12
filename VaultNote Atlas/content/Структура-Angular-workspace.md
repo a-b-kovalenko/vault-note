@@ -3,9 +3,10 @@
 ## 📝 TL;DR
 
 Angular workspace містить не лише компоненти, а й конфігурацію CLI, TypeScript,
-npm, тестів і редактора. У `frontend/` зараз є стандартний мінімальний
-standalone-застосунок без login-логіки; default screen буде замінено на login
-page на наступному кроці.
+npm, тестів і редактора. У `frontend/` зараз є мінімальний standalone-
+застосунок із application shell, маршрутом `/login`, auth-моделями, API
+сервісом і тимчасовою login page. Reactive form і повний auth state будуть
+додані на наступному кроці.
 
 ## Загальна структура
 
@@ -38,6 +39,7 @@ Frontend залишається окремим npm-проєктом, але back
 
 - `frontendNpmInstall` встановлює залежності через `npm ci` і
   `package-lock.json`;
+- `frontendStart` запускає Angular development server на `http://localhost:4200`;
 - `frontendTest` запускає unit-тести Angular один раз, без watch-режиму;
 - `frontendBuild` створює production bundle у `frontend/dist/frontend`;
 - `check` запускає frontend-тести та production build разом із backend і
@@ -49,8 +51,13 @@ Frontend залишається окремим npm-проєктом, але back
 ./gradlew frontendTest frontendBuild
 ```
 
-Gradle автоматично завантажує зафіксовану версію Node.js. Системні `node` та
-`npm` для цього сценарію не потрібні.
+У IntelliJ IDEA frontend можна запускати локальною npm-конфігурацією `VaultNote
+Frontend`,
+яка виконує script `start` із `frontend/package.json`. Альтернативно Gradle
+задача `frontendStart` запускає той самий development server.
+
+Для Gradle-сценарію Node Gradle plugin автоматично завантажує зафіксовану
+версію Node.js. Системні `node` та `npm` для нього не потрібні.
 
 ## Файли кореня workspace
 
@@ -170,9 +177,8 @@ Root standalone component. Він є верхнім компонентом appli
 
 ### `src/app/app.html`
 
-HTML-шаблон root component. Зараз це стандартний демонстраційний шаблон,
-згенерований Angular CLI. На наступному кроці його замінимо на мінімальну
-login-оболонку або router outlet.
+HTML-шаблон root component. Він містить лише `<router-outlet />`, тому shell не
+змішується з конкретною сторінкою. Login page завантажується через routing.
 
 ### `src/app/app.scss`
 
@@ -181,33 +187,45 @@ SCSS-стилі root component. Локальні стилі компонента
 
 ### `src/app/app.config.ts`
 
-Глобальна standalone-конфігурація Angular application. Зараз вона реєструє:
+Глобальна standalone-конфігурація Angular application. Вона реєструє:
 
 - browser error listeners;
-- Angular Router через `provideRouter(routes)`.
+- Angular Router через `provideRouter(routes)`;
+- Angular HTTP client через `provideHttpClient()`.
 
-Під час реалізації Phase 4 тут з'являться або будуть підключені application-wide
-providers для HTTP, CSRF і auth infrastructure.
+CSRF та auth-specific HTTP behavior буде додано окремими providers/interceptors
+на наступних кроках.
 
 ### `src/app/app.routes.ts`
 
-Центральний список маршрутів application. Зараз він порожній. На Phase 4 тут
-з'явиться маршрут login, а protected Notes і profile routes будуть додані пізніше.
+Центральний список маршрутів application. Маршрут `/login` завантажує login
+feature lazily. Порожній шлях і невідомі шляхи перенаправляються на `/login`.
+Protected Notes і profile routes будуть додані пізніше.
 
 ### `src/app/app.spec.ts`
 
-Початковий unit-тест root component. Він перевіряє, що базовий application
-створюється і може бути instantiated у test environment.
+Початковий unit-тест root component. Він перевіряє, що application shell
+створюється у test environment. Перевірка самої login behavior буде в тестах
+auth feature.
 
 Це не integration test backend і не browser e2e test.
 
+### `src/app/auth/`
+
+Перша feature-папка для authentication flow:
+
+- `auth.models.ts` — frontend-моделі login request/response та raw API response;
+- `auth-api.service.ts` — HTTP client для `POST /api/v1/auth/login` і мапінг
+  backend `snake_case` у frontend `camelCase`;
+- `login-page.ts` — тимчасовий routed placeholder. Reactive form і реальний
+  login UI будуть додані наступним кроком.
+
 ## Що з'явиться пізніше
 
-Під час наступних кроків структура розшириться feature-папками, наприклад:
+Під час наступних кроків структура розшириться іншими feature-папками:
 
 ```text
 src/app/
-├── auth/
 ├── notes/
 ├── profile/
 ├── shared/
