@@ -13,7 +13,8 @@ exercising realistic backend and frontend boundaries:
 * Spring Boot and Spring Security;
 * PostgreSQL persistence with Liquibase migrations;
 * REST API contracts and generated frontend clients;
-* email verification and session-based authentication;
+* email verification and stateless JWT access authentication with rotating
+  refresh sessions;
 * Angular application state, route guards, and access control.
 
 == Current state
@@ -35,6 +36,8 @@ The backend foundation is in progress. The repository currently contains:
   the cookie;
 * an explicit CORS allowlist and SPA-compatible CSRF protection for
   state-changing requests;
+* a verified Angular authentication slice with `/login`, `/me`, in-memory
+  access-token state, refresh handling, and current-session logout;
 * private notes CRUD with DTO boundaries, pagination, and service-level
   ownership checks;
 * unit coverage for the login, refresh, and token-generation services, plus
@@ -48,7 +51,8 @@ The following parts remain planned:
   phase;
 * OAuth2/OIDC sign-in as the next phase;
 * administrator note views and profile workflows;
-* the Angular frontend and generated API client.
+* registration, Notes, profile, and administrator Angular screens;
+* route guards and standard frontend API-error presentation.
 
 == Target architecture
 

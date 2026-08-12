@@ -42,6 +42,29 @@ The JSON response contains:
 The API response also sets the refresh-token cookie. The raw refresh token is
 never included in the JSON response.
 
+== Stateless access authentication and refresh state
+
+`SessionCreationPolicy.STATELESS` means that Spring Security does not create a
+server-side `HttpSession` as the source of authentication. It does not mean
+that the application has no persistent state.
+
+VaultNote uses a hybrid model:
+
+* the access JWT is self-contained and validated on every protected request;
+* the `SecurityContext` contains the resulting authentication only for the
+  current request;
+* Angular keeps the access JWT in memory and does not persist it in browser
+  storage;
+* the refresh session is stateful: PostgreSQL stores its hash, token family,
+  expiry, and revocation state, while the browser stores the raw value in an
+  `HttpOnly` cookie.
+
+Therefore `POST /api/v1/auth/login` is state-changing even though it does not
+create an `HttpSession`: it creates a refresh-token record and sets a cookie.
+`POST /api/v1/auth/refresh` rotates that state, and `POST /api/v1/auth/logout`
+revokes it and clears the cookie. CSRF protects these side effects; it is not
+dependent on Spring creating an HTTP session.
+
 == Protected endpoint
 
 `GET /api/v1/auth/me` requires the access token in the `Authorization` header:
@@ -174,6 +197,22 @@ The browser must also pass the CORS preflight. The configured origin is allowed
 with credentials, while an unknown origin is rejected. `CsrfCorsIntegrationTest`
 covers token issuance, missing-token rejection, allowed preflight, and
 unknown-origin rejection.
+
+== Angular browser flow
+
+The implemented frontend flow is:
+
+. `LoginPage` validates the form and calls `POST /api/v1/auth/login` after the
+  CSRF bootstrap.
+. Angular maps the `snake_case` response, stores the access JWT in
+  `AuthStateService`, and navigates to `/me`.
+. `MePage` calls `GET /api/v1/auth/me`; the bearer interceptor adds the access
+  JWT to the request.
+. When a protected request receives `401`, the refresh interceptor uses the
+  `HttpOnly` cookie to rotate the refresh session, stores the new access JWT in
+  memory, and retries the original request.
+. `Log out` calls `POST /api/v1/auth/logout`, then clears the in-memory state and
+  navigates back to `/login` even if the network call fails.
 
 == Configuration
 

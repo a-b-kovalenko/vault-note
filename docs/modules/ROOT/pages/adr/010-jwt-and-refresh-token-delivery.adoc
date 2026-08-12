@@ -36,6 +36,11 @@ authentication, the protected `GET /api/v1/auth/me` access-check endpoint, and
 the CSRF/CORS boundary for browser clients. The detailed browser protection
 decision is recorded in ADR 013.
 
+This is a hybrid model rather than a completely state-free application:
+access authentication is stateless, while the refresh session is stateful and
+stored through a hashed database record plus an `HttpOnly` cookie. No
+`HttpSession` is used as the source of access authentication.
+
 == Consequences
 
 * JavaScript cannot directly read the refresh token from the browser cookie.

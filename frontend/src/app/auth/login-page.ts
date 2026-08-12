@@ -6,6 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { Router } from '@angular/router';
 
 import { AuthApiService } from './auth-api.service';
 import { AuthStateService } from './auth-state.service';
@@ -25,6 +26,7 @@ const GENERIC_LOGIN_ERROR = 'Unable to sign in right now. Please try again.';
 export class LoginPage {
   private readonly authApiService = inject(AuthApiService);
   private readonly authState = inject(AuthStateService);
+  private readonly router = inject(Router);
 
   readonly loginForm = inject(NonNullableFormBuilder).group({
     email: ['', [Validators.required, Validators.email, Validators.maxLength(320)]],
@@ -33,9 +35,14 @@ export class LoginPage {
 
   readonly isSubmitting = signal(false);
   readonly loginError = signal<string | null>(null);
+  readonly isPasswordVisible = signal(false);
 
   protected isInvalid(control: AbstractControl): boolean {
     return control.invalid && (control.dirty || control.touched);
+  }
+
+  protected togglePasswordVisibility(): void {
+    this.isPasswordVisible.update((isVisible) => !isVisible);
   }
 
   protected onSubmit(): void {
@@ -49,7 +56,10 @@ export class LoginPage {
 
     this.isSubmitting.set(true);
     this.authApiService.login(this.loginForm.getRawValue()).subscribe({
-      next: (session) => this.authState.setSession(session),
+      next: (session) => {
+        this.authState.setSession(session);
+        void this.router.navigate(['/me']);
+      },
       complete: () => this.isSubmitting.set(false),
       error: (error: unknown) => {
         this.handleLoginError(error);

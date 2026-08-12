@@ -137,6 +137,39 @@ h1 {
   box-shadow: 0 0 0 0.2rem rgba(181, 71, 71, 0.16);
 }
 
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-input-wrapper .field-input {
+  padding-right: 4.75rem;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.65rem;
+  padding: 0.25rem;
+  border: 0;
+  color: #2f6b4f;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  transform: translateY(-50%);
+}
+
+.password-toggle:hover {
+  color: #24543e;
+}
+
+.password-toggle:focus-visible {
+  border-radius: 0.25rem;
+  outline: 3px solid rgba(47, 107, 79, 0.2);
+  outline-offset: 2px;
+}
+
 .field-error {
   color: #b54747;
   font-size: 0.75rem;

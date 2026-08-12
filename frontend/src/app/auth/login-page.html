@@ -16,12 +16,11 @@
     }
 
     <form class="login-form" [formGroup]="loginForm" novalidate (ngSubmit)="onSubmit()">
-      <label
+      <div
         class="field"
         [class.field-invalid]="isInvalid(loginForm.controls.email)"
-        for="email"
       >
-        <span class="field-label">Email</span>
+        <label class="field-label" for="email">Email</label>
         <input
           class="field-input"
           [class.field-input-invalid]="isInvalid(loginForm.controls.email)"
@@ -50,29 +49,39 @@
             }
           </span>
         }
-      </label>
+      </div>
 
-      <label
+      <div
         class="field"
         [class.field-invalid]="isInvalid(loginForm.controls.password)"
-        for="password"
       >
-        <span class="field-label">Password</span>
-        <input
-          class="field-input"
-          [class.field-input-invalid]="isInvalid(loginForm.controls.password)"
-          id="password"
-          type="password"
-          formControlName="password"
-          autocomplete="current-password"
-          maxlength="256"
-          placeholder="Enter your password"
-          required
-          [attr.aria-describedby]="
-            isInvalid(loginForm.controls.password) ? 'password-error' : null
-          "
-          [attr.aria-invalid]="isInvalid(loginForm.controls.password)"
-        />
+        <label class="field-label" for="password">Password</label>
+        <div class="password-input-wrapper">
+          <input
+            class="field-input"
+            [class.field-input-invalid]="isInvalid(loginForm.controls.password)"
+            id="password"
+            [type]="isPasswordVisible() ? 'text' : 'password'"
+            formControlName="password"
+            autocomplete="current-password"
+            maxlength="256"
+            placeholder="Enter your password"
+            required
+            [attr.aria-describedby]="
+              isInvalid(loginForm.controls.password) ? 'password-error' : null
+            "
+            [attr.aria-invalid]="isInvalid(loginForm.controls.password)"
+          />
+          <button
+            class="password-toggle"
+            type="button"
+            [attr.aria-label]="isPasswordVisible() ? 'Hide password' : 'Show password'"
+            [attr.aria-pressed]="isPasswordVisible()"
+            (click)="togglePasswordVisibility()"
+          >
+            {{ isPasswordVisible() ? 'Hide' : 'Show' }}
+          </button>
+        </div>
         @if (isInvalid(loginForm.controls.password)) {
           <span class="field-error" id="password-error" role="alert">
             @if (loginForm.controls.password.hasError('required')) {
@@ -84,7 +93,7 @@
             }
           </span>
         }
-      </label>
+      </div>
 
       <button
         class="submit-button"

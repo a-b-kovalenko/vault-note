@@ -64,6 +64,12 @@ Access token навмисно не записується в `localStorage`, `se
 інше persistent browser storage. Після повного перезавантаження сторінки цей
 state порожній, а відновлення виконується через refresh cookie.
 
+Цей Angular state не є backend `HttpSession` і не є Spring Security
+`SecurityContext`. Це локальний frontend cache для access JWT. Backend
+залишається stateless щодо access authentication, але має persistent refresh
+session: hash refresh token-а зберігається в PostgreSQL, а raw token живе в
+`HttpOnly` cookie браузера.
+
 ## Що означає CSRF bootstrap та refresh/interceptor
 
 Цей крок з'єднує login API, browser cookies і access-token state в один

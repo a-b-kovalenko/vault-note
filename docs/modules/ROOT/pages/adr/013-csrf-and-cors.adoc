@@ -35,6 +35,12 @@ Use Spring Security's cookie-based SPA CSRF flow:
 * explicitly exclude registration and email verification until those public
   flows receive their own browser CSRF integration.
 
+The term `state-changing` refers to an operation with a side effect, not to
+the creation of a Spring HTTP session. In this application login creates a
+refresh-token record and cookie, refresh rotates that record, and logout
+revokes it and clears the cookie. These operations remain CSRF-protected under
+`SessionCreationPolicy.STATELESS`.
+
 Use `SameSite=Lax` for the local CSRF cookie and keep the CORS origin in
 `VAULTNOTE_CORS_ALLOWED_ORIGINS`. Production deployments must provide their
 real frontend origin and review cookie `Secure` and `SameSite` settings.

@@ -25,13 +25,21 @@ has been implemented and verified. Branch integration is tracked separately.
 - Current-session logout and refresh-cookie clearing are implemented and
   verified.
 - CORS and SPA-compatible CSRF protection are implemented and verified.
+- The Angular authentication slice is implemented: generated auth models,
+  `/login`, in-memory access-token state, CSRF bootstrap, bearer attachment,
+  single-flight refresh, `/me`, logout, password visibility toggle, and focused
+  unit tests.
+- The local browser flow was verified end to end: successful login redirects to
+  `/me`, current user data is loaded, and logout revokes the refresh session and
+  returns to `/login`.
 - The private Notes CRUD baseline is implemented: owner-only endpoints,
   pagination, DTO boundaries, `CurrentUserProvider` ownership checks,
   `NOTE_NOT_FOUND` handling, and PostgreSQL-backed integration coverage.
 - The Notes API currently returns source Markdown; safe HTML rendering is
   planned as the final step of the Angular phase, when a preview or read-only
   mode is introduced.
-- Next: finish the Notes administrator view and profile updates; the remaining
+- Next: finish the Notes administrator view, profile updates, authenticated
+  route guards, and standard frontend API-error presentation; the remaining
   authentication hardening is authentication audit events.
 - The local profile is implemented and verified locally.
 
@@ -136,6 +144,10 @@ has been implemented and verified. Branch integration is tracked separately.
 - [x] Add the minimum auth state for in-memory access-token storage, refresh,
   and CSRF handling.
 - [x] Add focused frontend unit tests for the minimal login flow.
+- [x] Add the authenticated `/me` screen and redirect after successful login.
+- [x] Add current-session logout with local state clearing and login redirect.
+- [x] Add password visibility toggle and accessible button state.
+- [x] Verify the local browser flow: login → `/me` → logout → `/login`.
 
 ## Phase 4.5 — Password management prerequisite
 
@@ -173,7 +185,6 @@ has been implemented and verified. Branch integration is tracked separately.
 - [ ] Implement registration, email verification, Notes, profile, and
   administrator screens.
 - [ ] Add authenticated and administrator route guards.
-- [x] Add access-token attachment, single-flight refresh, and CSRF handling.
 - [ ] Add standard `ProblemDetail` error presentation.
 - [ ] Add focused frontend unit tests and production-build verification.
 - [ ] As the final frontend task, add Markdown preview/read rendering.

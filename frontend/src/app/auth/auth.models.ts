@@ -1,5 +1,6 @@
 import type {
   ApiErrorResponse,
+  CurrentUserResponse as OpenApiCurrentUserResponse,
   LoginRequest,
   LoginResponse as OpenApiLoginResponse,
   ValidationViolation,
@@ -8,6 +9,13 @@ import type {
 export type { ApiErrorResponse, LoginRequest, ValidationViolation };
 
 export type LoginApiResponse = OpenApiLoginResponse;
+
+export type CurrentUserApiResponse = OpenApiCurrentUserResponse;
+
+export type CurrentUserResponse = {
+  userId: NonNullable<OpenApiCurrentUserResponse['user_id']>;
+  roles: NonNullable<OpenApiCurrentUserResponse['roles']>;
+};
 
 /**
  * Application-facing login response. Its fields are derived from the
