@@ -23,119 +23,119 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(EntityExistsException.class)
   public ResponseEntity<ApiErrorResponse> handleEntityExistsException(
-      EntityExistsException exception) {
+    EntityExistsException exception) {
 
     log.warn("Entity already exists: {}", exception.getMessage());
 
     var response = new ApiErrorResponse("ENTITY_ALREADY_EXISTS", exception.getMessage());
 
     return ResponseEntity
-        .status(HttpStatus.CONFLICT)
-        .body(response);
+      .status(HttpStatus.CONFLICT)
+      .body(response);
   }
 
   @ExceptionHandler(EmailVerificationFailedException.class)
   public ResponseEntity<ApiErrorResponse> handleEmailVerificationFailedException(
-      EmailVerificationFailedException exception) {
+    EmailVerificationFailedException exception) {
 
     log.warn("Email verification failed: {}", exception.getMessage());
 
     var response = new ApiErrorResponse("EMAIL_VERIFICATION_FAILED", exception.getMessage());
 
     return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .body(response);
+      .status(HttpStatus.BAD_REQUEST)
+      .body(response);
   }
 
   @ExceptionHandler(PasswordResetFailedException.class)
   public ResponseEntity<ApiErrorResponse> handlePasswordResetFailedException(
-      PasswordResetFailedException exception) {
+    PasswordResetFailedException exception) {
 
     log.warn("Password reset failed");
 
     var response = new ApiErrorResponse("PASSWORD_RESET_FAILED", exception.getMessage());
 
     return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .body(response);
+      .status(HttpStatus.BAD_REQUEST)
+      .body(response);
   }
 
   @ExceptionHandler(AuthenticationFailedException.class)
   public ResponseEntity<ApiErrorResponse> handleAuthenticationFailedException(
-      AuthenticationFailedException exception) {
+    AuthenticationFailedException exception) {
 
     log.warn("Authentication failed");
 
     var response = new ApiErrorResponse("AUTHENTICATION_FAILED", exception.getMessage());
 
     return ResponseEntity
-        .status(HttpStatus.UNAUTHORIZED)
-        .body(response);
+      .status(HttpStatus.UNAUTHORIZED)
+      .body(response);
   }
 
   @ExceptionHandler(RefreshTokenAuthenticationFailedException.class)
   public ResponseEntity<ApiErrorResponse> handleRefreshTokenAuthenticationFailedException(
-      RefreshTokenAuthenticationFailedException exception) {
+    RefreshTokenAuthenticationFailedException exception) {
 
     log.warn("Refresh token authentication failed");
 
     var response = new ApiErrorResponse(
-        "REFRESH_TOKEN_AUTHENTICATION_FAILED",
-        exception.getMessage());
+      "REFRESH_TOKEN_AUTHENTICATION_FAILED",
+      exception.getMessage());
 
     return ResponseEntity
-        .status(HttpStatus.UNAUTHORIZED)
-        .body(response);
+      .status(HttpStatus.UNAUTHORIZED)
+      .body(response);
   }
 
   @ExceptionHandler(NoteNotFoundException.class)
   public ResponseEntity<ApiErrorResponse> handleNoteNotFoundException(
-      NoteNotFoundException exception) {
+    NoteNotFoundException exception) {
 
     log.warn("Note not found: {}", exception.getMessage());
 
     var response = new ApiErrorResponse("NOTE_NOT_FOUND", exception.getMessage());
 
     return ResponseEntity
-        .status(HttpStatus.NOT_FOUND)
-        .body(response);
+      .status(HttpStatus.NOT_FOUND)
+      .body(response);
   }
 
   @ExceptionHandler(NoteVersionConflictException.class)
   public ResponseEntity<ApiErrorResponse> handleNoteVersionConflictException(
-      NoteVersionConflictException exception) {
+    NoteVersionConflictException exception) {
 
     log.warn("Note version conflict: {}", exception.getMessage());
 
     var response = new ApiErrorResponse("NOTE_VERSION_CONFLICT", exception.getMessage());
 
     return ResponseEntity
-        .status(HttpStatus.CONFLICT)
-        .body(response);
+      .status(HttpStatus.CONFLICT)
+      .body(response);
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ApiErrorResponse> handleValidationException(
-      MethodArgumentNotValidException exception) {
+    MethodArgumentNotValidException exception) {
 
     var violations = exception.getBindingResult()
-        .getFieldErrors()
-        .stream()
-        .map(GlobalExceptionHandler::toViolation)
-        .toList();
+      .getFieldErrors()
+      .stream()
+      .map(GlobalExceptionHandler::toViolation)
+      .toList();
 
     var response = new ApiErrorResponse("VALIDATION_FAILED", "Request validation failed", violations);
 
     return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .body(response);
+      .status(HttpStatus.BAD_REQUEST)
+      .body(response);
   }
 
   private static ValidationViolation toViolation(FieldError error) {
     return new ValidationViolation(
-        toApiFieldName(error.getField()),
-        toApiCode(Objects.requireNonNull(error.getCode())),
-        error.getDefaultMessage());
+      toApiFieldName(error.getField()),
+      toApiCode(Objects.requireNonNull(error.getCode())),
+      error.getDefaultMessage());
   }
 
   private static String toApiFieldName(String fieldName) {

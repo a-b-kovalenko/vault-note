@@ -24,9 +24,9 @@ class SecurityContextCurrentUserProviderTest {
   @Test
   void shouldReturnCurrentUserIdFromAuthenticationName() {
     var authentication = UsernamePasswordAuthenticationToken.authenticated(
-        "42",
-        null,
-        List.of());
+      "42",
+      null,
+      List.of());
     SecurityContextHolder.getContext().setAuthentication(authentication);
 
     var currentUserId = provider.currentUserId();
@@ -37,33 +37,33 @@ class SecurityContextCurrentUserProviderTest {
   @Test
   void shouldRejectMissingAuthentication() {
     assertThatExceptionOfType(AuthenticationCredentialsNotFoundException.class)
-        .isThrownBy(provider::currentUserId)
-        .withMessage("An authenticated user is required");
+      .isThrownBy(provider::currentUserId)
+      .withMessage("An authenticated user is required");
   }
 
   @Test
   void shouldRejectAnonymousAuthentication() {
     var authentication = new AnonymousAuthenticationToken(
-        "key",
-        "anonymousUser",
-        AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
+      "key",
+      "anonymousUser",
+      AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
     SecurityContextHolder.getContext().setAuthentication(authentication);
 
     assertThatExceptionOfType(AuthenticationCredentialsNotFoundException.class)
-        .isThrownBy(provider::currentUserId)
-        .withMessage("An authenticated user is required");
+      .isThrownBy(provider::currentUserId)
+      .withMessage("An authenticated user is required");
   }
 
   @Test
   void shouldRejectNonNumericAuthenticationName() {
     var authentication = UsernamePasswordAuthenticationToken.authenticated(
-        "andrii@example.com",
-        null,
-        List.of());
+      "andrii@example.com",
+      null,
+      List.of());
     SecurityContextHolder.getContext().setAuthentication(authentication);
 
     assertThatExceptionOfType(AuthenticationCredentialsNotFoundException.class)
-        .isThrownBy(provider::currentUserId)
-        .withMessage("Authenticated user subject must be numeric");
+      .isThrownBy(provider::currentUserId)
+      .withMessage("Authenticated user subject must be numeric");
   }
 }

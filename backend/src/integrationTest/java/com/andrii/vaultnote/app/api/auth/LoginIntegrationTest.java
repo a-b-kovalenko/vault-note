@@ -42,10 +42,10 @@ class LoginIntegrationTest extends AbstractBaseIntegrationTest {
 
   @Autowired
   LoginIntegrationTest(
-      UserJpaRepository userRepository,
-      RefreshTokenJpaRepository refreshTokenRepository,
-      PasswordEncoder passwordEncoder,
-      SecureTokenGenerator secureTokenGenerator) {
+    UserJpaRepository userRepository,
+    RefreshTokenJpaRepository refreshTokenRepository,
+    PasswordEncoder passwordEncoder,
+    SecureTokenGenerator secureTokenGenerator) {
     this.userRepository = userRepository;
     this.refreshTokenRepository = refreshTokenRepository;
     this.passwordEncoder = passwordEncoder;
@@ -62,28 +62,28 @@ class LoginIntegrationTest extends AbstractBaseIntegrationTest {
   @Test
   void shouldLoginVerifiedUserAgainstPostgres() {
     var user = userRepository.saveAndFlush(UserEntity.builder()
-        .email(USER_EMAIL)
-        .displayName("Login User")
-        .passwordHash(passwordEncoder.encode(PASSWORD))
-        .emailVerified(true)
-        .roles(EnumSet.of(UserRole.USER))
-        .build());
+      .email(USER_EMAIL)
+      .displayName("Login User")
+      .passwordHash(passwordEncoder.encode(PASSWORD))
+      .emailVerified(true)
+      .roles(EnumSet.of(UserRole.USER))
+      .build());
     var request = LoginRequest.builder()
-        .email(USER_EMAIL)
-        .password(PASSWORD)
-        .build();
+      .email(USER_EMAIL)
+      .password(PASSWORD)
+      .build();
     var requestStartedAt = Instant.now();
 
     var response = givenWithCsrf()
-        .port(port)
-        .contentType("application/json")
-        .body(request)
-        .when()
-        .post(LOGIN_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.OK.value())
-        .extract()
-        .response();
+      .port(port)
+      .contentType("application/json")
+      .body(request)
+      .when()
+      .post(LOGIN_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.OK.value())
+      .extract()
+      .response();
 
     var requestFinishedAt = Instant.now();
     var loginResponse = response.as(LoginResponse.class);
@@ -91,31 +91,31 @@ class LoginIntegrationTest extends AbstractBaseIntegrationTest {
     var setCookieHeader = response.getHeader("Set-Cookie");
 
     assertThat(loginResponse.accessToken())
-        .isNotBlank()
-        .satisfies(token -> assertThat(token.split("\\.")).hasSize(3));
+      .isNotBlank()
+      .satisfies(token -> assertThat(token.split("\\.")).hasSize(3));
     assertThat(loginResponse.tokenType()).isEqualTo(TokenType.BEARER);
     assertThat(loginResponse.expiresIn()).isEqualTo(Duration.ofMinutes(15).toSeconds());
     assertThat(rawRefreshToken).isNotBlank();
     assertThat(setCookieHeader)
-        .contains(REFRESH_COOKIE_NAME + "=" + rawRefreshToken)
-        .contains("Path=/api/v1/auth")
-        .contains("Max-Age=" + REFRESH_TOKEN_TTL.toSeconds())
-        .contains("HttpOnly")
-        .contains("SameSite=Lax");
+      .contains(REFRESH_COOKIE_NAME + "=" + rawRefreshToken)
+      .contains("Path=/api/v1/auth")
+      .contains("Max-Age=" + REFRESH_TOKEN_TTL.toSeconds())
+      .contains("HttpOnly")
+      .contains("SameSite=Lax");
 
     assertThat(refreshTokenRepository.findAll())
-        .singleElement()
-        .satisfies(refreshToken -> {
-          assertThat(refreshToken.getUser().getId()).isEqualTo(user.getId());
-          assertThat(refreshToken.getTokenHash())
-              .isEqualTo(secureTokenGenerator.hash(rawRefreshToken));
-          assertThat(refreshToken.getTokenHash()).isNotEqualTo(rawRefreshToken);
-          assertThat(refreshToken.getTokenFamilyId()).isNotNull();
-          assertThat(refreshToken.getExpiresAt())
-              .isAfter(requestStartedAt.plus(REFRESH_TOKEN_TTL).minusSeconds(5))
-              .isBefore(requestFinishedAt.plus(REFRESH_TOKEN_TTL).plusSeconds(5));
-          assertThat(refreshToken.getRevokedAt()).isNull();
-        });
+      .singleElement()
+      .satisfies(refreshToken -> {
+        assertThat(refreshToken.getUser().getId()).isEqualTo(user.getId());
+        assertThat(refreshToken.getTokenHash())
+          .isEqualTo(secureTokenGenerator.hash(rawRefreshToken));
+        assertThat(refreshToken.getTokenHash()).isNotEqualTo(rawRefreshToken);
+        assertThat(refreshToken.getTokenFamilyId()).isNotNull();
+        assertThat(refreshToken.getExpiresAt())
+          .isAfter(requestStartedAt.plus(REFRESH_TOKEN_TTL).minusSeconds(5))
+          .isBefore(requestFinishedAt.plus(REFRESH_TOKEN_TTL).plusSeconds(5));
+        assertThat(refreshToken.getRevokedAt()).isNull();
+      });
   }
 
   /**
@@ -128,27 +128,27 @@ class LoginIntegrationTest extends AbstractBaseIntegrationTest {
   @Test
   void shouldRejectInvalidPasswordAgainstPostgres() {
     userRepository.saveAndFlush(UserEntity.builder()
-        .email(USER_EMAIL)
-        .displayName("Login User")
-        .passwordHash(passwordEncoder.encode(PASSWORD))
-        .emailVerified(true)
-        .roles(EnumSet.of(UserRole.USER))
-        .build());
+      .email(USER_EMAIL)
+      .displayName("Login User")
+      .passwordHash(passwordEncoder.encode(PASSWORD))
+      .emailVerified(true)
+      .roles(EnumSet.of(UserRole.USER))
+      .build());
     var request = LoginRequest.builder()
-        .email(USER_EMAIL)
-        .password(WRONG_PASSWORD)
-        .build();
+      .email(USER_EMAIL)
+      .password(WRONG_PASSWORD)
+      .build();
 
     var response = givenWithCsrf()
-        .port(port)
-        .contentType("application/json")
-        .body(request)
-        .when()
-        .post(LOGIN_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.UNAUTHORIZED.value())
-        .extract()
-        .response();
+      .port(port)
+      .contentType("application/json")
+      .body(request)
+      .when()
+      .post(LOGIN_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.UNAUTHORIZED.value())
+      .extract()
+      .response();
 
     var errorResponse = response.as(ApiErrorResponse.class);
 
@@ -167,27 +167,27 @@ class LoginIntegrationTest extends AbstractBaseIntegrationTest {
   @Test
   void shouldRejectUnverifiedUserAgainstPostgres() {
     userRepository.saveAndFlush(UserEntity.builder()
-        .email(UNVERIFIED_USER_EMAIL)
-        .displayName("Unverified Login User")
-        .passwordHash(passwordEncoder.encode(PASSWORD))
-        .emailVerified(false)
-        .roles(EnumSet.of(UserRole.USER))
-        .build());
+      .email(UNVERIFIED_USER_EMAIL)
+      .displayName("Unverified Login User")
+      .passwordHash(passwordEncoder.encode(PASSWORD))
+      .emailVerified(false)
+      .roles(EnumSet.of(UserRole.USER))
+      .build());
     var request = LoginRequest.builder()
-        .email(UNVERIFIED_USER_EMAIL)
-        .password(PASSWORD)
-        .build();
+      .email(UNVERIFIED_USER_EMAIL)
+      .password(PASSWORD)
+      .build();
 
     var response = givenWithCsrf()
-        .port(port)
-        .contentType("application/json")
-        .body(request)
-        .when()
-        .post(LOGIN_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.UNAUTHORIZED.value())
-        .extract()
-        .response();
+      .port(port)
+      .contentType("application/json")
+      .body(request)
+      .when()
+      .post(LOGIN_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.UNAUTHORIZED.value())
+      .extract()
+      .response();
 
     var errorResponse = response.as(ApiErrorResponse.class);
 

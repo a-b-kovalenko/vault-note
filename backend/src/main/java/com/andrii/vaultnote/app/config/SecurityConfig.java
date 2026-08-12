@@ -31,38 +31,38 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain securityFilterChain(
-      HttpSecurity http,
-      RolesJwtAuthenticationConverter jwtAuthenticationConverter,
-      CsrfTokenRepository csrfTokenRepository,
-      CsrfTokenRequestHandler csrfTokenRequestHandler) {
+    HttpSecurity http,
+    RolesJwtAuthenticationConverter jwtAuthenticationConverter,
+    CsrfTokenRepository csrfTokenRepository,
+    CsrfTokenRequestHandler csrfTokenRequestHandler) {
     http
-        .cors(Customizer.withDefaults())
-        .csrf(csrf -> csrf
-            .csrfTokenRepository(csrfTokenRepository)
-            .csrfTokenRequestHandler(csrfTokenRequestHandler)
-            .ignoringRequestMatchers(
-                "/api/v1/auth/registrations",
-                "/api/v1/auth/email-verification"))
-        .sessionManagement(session -> session
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> auth
-            .dispatcherTypeMatchers(ERROR).permitAll()
-            .requestMatchers(OPTIONS, "/**").permitAll()
-            .requestMatchers(GET, "/actuator/health").permitAll()
-            .requestMatchers(GET, "/swagger-ui.html").permitAll()
-            .requestMatchers(GET, "/swagger-ui/**").permitAll()
-            .requestMatchers(GET, "/v3/api-docs/**").permitAll()
-            .requestMatchers(GET, "/csrf").permitAll()
-            .requestMatchers(POST, "/api/v1/auth/registrations").permitAll()
-            .requestMatchers(POST, "/api/v1/auth/email-verification").permitAll()
-            .requestMatchers(POST, "/api/v1/auth/password-reset/request").permitAll()
-            .requestMatchers(POST, "/api/v1/auth/password-reset/confirm").permitAll()
-            .requestMatchers(POST, "/api/v1/auth/login").permitAll()
-            .requestMatchers(POST, "/api/v1/auth/refresh").permitAll()
-            .requestMatchers(POST, "/api/v1/auth/logout").permitAll()
-            .anyRequest().authenticated())
-        .oauth2ResourceServer(oauth2 -> oauth2
-            .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
+      .cors(Customizer.withDefaults())
+      .csrf(csrf -> csrf
+        .csrfTokenRepository(csrfTokenRepository)
+        .csrfTokenRequestHandler(csrfTokenRequestHandler)
+        .ignoringRequestMatchers(
+          "/api/v1/auth/registrations",
+          "/api/v1/auth/email-verification"))
+      .sessionManagement(session -> session
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+      .authorizeHttpRequests(auth -> auth
+        .dispatcherTypeMatchers(ERROR).permitAll()
+        .requestMatchers(OPTIONS, "/**").permitAll()
+        .requestMatchers(GET, "/actuator/health").permitAll()
+        .requestMatchers(GET, "/swagger-ui.html").permitAll()
+        .requestMatchers(GET, "/swagger-ui/**").permitAll()
+        .requestMatchers(GET, "/v3/api-docs/**").permitAll()
+        .requestMatchers(GET, "/csrf").permitAll()
+        .requestMatchers(POST, "/api/v1/auth/registrations").permitAll()
+        .requestMatchers(POST, "/api/v1/auth/email-verification").permitAll()
+        .requestMatchers(POST, "/api/v1/auth/password-reset/request").permitAll()
+        .requestMatchers(POST, "/api/v1/auth/password-reset/confirm").permitAll()
+        .requestMatchers(POST, "/api/v1/auth/login").permitAll()
+        .requestMatchers(POST, "/api/v1/auth/refresh").permitAll()
+        .requestMatchers(POST, "/api/v1/auth/logout").permitAll()
+        .anyRequest().authenticated())
+      .oauth2ResourceServer(oauth2 -> oauth2
+        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
 
     return http.build();
   }
@@ -70,10 +70,10 @@ public class SecurityConfig {
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new Argon2PasswordEncoder(
-        ARGON2_SALT_LENGTH,
-        ARGON2_HASH_LENGTH,
-        ARGON2_PARALLELISM,
-        ARGON2_MEMORY_COST_KIB,
-        ARGON2_ITERATIONS);
+      ARGON2_SALT_LENGTH,
+      ARGON2_HASH_LENGTH,
+      ARGON2_PARALLELISM,
+      ARGON2_MEMORY_COST_KIB,
+      ARGON2_ITERATIONS);
   }
 }

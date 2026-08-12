@@ -14,12 +14,12 @@ class OpenApiConfiguration {
   @Bean
   OpenAPI vaultNoteOpenAPI() {
     var bearerAuth = new SecurityScheme()
-        .type(SecurityScheme.Type.HTTP)
-        .scheme("bearer")
-        .bearerFormat("JWT");
+      .type(SecurityScheme.Type.HTTP)
+      .scheme("bearer")
+      .bearerFormat("JWT");
 
     return new OpenAPI()
-        .components(new Components()
-            .addSecuritySchemes(BEARER_AUTH_SCHEME, bearerAuth));
+      .components(new Components()
+        .addSecuritySchemes(BEARER_AUTH_SCHEME, bearerAuth));
   }
 }

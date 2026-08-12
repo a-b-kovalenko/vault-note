@@ -28,11 +28,11 @@ class GlobalExceptionHandlerTest {
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
     assertThat(response.getBody())
-        .isNotNull()
-        .extracting(ApiErrorResponse::code, ApiErrorResponse::message)
-        .containsExactly(
-            "ENTITY_ALREADY_EXISTS",
-            "UserEntity with email 'new@email.com' already exists.");
+      .isNotNull()
+      .extracting(ApiErrorResponse::code, ApiErrorResponse::message)
+      .containsExactly(
+        "ENTITY_ALREADY_EXISTS",
+        "UserEntity with email 'new@email.com' already exists.");
   }
 
   @Test
@@ -43,11 +43,11 @@ class GlobalExceptionHandlerTest {
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(response.getBody())
-        .isNotNull()
-        .extracting(ApiErrorResponse::code, ApiErrorResponse::message)
-        .containsExactly(
-            "EMAIL_VERIFICATION_FAILED",
-            "Email verification link is invalid or has expired.");
+      .isNotNull()
+      .extracting(ApiErrorResponse::code, ApiErrorResponse::message)
+      .containsExactly(
+        "EMAIL_VERIFICATION_FAILED",
+        "Email verification link is invalid or has expired.");
   }
 
   @Test
@@ -58,9 +58,9 @@ class GlobalExceptionHandlerTest {
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     assertThat(response.getBody())
-        .isNotNull()
-        .extracting(ApiErrorResponse::code, ApiErrorResponse::message)
-        .containsExactly("NOTE_NOT_FOUND", "Note with id '11' was not found.");
+      .isNotNull()
+      .extracting(ApiErrorResponse::code, ApiErrorResponse::message)
+      .containsExactly("NOTE_NOT_FOUND", "Note with id '11' was not found.");
   }
 
   @Test
@@ -74,24 +74,24 @@ class GlobalExceptionHandlerTest {
 
     var method = ValidationTestController.class.getDeclaredMethod("handle", Object.class);
     var exception = new MethodArgumentNotValidException(
-        new MethodParameter(method, 0),
-        bindingResult);
+      new MethodParameter(method, 0),
+      bindingResult);
 
     var response = handler.handleValidationException(exception);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
     assertThat(response.getBody())
-        .isNotNull()
-        .extracting(ApiErrorResponse::code, ApiErrorResponse::message)
-        .containsExactly("VALIDATION_FAILED", "Request validation failed");
+      .isNotNull()
+      .extracting(ApiErrorResponse::code, ApiErrorResponse::message)
+      .containsExactly("VALIDATION_FAILED", "Request validation failed");
     assertThat(response.getBody().violations())
-        .extracting(ValidationViolation::field, ValidationViolation::code)
-        .containsExactly(
-            tuple("email", "INVALID_FORMAT"),
-            tuple("display_name", "REQUIRED"),
-            tuple("password", "INVALID_LENGTH"),
-            tuple("password", "PASSWORD_POLICY"),
-            tuple("unknown", "INVALID_VALUE"));
+      .extracting(ValidationViolation::field, ValidationViolation::code)
+      .containsExactly(
+        tuple("email", "INVALID_FORMAT"),
+        tuple("display_name", "REQUIRED"),
+        tuple("password", "INVALID_LENGTH"),
+        tuple("password", "PASSWORD_POLICY"),
+        tuple("unknown", "INVALID_VALUE"));
   }
 
   private static FieldError fieldError(String field, String code, String message) {

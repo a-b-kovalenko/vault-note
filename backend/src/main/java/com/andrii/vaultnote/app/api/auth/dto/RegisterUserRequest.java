@@ -11,9 +11,9 @@ import tools.jackson.databind.annotation.JsonNaming;
 @Builder(toBuilder = true)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record RegisterUserRequest(
-    @NotBlank @Email @Size(max = 320) String email,
+  @NotBlank @Email @Size(max = 320) String email,
 
-    @NotBlank @Size(max = 100) String displayName,
+  @NotBlank @Size(max = 100) String displayName,
 
-    @NotBlank @Size(min = 12, max = 256) @PasswordPolicy String password) {
+  @NotBlank @Size(min = 12, max = 256) @PasswordPolicy String password) {
 }

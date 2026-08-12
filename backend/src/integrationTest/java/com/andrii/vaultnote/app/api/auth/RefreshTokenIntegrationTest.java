@@ -42,10 +42,10 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
 
   @Autowired
   RefreshTokenIntegrationTest(
-      UserJpaRepository userRepository,
-      RefreshTokenJpaRepository refreshTokenRepository,
-      PasswordEncoder passwordEncoder,
-      SecureTokenGenerator secureTokenGenerator) {
+    UserJpaRepository userRepository,
+    RefreshTokenJpaRepository refreshTokenRepository,
+    PasswordEncoder passwordEncoder,
+    SecureTokenGenerator secureTokenGenerator) {
     this.userRepository = userRepository;
     this.refreshTokenRepository = refreshTokenRepository;
     this.passwordEncoder = passwordEncoder;
@@ -64,62 +64,62 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
   void shouldRotateRefreshTokenAgainstPostgres() {
     var user = saveUser();
     var loginRequest = LoginRequest.builder()
-        .email(USER_EMAIL)
-        .password(PASSWORD)
-        .build();
+      .email(USER_EMAIL)
+      .password(PASSWORD)
+      .build();
 
     var loginResponse = givenWithCsrf()
-        .port(port)
-        .contentType("application/json")
-        .body(loginRequest)
-        .when()
-        .post(LOGIN_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.OK.value())
-        .extract()
-        .response();
+      .port(port)
+      .contentType("application/json")
+      .body(loginRequest)
+      .when()
+      .post(LOGIN_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.OK.value())
+      .extract()
+      .response();
 
     var oldRawRefreshToken = loginResponse.getCookie(REFRESH_COOKIE_NAME);
     var oldRefreshTokenHash = secureTokenGenerator.hash(oldRawRefreshToken);
     var requestStartedAt = Instant.now();
 
     var response = givenWithCsrf()
-        .port(port)
-        .cookie(REFRESH_COOKIE_NAME, oldRawRefreshToken)
-        .when()
-        .post(REFRESH_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.OK.value())
-        .extract()
-        .response();
+      .port(port)
+      .cookie(REFRESH_COOKIE_NAME, oldRawRefreshToken)
+      .when()
+      .post(REFRESH_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.OK.value())
+      .extract()
+      .response();
 
     var requestFinishedAt = Instant.now();
     var refreshResponse = response.as(LoginResponse.class);
     var newRawRefreshToken = response.getCookie(REFRESH_COOKIE_NAME);
     var persistedTokens = refreshTokenRepository.findAll();
     var newRefreshToken = persistedTokens.stream()
-        .filter(token -> token.getTokenHash().equals(secureTokenGenerator.hash(newRawRefreshToken)))
-        .findFirst()
-        .orElseThrow();
+      .filter(token -> token.getTokenHash().equals(secureTokenGenerator.hash(newRawRefreshToken)))
+      .findFirst()
+      .orElseThrow();
     var revokedRefreshToken = persistedTokens.stream()
-        .filter(token -> token.getTokenHash().equals(oldRefreshTokenHash))
-        .findFirst()
-        .orElseThrow();
+      .filter(token -> token.getTokenHash().equals(oldRefreshTokenHash))
+      .findFirst()
+      .orElseThrow();
 
     assertThat(refreshResponse.accessToken())
-        .isNotBlank()
-        .satisfies(token -> assertThat(token.split("\\.")).hasSize(3));
+      .isNotBlank()
+      .satisfies(token -> assertThat(token.split("\\.")).hasSize(3));
     assertThat(refreshResponse.tokenType()).isEqualTo(TokenType.BEARER);
     assertThat(refreshResponse.expiresIn()).isEqualTo(ACCESS_TOKEN_TTL.toSeconds());
     assertThat(newRawRefreshToken)
-        .isNotBlank()
-        .isNotEqualTo(oldRawRefreshToken);
+      .isNotBlank()
+      .isNotEqualTo(oldRawRefreshToken);
     assertThat(response.getHeader("Set-Cookie"))
-        .contains(REFRESH_COOKIE_NAME + "=" + newRawRefreshToken)
-        .contains("Path=/api/v1/auth")
-        .contains("Max-Age=" + REFRESH_TOKEN_TTL.toSeconds())
-        .contains("HttpOnly")
-        .contains("SameSite=Lax");
+      .contains(REFRESH_COOKIE_NAME + "=" + newRawRefreshToken)
+      .contains("Path=/api/v1/auth")
+      .contains("Max-Age=" + REFRESH_TOKEN_TTL.toSeconds())
+      .contains("HttpOnly")
+      .contains("SameSite=Lax");
 
     assertThat(persistedTokens).hasSize(2);
     assertThat(revokedRefreshToken.getUser().getId()).isEqualTo(user.getId());
@@ -127,10 +127,10 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
     assertThat(newRefreshToken.getUser().getId()).isEqualTo(user.getId());
     assertThat(newRefreshToken.getRevokedAt()).isNull();
     assertThat(newRefreshToken.getTokenFamilyId())
-        .isEqualTo(revokedRefreshToken.getTokenFamilyId());
+      .isEqualTo(revokedRefreshToken.getTokenFamilyId());
     assertThat(newRefreshToken.getExpiresAt())
-        .isAfter(requestStartedAt.plus(REFRESH_TOKEN_TTL).minusSeconds(5))
-        .isBefore(requestFinishedAt.plus(REFRESH_TOKEN_TTL).plusSeconds(5));
+      .isAfter(requestStartedAt.plus(REFRESH_TOKEN_TTL).minusSeconds(5))
+      .isBefore(requestFinishedAt.plus(REFRESH_TOKEN_TTL).plusSeconds(5));
   }
 
   /**
@@ -141,42 +141,42 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
   void shouldLogoutAndClearRefreshTokenAgainstPostgres() {
     var user = saveUser();
     var loginRequest = LoginRequest.builder()
-        .email(USER_EMAIL)
-        .password(PASSWORD)
-        .build();
+      .email(USER_EMAIL)
+      .password(PASSWORD)
+      .build();
     var loginResponse = givenWithCsrf()
-        .port(port)
-        .contentType("application/json")
-        .body(loginRequest)
-        .when()
-        .post(LOGIN_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.OK.value())
-        .extract()
-        .response();
+      .port(port)
+      .contentType("application/json")
+      .body(loginRequest)
+      .when()
+      .post(LOGIN_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.OK.value())
+      .extract()
+      .response();
     var rawRefreshToken = loginResponse.getCookie(REFRESH_COOKIE_NAME);
     var persistedToken = refreshTokenRepository.findAll().stream()
-        .findFirst()
-        .orElseThrow();
+      .findFirst()
+      .orElseThrow();
 
     var response = givenWithCsrf()
-        .port(port)
-        .cookie(REFRESH_COOKIE_NAME, rawRefreshToken)
-        .when()
-        .post(LOGOUT_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.NO_CONTENT.value())
-        .extract()
-        .response();
+      .port(port)
+      .cookie(REFRESH_COOKIE_NAME, rawRefreshToken)
+      .when()
+      .post(LOGOUT_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.NO_CONTENT.value())
+      .extract()
+      .response();
 
     var revokedToken = refreshTokenRepository.findById(persistedToken.getId()).orElseThrow();
     assertThat(response.getBody().asString()).isEmpty();
     assertThat(response.getHeader("Set-Cookie"))
-        .contains(REFRESH_COOKIE_NAME + "=")
-        .contains("Path=/api/v1/auth")
-        .contains("Max-Age=0")
-        .contains("HttpOnly")
-        .contains("SameSite=Lax");
+      .contains(REFRESH_COOKIE_NAME + "=")
+      .contains("Path=/api/v1/auth")
+      .contains("Max-Age=0")
+      .contains("HttpOnly")
+      .contains("SameSite=Lax");
     assertThat(revokedToken.getUser().getId()).isEqualTo(user.getId());
     assertThat(revokedToken.getRevokedAt()).isNotNull();
   }
@@ -187,30 +187,30 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
   @Test
   void shouldClearRefreshTokenCookieWhenLogoutCookieIsMissing() {
     var response = givenWithCsrf()
-        .port(port)
-        .when()
-        .post(LOGOUT_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.NO_CONTENT.value())
-        .extract()
-        .response();
+      .port(port)
+      .when()
+      .post(LOGOUT_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.NO_CONTENT.value())
+      .extract()
+      .response();
 
     assertThat(response.getHeader("Set-Cookie"))
-        .contains(REFRESH_COOKIE_NAME + "=")
-        .contains("Path=/api/v1/auth")
-        .contains("Max-Age=0")
-        .contains("HttpOnly")
-        .contains("SameSite=Lax");
+      .contains(REFRESH_COOKIE_NAME + "=")
+      .contains("Path=/api/v1/auth")
+      .contains("Max-Age=0")
+      .contains("HttpOnly")
+      .contains("SameSite=Lax");
     assertThat(refreshTokenRepository.findAll()).isEmpty();
   }
 
   private UserEntity saveUser() {
     return userRepository.saveAndFlush(UserEntity.builder()
-        .email(USER_EMAIL)
-        .displayName("Refresh User")
-        .passwordHash(passwordEncoder.encode(PASSWORD))
-        .emailVerified(true)
-        .roles(EnumSet.of(UserRole.USER))
-        .build());
+      .email(USER_EMAIL)
+      .displayName("Refresh User")
+      .passwordHash(passwordEncoder.encode(PASSWORD))
+      .emailVerified(true)
+      .roles(EnumSet.of(UserRole.USER))
+      .build());
   }
 }

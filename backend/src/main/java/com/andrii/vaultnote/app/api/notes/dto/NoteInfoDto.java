@@ -8,10 +8,10 @@ import lombok.Builder;
 @Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record NoteInfoDto(
-    Long id,
-    String title,
-    String content,
-    long version,
-    Instant createdAt,
-    Instant updatedAt) {
+  Long id,
+  String title,
+  String content,
+  long version,
+  Instant createdAt,
+  Instant updatedAt) {
 }

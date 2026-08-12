@@ -67,8 +67,8 @@ class NoteServiceImplTest {
     var result = noteService.getNotes(pageable);
 
     assertThat(result.getContent())
-        .extracting(NoteInfoDto::id, NoteInfoDto::title, NoteInfoDto::content)
-        .containsExactly(tuple(NOTE_ID, TITLE, CONTENT));
+      .extracting(NoteInfoDto::id, NoteInfoDto::title, NoteInfoDto::content)
+      .containsExactly(tuple(NOTE_ID, TITLE, CONTENT));
     verify(noteMapper).toNoteInfoDto(note);
   }
 
@@ -82,8 +82,8 @@ class NoteServiceImplTest {
     var result = noteService.getNote(NOTE_ID);
 
     assertThat(result)
-        .extracting(NoteInfoDto::id, NoteInfoDto::title, NoteInfoDto::content)
-        .containsExactly(NOTE_ID, TITLE, CONTENT);
+      .extracting(NoteInfoDto::id, NoteInfoDto::title, NoteInfoDto::content)
+      .containsExactly(NOTE_ID, TITLE, CONTENT);
     verify(noteMapper).toNoteInfoDto(note);
   }
 
@@ -93,8 +93,8 @@ class NoteServiceImplTest {
     when(noteRepository.findByIdAndOwner_Id(NOTE_ID, USER_ID)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> noteService.getNote(NOTE_ID))
-        .isInstanceOf(NoteNotFoundException.class)
-        .hasMessage("Note with id '11' was not found.");
+      .isInstanceOf(NoteNotFoundException.class)
+      .hasMessage("Note with id '11' was not found.");
   }
 
   @Test
@@ -104,13 +104,13 @@ class NoteServiceImplTest {
     when(currentUserProvider.currentUserId()).thenReturn(USER_ID);
     when(userRepository.getReferenceById(USER_ID)).thenReturn(owner);
     when(noteRepository.save(any(NoteEntity.class)))
-        .thenAnswer(invocation -> invocation.getArgument(0));
+      .thenAnswer(invocation -> invocation.getArgument(0));
 
     var result = noteService.createNote(TITLE, CONTENT);
 
     assertThat(result)
-        .extracting(NoteInfoDto::title, NoteInfoDto::content)
-        .containsExactly(TITLE, CONTENT);
+      .extracting(NoteInfoDto::title, NoteInfoDto::content)
+      .containsExactly(TITLE, CONTENT);
     var noteCaptor = ArgumentCaptor.forClass(NoteEntity.class);
     verify(noteRepository).save(noteCaptor.capture());
 
@@ -127,13 +127,13 @@ class NoteServiceImplTest {
     when(currentUserProvider.currentUserId()).thenReturn(USER_ID);
     when(noteRepository.findByIdAndOwner_Id(NOTE_ID, USER_ID)).thenReturn(Optional.of(note));
     when(noteRepository.saveAndFlush(any(NoteEntity.class)))
-        .thenAnswer(invocation -> invocation.getArgument(0));
+      .thenAnswer(invocation -> invocation.getArgument(0));
 
     var result = noteService.updateNote(NOTE_ID, updatedTitle, updatedContent, 0L);
 
     assertThat(result)
-        .extracting(NoteInfoDto::id, NoteInfoDto::title, NoteInfoDto::content)
-        .containsExactly(NOTE_ID, updatedTitle, updatedContent);
+      .extracting(NoteInfoDto::id, NoteInfoDto::title, NoteInfoDto::content)
+      .containsExactly(NOTE_ID, updatedTitle, updatedContent);
     verify(noteRepository).saveAndFlush(any(NoteEntity.class));
     verify(noteMapper).toNoteInfoDto(any(NoteEntity.class));
   }
@@ -144,7 +144,7 @@ class NoteServiceImplTest {
     when(noteRepository.findByIdAndOwner_Id(NOTE_ID, USER_ID)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> noteService.updateNote(NOTE_ID, TITLE, CONTENT, 0L))
-        .isInstanceOf(NoteNotFoundException.class);
+      .isInstanceOf(NoteNotFoundException.class);
     verify(noteRepository, never()).save(any(NoteEntity.class));
     verify(noteMapper, never()).toNoteInfoDto(any(NoteEntity.class));
   }
@@ -167,15 +167,15 @@ class NoteServiceImplTest {
     when(noteRepository.findByIdAndOwner_Id(NOTE_ID, USER_ID)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> noteService.deleteNote(NOTE_ID))
-        .isInstanceOf(NoteNotFoundException.class);
+      .isInstanceOf(NoteNotFoundException.class);
     verify(noteRepository, never()).delete(any(NoteEntity.class));
   }
 
   private static NoteEntity note(long id, String title, String content) {
     return NoteEntity.builder()
-        .id(id)
-        .title(title)
-        .content(content)
-        .build();
+      .id(id)
+      .title(title)
+      .content(content)
+      .build();
   }
 }

@@ -42,9 +42,9 @@ class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
 
   @Autowired
   RegistrationIntegrationTest(
-      UserJpaRepository userJpaRepository,
-      EmailVerificationTokenJpaRepository tokenRepository,
-      MailSender mailSender) {
+    UserJpaRepository userJpaRepository,
+    EmailVerificationTokenJpaRepository tokenRepository,
+    MailSender mailSender) {
     this.userJpaRepository = userJpaRepository;
     this.tokenRepository = tokenRepository;
     this.mailSender = mailSender;
@@ -62,22 +62,22 @@ class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
   void shouldRegisterUserAgainstPostgres() {
     var email = uniqueEmail();
     var request = RegisterUserRequest.builder()
-        .email(email)
-        .displayName("Integration User")
-        .password(PASSWORD)
-        .build();
+      .email(email)
+      .displayName("Integration User")
+      .password(PASSWORD)
+      .build();
     var requestStartedAt = Instant.now();
 
     var response = given()
-        .port(port)
-        .contentType(ContentType.JSON)
-        .body(request)
-        .when()
-        .post("/api/v1/auth/registrations")
-        .then()
-        .statusCode(HttpStatus.CREATED.value())
-        .extract()
-        .as(RegisterUserResponse.class);
+      .port(port)
+      .contentType(ContentType.JSON)
+      .body(request)
+      .when()
+      .post("/api/v1/auth/registrations")
+      .then()
+      .statusCode(HttpStatus.CREATED.value())
+      .extract()
+      .as(RegisterUserResponse.class);
 
     var requestFinishedAt = Instant.now();
 
@@ -86,9 +86,9 @@ class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
     var savedUser = userJpaRepository.findByEmail(email).orElseThrow();
     assertThat(savedUser.getDisplayName()).isEqualTo("Integration User");
     assertThat(savedUser.getPasswordHash())
-        .isNotBlank()
-        .isNotEqualTo(PASSWORD)
-        .startsWith("$argon2id$");
+      .isNotBlank()
+      .isNotEqualTo(PASSWORD)
+      .startsWith("$argon2id$");
     assertThat(savedUser.isEmailVerified()).isFalse();
     assertThat(savedUser.getRoles()).containsExactly(UserRole.USER);
     assertThat(savedUser.getCreatedAt()).isBetween(requestStartedAt, requestFinishedAt);
@@ -96,21 +96,21 @@ class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
     assertThat(savedUser.getUpdatedAt()).isAfterOrEqualTo(savedUser.getCreatedAt());
 
     assertThat(tokenRepository.findAll())
-        .singleElement()
-        .satisfies(token -> {
-          assertThat(token.getUser().getId()).isEqualTo(savedUser.getId());
-          assertThat(token.getTokenHash()).hasSize(64);
-          assertThat(token.getExpiresAt()).isAfter(requestFinishedAt);
-          assertThat(token.getUsedAt()).isNull();
-        });
+      .singleElement()
+      .satisfies(token -> {
+        assertThat(token.getUser().getId()).isEqualTo(savedUser.getId());
+        assertThat(token.getTokenHash()).hasSize(64);
+        assertThat(token.getExpiresAt()).isAfter(requestFinishedAt);
+        assertThat(token.getUsedAt()).isNull();
+      });
 
     var mailCaptor = ArgumentCaptor.forClass(MailMessage.class);
     verify(mailSender).send(mailCaptor.capture());
     assertThat(mailCaptor.getValue().to()).isEqualTo(email);
     assertThat(mailCaptor.getValue().text())
-        .startsWith("Hello Integration User,\n\n"
-            + "Please verify your VaultNote email by opening this link:")
-        .contains("http://localhost:4200/verify-email?token=");
+      .startsWith("Hello Integration User,\n\n"
+        + "Please verify your VaultNote email by opening this link:")
+      .contains("http://localhost:4200/verify-email?token=");
   }
 
   /**
@@ -123,21 +123,21 @@ class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
   @Test
   void shouldRejectDuplicateEmail() {
     var request = RegisterUserRequest.builder()
-        .email("existing@example.com")
-        .displayName("New User")
-        .password(PASSWORD)
-        .build();
+      .email("existing@example.com")
+      .displayName("New User")
+      .password(PASSWORD)
+      .build();
 
     var response = given()
-        .port(port)
-        .contentType(ContentType.JSON)
-        .body(request)
-        .when()
-        .post("/api/v1/auth/registrations")
-        .then()
-        .statusCode(HttpStatus.CONFLICT.value())
-        .extract()
-        .as(ApiErrorResponse.class);
+      .port(port)
+      .contentType(ContentType.JSON)
+      .body(request)
+      .when()
+      .post("/api/v1/auth/registrations")
+      .then()
+      .statusCode(HttpStatus.CONFLICT.value())
+      .extract()
+      .as(ApiErrorResponse.class);
 
     assertThat(response.code()).isEqualTo("ENTITY_ALREADY_EXISTS");
   }
@@ -158,72 +158,72 @@ class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
   @ParameterizedTest(name = "{0}")
   @MethodSource("invalidRegistrationRequests")
   void shouldRejectInvalidRegistrationRequest(
-      String scenario,
-      RegisterUserRequest request,
-      String expectedField,
-      String expectedCode) {
+    String scenario,
+    RegisterUserRequest request,
+    String expectedField,
+    String expectedCode) {
 
     var response = given()
-        .port(port)
-        .contentType(ContentType.JSON)
-        .body(request)
-        .when()
-        .post("/api/v1/auth/registrations")
-        .then()
-        .statusCode(HttpStatus.BAD_REQUEST.value())
-        .extract()
-        .as(ApiErrorResponse.class);
+      .port(port)
+      .contentType(ContentType.JSON)
+      .body(request)
+      .when()
+      .post("/api/v1/auth/registrations")
+      .then()
+      .statusCode(HttpStatus.BAD_REQUEST.value())
+      .extract()
+      .as(ApiErrorResponse.class);
 
     assertThat(response.code()).isEqualTo("VALIDATION_FAILED");
     assertThat(response.violations())
-        .singleElement()
-        .extracting(ValidationViolation::field, ValidationViolation::code)
-        .containsExactly(expectedField, expectedCode);
+      .singleElement()
+      .extracting(ValidationViolation::field, ValidationViolation::code)
+      .containsExactly(expectedField, expectedCode);
   }
 
   private static Stream<Arguments> invalidRegistrationRequests() {
     var validRequest = RegisterUserRequest.builder()
-        .email("validation-" + UUID.randomUUID() + "@example.com")
-        .displayName("Valid User")
-        .password(PASSWORD)
-        .build();
+      .email("validation-" + UUID.randomUUID() + "@example.com")
+      .displayName("Valid User")
+      .password(PASSWORD)
+      .build();
 
     return Stream.of(
-        Arguments.of(
-            "blank email",
-            validRequest.toBuilder().email("").build(),
-            "email",
-            "REQUIRED"),
-        Arguments.of(
-            "malformed email",
-            validRequest.toBuilder().email("invalid-email").build(),
-            "email",
-            "INVALID_FORMAT"),
-        Arguments.of(
-            "blank display name",
-            validRequest.toBuilder().displayName(" ").build(),
-            "display_name",
-            "REQUIRED"),
-        Arguments.of(
-            "display name too long",
-            validRequest.toBuilder().displayName("a".repeat(101)).build(),
-            "display_name",
-            "INVALID_LENGTH"),
-        Arguments.of(
-            "password too short",
-            validRequest.toBuilder().password("password12").build(),
-            "password",
-            "INVALID_LENGTH"),
-        Arguments.of(
-            "password without alphabetic character",
-            validRequest.toBuilder().password("12345678901112").build(),
-            "password",
-            "PASSWORD_POLICY"),
-        Arguments.of(
-            "password with one digit",
-            validRequest.toBuilder().password("onlyOneDigit1").build(),
-            "password",
-            "PASSWORD_POLICY"));
+      Arguments.of(
+        "blank email",
+        validRequest.toBuilder().email("").build(),
+        "email",
+        "REQUIRED"),
+      Arguments.of(
+        "malformed email",
+        validRequest.toBuilder().email("invalid-email").build(),
+        "email",
+        "INVALID_FORMAT"),
+      Arguments.of(
+        "blank display name",
+        validRequest.toBuilder().displayName(" ").build(),
+        "display_name",
+        "REQUIRED"),
+      Arguments.of(
+        "display name too long",
+        validRequest.toBuilder().displayName("a".repeat(101)).build(),
+        "display_name",
+        "INVALID_LENGTH"),
+      Arguments.of(
+        "password too short",
+        validRequest.toBuilder().password("password12").build(),
+        "password",
+        "INVALID_LENGTH"),
+      Arguments.of(
+        "password without alphabetic character",
+        validRequest.toBuilder().password("12345678901112").build(),
+        "password",
+        "PASSWORD_POLICY"),
+      Arguments.of(
+        "password with one digit",
+        validRequest.toBuilder().password("onlyOneDigit1").build(),
+        "password",
+        "PASSWORD_POLICY"));
   }
 
   private static String uniqueEmail() {

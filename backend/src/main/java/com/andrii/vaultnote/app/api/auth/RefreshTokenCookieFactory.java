@@ -18,21 +18,21 @@ public class RefreshTokenCookieFactory {
 
   public ResponseCookie create(String rawRefreshToken) {
     return ResponseCookie.from(properties.cookieName(), rawRefreshToken)
-        .httpOnly(true)
-        .secure(properties.secure())
-        .path(properties.cookiePath())
-        .sameSite(properties.sameSite())
-        .maxAge(properties.ttl())
-        .build();
+      .httpOnly(true)
+      .secure(properties.secure())
+      .path(properties.cookiePath())
+      .sameSite(properties.sameSite())
+      .maxAge(properties.ttl())
+      .build();
   }
 
   public ResponseCookie clear() {
     return ResponseCookie.from(properties.cookieName(), "")
-        .httpOnly(true)
-        .secure(properties.secure())
-        .path(properties.cookiePath())
-        .sameSite(properties.sameSite())
-        .maxAge(Duration.ZERO)
-        .build();
+      .httpOnly(true)
+      .secure(properties.secure())
+      .path(properties.cookiePath())
+      .sameSite(properties.sameSite())
+      .maxAge(Duration.ZERO)
+      .build();
   }
 }

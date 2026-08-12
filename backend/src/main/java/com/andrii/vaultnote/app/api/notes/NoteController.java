@@ -43,25 +43,25 @@ public class NoteController {
 
   @Operation(summary = "Get current user's notes")
   @ApiResponse(
-      responseCode = "200",
-      description = "Get current user's notes",
-      content = {
-          @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))})
+    responseCode = "200",
+    description = "Get current user's notes",
+    content = {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))})
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
   @GetMapping
   public Page<NoteInfoDto> getNotes(
-      @PageableDefault(size = 20) @SortDefault(
-          sort = "updatedAt",
-          direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
+    @PageableDefault(size = 20) @SortDefault(
+      sort = "updatedAt",
+      direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
     return noteService.getNotes(pageable);
   }
 
   @Operation(summary = "Get current user's note")
   @ApiResponse(
-      responseCode = "200",
-      description = "Get current user's note",
-      content = {
-          @Content(mediaType = "application/json", schema = @Schema(implementation = NoteInfoDto.class))})
+    responseCode = "200",
+    description = "Get current user's note",
+    content = {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = NoteInfoDto.class))})
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
   @ApiResponse(responseCode = "404", description = "Note not found", content = {@Content})
   @GetMapping("/{noteId}")
@@ -71,38 +71,38 @@ public class NoteController {
 
   @Operation(summary = "Create note")
   @ApiResponse(
-      responseCode = "201",
-      description = "Note created",
-      content = {
-          @Content(mediaType = "application/json", schema = @Schema(implementation = NoteInfoDto.class))})
+    responseCode = "201",
+    description = "Note created",
+    content = {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = NoteInfoDto.class))})
   @ApiResponse(responseCode = "400", description = "Invalid request", content = {@Content})
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public ResponseEntity<NoteInfoDto> createNote(@RequestBody @Valid NoteRequest request) {
     return withEtag(
-        HttpStatus.CREATED,
-        noteService.createNote(request.title(), request.content()));
+      HttpStatus.CREATED,
+      noteService.createNote(request.title(), request.content()));
   }
 
   @Operation(summary = "Update note")
   @ApiResponse(
-      responseCode = "200",
-      description = "Note updated",
-      content = {
-          @Content(mediaType = "application/json", schema = @Schema(implementation = NoteInfoDto.class))})
+    responseCode = "200",
+    description = "Note updated",
+    content = {
+      @Content(mediaType = "application/json", schema = @Schema(implementation = NoteInfoDto.class))})
   @ApiResponse(responseCode = "400", description = "Invalid request", content = {@Content})
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
   @ApiResponse(responseCode = "404", description = "Note not found", content = {@Content})
   @PutMapping("/{noteId}")
   public ResponseEntity<NoteInfoDto> updateNote(
-      @PathVariable Long noteId,
-      @RequestBody @Valid NoteRequest request,
-      @RequestHeader(HttpHeaders.IF_MATCH) String ifMatch) {
+    @PathVariable Long noteId,
+    @RequestBody @Valid NoteRequest request,
+    @RequestHeader(HttpHeaders.IF_MATCH) String ifMatch) {
     var expectedVersion = NoteEtag.parse(ifMatch).version();
     return withEtag(
-        HttpStatus.OK,
-        noteService.updateNote(noteId, request.title(), request.content(), expectedVersion));
+      HttpStatus.OK,
+      noteService.updateNote(noteId, request.title(), request.content(), expectedVersion));
   }
 
   @Operation(summary = "Delete note")
@@ -117,7 +117,7 @@ public class NoteController {
 
   private static ResponseEntity<NoteInfoDto> withEtag(HttpStatus status, NoteInfoDto note) {
     return ResponseEntity.status(status)
-        .eTag(new NoteEtag(note.version()).headerValue())
-        .body(note);
+      .eTag(new NoteEtag(note.version()).headerValue())
+      .body(note);
   }
 }

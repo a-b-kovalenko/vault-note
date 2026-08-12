@@ -32,11 +32,11 @@ class AuthenticationResultFactoryTest {
   @Test
   void shouldCreateAuthenticationResult() {
     var user = UserEntity.builder()
-        .id(1L)
-        .build();
+      .id(1L)
+      .build();
     var generatedAccessToken = new AccessTokenGenerator.GeneratedToken(
-        ACCESS_TOKEN,
-        ACCESS_TOKEN_EXPIRES_IN);
+      ACCESS_TOKEN,
+      ACCESS_TOKEN_EXPIRES_IN);
     when(accessTokenGenerator.generate(user)).thenReturn(generatedAccessToken);
 
     var result = authenticationResultFactory.create(user, RAW_REFRESH_TOKEN);

@@ -56,10 +56,10 @@ class RegistrationServiceImplTest {
   @Test
   void shouldRegisterUser() {
     var request = RegisterUserRequest.builder()
-        .email(EMAIL)
-        .displayName(DISPLAY_NAME)
-        .password(RAW_PASSWORD)
-        .build();
+      .email(EMAIL)
+      .displayName(DISPLAY_NAME)
+      .password(RAW_PASSWORD)
+      .build();
 
     when(userJpaRepository.existsByEmail(EMAIL)).thenReturn(false);
     when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(MOCK_HASH);
@@ -67,8 +67,8 @@ class RegistrationServiceImplTest {
     when(userJpaRepository.save(any(UserEntity.class))).thenAnswer(invocation -> {
       var userToSave = (UserEntity) invocation.getArgument(0);
       return userToSave.toBuilder()
-          .id(1L)
-          .build();
+        .id(1L)
+        .build();
     });
 
     var response = registrationService.registerUser(request);
@@ -81,22 +81,22 @@ class RegistrationServiceImplTest {
 
     assertThat(userCaptor.getValue().getRoles()).containsExactly(UserRole.USER);
     assertThat(response)
-        .extracting(RegisterUserResponse::userId)
-        .isEqualTo(1L);
+      .extracting(RegisterUserResponse::userId)
+      .isEqualTo(1L);
   }
 
   @Test
   void shouldThrowIfEmailExists() {
     var request = RegisterUserRequest.builder()
-        .email(EMAIL)
-        .displayName(DISPLAY_NAME)
-        .password("password")
-        .build();
+      .email(EMAIL)
+      .displayName(DISPLAY_NAME)
+      .password("password")
+      .build();
     when(userJpaRepository.existsByEmail(EMAIL)).thenReturn(true);
 
     assertThatExceptionOfType(EntityExistsException.class)
-        .isThrownBy(() -> registrationService.registerUser(request))
-        .withMessage("UserEntity with email '" + EMAIL + "' already exists.");
+      .isThrownBy(() -> registrationService.registerUser(request))
+      .withMessage("UserEntity with email '" + EMAIL + "' already exists.");
 
     verifyNoInteractions(userMapper);
     verifyNoInteractions(passwordEncoder);
@@ -107,40 +107,40 @@ class RegistrationServiceImplTest {
   @Test
   void shouldTranslateIntegrityViolationToEntityExists() {
     var request = RegisterUserRequest.builder()
-        .email(EMAIL)
-        .displayName(DISPLAY_NAME)
-        .password(RAW_PASSWORD)
-        .build();
+      .email(EMAIL)
+      .displayName(DISPLAY_NAME)
+      .password(RAW_PASSWORD)
+      .build();
 
     when(userJpaRepository.existsByEmail(EMAIL)).thenReturn(false);
     when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(MOCK_HASH);
     when(userJpaRepository.save(any(UserEntity.class)))
-        .thenThrow(new DataIntegrityViolationException("Unique constraint violation",
-            new SQLException("duplicate key value violates unique constraint \"uk_users_email\"",
-                "23505")));
+      .thenThrow(new DataIntegrityViolationException("Unique constraint violation",
+        new SQLException("duplicate key value violates unique constraint \"uk_users_email\"",
+          "23505")));
 
     assertThatExceptionOfType(EntityExistsException.class)
-        .isThrownBy(() -> registrationService.registerUser(request))
-        .withMessage("UserEntity with email '" + EMAIL + "' already exists.");
+      .isThrownBy(() -> registrationService.registerUser(request))
+      .withMessage("UserEntity with email '" + EMAIL + "' already exists.");
   }
 
   @Test
   void shouldRethrowNonUniqueIntegrityViolation() {
     var request = RegisterUserRequest.builder()
-        .email(EMAIL)
-        .displayName(DISPLAY_NAME)
-        .password(RAW_PASSWORD)
-        .build();
+      .email(EMAIL)
+      .displayName(DISPLAY_NAME)
+      .password(RAW_PASSWORD)
+      .build();
 
     when(userJpaRepository.existsByEmail(EMAIL)).thenReturn(false);
     when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(MOCK_HASH);
     when(userJpaRepository.save(any(UserEntity.class)))
-        .thenThrow(new DataIntegrityViolationException("Not null violation",
-            new SQLException("null value in column \"password_hash\" violates not-null constraint",
-                "23502")));
+      .thenThrow(new DataIntegrityViolationException("Not null violation",
+        new SQLException("null value in column \"password_hash\" violates not-null constraint",
+          "23502")));
 
     assertThatExceptionOfType(DataIntegrityViolationException.class)
-        .isThrownBy(() -> registrationService.registerUser(request))
-        .withMessage("Not null violation");
+      .isThrownBy(() -> registrationService.registerUser(request))
+      .withMessage("Not null violation");
   }
 }

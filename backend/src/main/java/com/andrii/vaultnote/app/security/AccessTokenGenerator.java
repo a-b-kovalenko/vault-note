@@ -25,12 +25,12 @@ public class AccessTokenGenerator {
     var issuedAt = clock.instant();
     var expiresAt = issuedAt.plus(jwtProperties.accessTokenTtl());
     var claims = JwtClaimsSet.builder()
-        .issuer(jwtProperties.issuer())
-        .subject(user.getId().toString())
-        .issuedAt(issuedAt)
-        .expiresAt(expiresAt)
-        .claim("roles", user.getRoles().stream().map(UserRole::name).toList())
-        .build();
+      .issuer(jwtProperties.issuer())
+      .subject(user.getId().toString())
+      .issuedAt(issuedAt)
+      .expiresAt(expiresAt)
+      .claim("roles", user.getRoles().stream().map(UserRole::name).toList())
+      .build();
 
     var encodedToken = jwtEncoder.encode(JwtEncoderParameters.from(claims));
 
@@ -38,7 +38,7 @@ public class AccessTokenGenerator {
   }
 
   public record GeneratedToken(
-      String rawValue,
-      long expiresIn) {
+    String rawValue,
+    long expiresIn) {
   }
 }

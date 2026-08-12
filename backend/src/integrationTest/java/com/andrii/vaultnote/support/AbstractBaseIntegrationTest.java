@@ -21,10 +21,10 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @DBRider
 @DBUnit(
-    schema = "vaultnote",
-    caseInsensitiveStrategy = Orthography.LOWERCASE,
-    alwaysCleanBefore = true,
-    alwaysCleanAfter = true)
+  schema = "vaultnote",
+  caseInsensitiveStrategy = Orthography.LOWERCASE,
+  alwaysCleanBefore = true,
+  alwaysCleanAfter = true)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(AbstractBaseIntegrationTest.TestMailConfiguration.class)
 public abstract class AbstractBaseIntegrationTest {
@@ -34,10 +34,10 @@ public abstract class AbstractBaseIntegrationTest {
   private static final String CSRF_HEADER_NAME = "X-XSRF-TOKEN";
 
   protected static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine")
-      .withDatabaseName("vault_note")
-      .withUsername("user")
-      .withPassword("password")
-      .withInitScript("db/init.sql");
+    .withDatabaseName("vault_note")
+    .withUsername("user")
+    .withPassword("password")
+    .withInitScript("db/init.sql");
 
   static {
     POSTGRES.start();
@@ -55,18 +55,18 @@ public abstract class AbstractBaseIntegrationTest {
 
   protected RequestSpecification givenWithCsrf() {
     var csrfResponse = given()
-        .port(port)
-        .when()
-        .get(CSRF_ENDPOINT)
-        .then()
-        .statusCode(HttpStatus.OK.value())
-        .extract()
-        .response();
+      .port(port)
+      .when()
+      .get(CSRF_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.OK.value())
+      .extract()
+      .response();
 
     return given()
-        .port(port)
-        .cookie(CSRF_COOKIE_NAME, csrfResponse.getCookie(CSRF_COOKIE_NAME))
-        .header(CSRF_HEADER_NAME, csrfResponse.jsonPath().getString("token"));
+      .port(port)
+      .cookie(CSRF_COOKIE_NAME, csrfResponse.getCookie(CSRF_COOKIE_NAME))
+      .header(CSRF_HEADER_NAME, csrfResponse.jsonPath().getString("token"));
   }
 
   @TestConfiguration(proxyBeanMethods = false)

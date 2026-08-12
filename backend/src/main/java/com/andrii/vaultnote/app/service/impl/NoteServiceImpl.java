@@ -34,9 +34,9 @@ public class NoteServiceImpl implements NoteService {
   public Page<NoteInfoDto> getNotes(Pageable pageable) {
     var ownerId = currentUserProvider.currentUserId();
     log.info("Getting notes: ownerId={}, page={}, size={}, sort={}",
-        ownerId, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
+      ownerId, pageable.getPageNumber(), pageable.getPageSize(), pageable.getSort());
     return noteRepository.findByOwner_Id(ownerId, pageable)
-        .map(noteMapper::toNoteInfoDto);
+      .map(noteMapper::toNoteInfoDto);
   }
 
   @Override
@@ -45,8 +45,8 @@ public class NoteServiceImpl implements NoteService {
     var ownerId = currentUserProvider.currentUserId();
     log.info("Getting note: noteId={}, ownerId={}", noteId, ownerId);
     return noteRepository.findByIdAndOwner_Id(noteId, ownerId)
-        .map(noteMapper::toNoteInfoDto)
-        .orElseThrow(() -> new NoteNotFoundException(noteId));
+      .map(noteMapper::toNoteInfoDto)
+      .orElseThrow(() -> new NoteNotFoundException(noteId));
   }
 
   @Override
@@ -56,10 +56,10 @@ public class NoteServiceImpl implements NoteService {
     log.info("Creating note for ownerId={}", ownerId);
     var owner = userRepository.getReferenceById(ownerId);
     var note = NoteEntity.builder()
-        .owner(owner)
-        .title(title)
-        .content(content)
-        .build();
+      .owner(owner)
+      .title(title)
+      .content(content)
+      .build();
     return noteMapper.toNoteInfoDto(noteRepository.save(note));
   }
 
@@ -68,12 +68,12 @@ public class NoteServiceImpl implements NoteService {
   public NoteInfoDto updateNote(Long noteId, String title, String content, long expectedVersion) {
     var ownerId = currentUserProvider.currentUserId();
     log.info("Updating note: noteId={}, ownerId={}, expectedVersion={}",
-        noteId, ownerId, expectedVersion);
+      noteId, ownerId, expectedVersion);
     return noteRepository.findByIdAndOwner_Id(noteId, ownerId)
-        .map(note -> updateNote(note, title, content, expectedVersion))
-        .map(noteRepository::saveAndFlush)
-        .map(noteMapper::toNoteInfoDto)
-        .orElseThrow(() -> new NoteNotFoundException(noteId));
+      .map(note -> updateNote(note, title, content, expectedVersion))
+      .map(noteRepository::saveAndFlush)
+      .map(noteMapper::toNoteInfoDto)
+      .orElseThrow(() -> new NoteNotFoundException(noteId));
   }
 
   @Override
@@ -82,12 +82,12 @@ public class NoteServiceImpl implements NoteService {
     var ownerId = currentUserProvider.currentUserId();
     log.info("Deleting note: noteId={}, ownerId={}", noteId, ownerId);
     var note = noteRepository.findByIdAndOwner_Id(noteId, ownerId)
-        .orElseThrow(() -> new NoteNotFoundException(noteId));
+      .orElseThrow(() -> new NoteNotFoundException(noteId));
     noteRepository.delete(note);
   }
 
   private NoteEntity updateNote(
-      NoteEntity note, String title, String content, long expectedVersion) {
+    NoteEntity note, String title, String content, long expectedVersion) {
     if (note.getVersion() != expectedVersion) {
       throw new NoteVersionConflictException(note.getId(), expectedVersion, note.getVersion());
     }

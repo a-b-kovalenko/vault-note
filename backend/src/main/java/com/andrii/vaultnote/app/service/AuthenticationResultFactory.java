@@ -20,10 +20,10 @@ public class AuthenticationResultFactory {
     var accessToken = accessTokenGenerator.generate(user);
 
     var loginResponse = LoginResponse.builder()
-        .accessToken(accessToken.rawValue())
-        .tokenType(TokenType.BEARER)
-        .expiresIn(accessToken.expiresIn())
-        .build();
+      .accessToken(accessToken.rawValue())
+      .tokenType(TokenType.BEARER)
+      .expiresIn(accessToken.expiresIn())
+      .build();
 
     return new LoginResult(loginResponse, rawRefreshToken);
   }

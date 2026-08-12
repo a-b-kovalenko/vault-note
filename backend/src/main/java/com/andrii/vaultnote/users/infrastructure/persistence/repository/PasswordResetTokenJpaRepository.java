@@ -19,13 +19,13 @@ public interface PasswordResetTokenJpaRepository extends JpaRepository<PasswordR
 
   @Modifying
   @Query("""
-      update PasswordResetTokenEntity token
-         set token.invalidatedAt = :invalidatedAt
-       where token.user.id = :userId
-         and token.usedAt is null
-         and token.invalidatedAt is null
-      """)
+    update PasswordResetTokenEntity token
+       set token.invalidatedAt = :invalidatedAt
+     where token.user.id = :userId
+       and token.usedAt is null
+       and token.invalidatedAt is null
+    """)
   int invalidateActiveByUserId(
-      @Param("userId") Long userId,
-      @Param("invalidatedAt") Instant invalidatedAt);
+    @Param("userId") Long userId,
+    @Param("invalidatedAt") Instant invalidatedAt);
 }

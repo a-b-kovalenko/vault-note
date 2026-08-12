@@ -31,21 +31,21 @@ class JwtConfiguration {
   @Bean
   JwtEncoder jwtEncoder(SecretKey jwtSecretKey) {
     return NimbusJwtEncoder.withSecretKey(jwtSecretKey)
-        .algorithm(MacAlgorithm.HS256)
-        .build();
+      .algorithm(MacAlgorithm.HS256)
+      .build();
   }
 
   @Bean
   JwtDecoder jwtDecoder(
-      SecretKey jwtSecretKey,
-      JwtProperties properties,
-      JwtRolesValidator jwtRolesValidator) {
+    SecretKey jwtSecretKey,
+    JwtProperties properties,
+    JwtRolesValidator jwtRolesValidator) {
     var decoder = NimbusJwtDecoder.withSecretKey(jwtSecretKey)
-        .macAlgorithm(MacAlgorithm.HS256)
-        .build();
+      .macAlgorithm(MacAlgorithm.HS256)
+      .build();
     decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
-        JwtValidators.createDefaultWithIssuer(properties.issuer()),
-        jwtRolesValidator));
+      JwtValidators.createDefaultWithIssuer(properties.issuer()),
+      jwtRolesValidator));
     return decoder;
   }
 

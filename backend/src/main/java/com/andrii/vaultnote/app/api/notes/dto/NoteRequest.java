@@ -9,6 +9,6 @@ import lombok.Builder;
 @Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record NoteRequest(
-    @NotBlank @Size(max = 200) String title,
-    @NotBlank @Size(max = 20_000) String content) {
+  @NotBlank @Size(max = 200) String title,
+  @NotBlank @Size(max = 20_000) String content) {
 }

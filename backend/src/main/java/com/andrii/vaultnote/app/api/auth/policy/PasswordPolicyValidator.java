@@ -11,12 +11,12 @@ public class PasswordPolicyValidator implements ConstraintValidator<PasswordPoli
       return true;
     }
     var hasTwoDigits = value.codePoints()
-        .filter(Character::isDigit)
-        .limit(2)
-        .count() == 2;
+      .filter(Character::isDigit)
+      .limit(2)
+      .count() == 2;
 
     var hasAlphabeticCharacter = value.codePoints()
-        .anyMatch(Character::isAlphabetic);
+      .anyMatch(Character::isAlphabetic);
 
     return hasTwoDigits && hasAlphabeticCharacter;
   }

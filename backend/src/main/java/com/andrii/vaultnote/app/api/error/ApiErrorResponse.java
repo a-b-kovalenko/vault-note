@@ -5,9 +5,9 @@ import java.util.List;
 
 @Schema(name = "ApiErrorResponse", description = "Stable API error response.")
 public record ApiErrorResponse(
-    @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String code,
-    @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String message,
-    @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<ValidationViolation> violations) {
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String code,
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String message,
+  @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<ValidationViolation> violations) {
 
   public ApiErrorResponse(String code, String message) {
     this(code, message, List.of());

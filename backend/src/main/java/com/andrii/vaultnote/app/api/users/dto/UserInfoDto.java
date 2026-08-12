@@ -7,7 +7,7 @@ import lombok.Builder;
 @Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record UserInfoDto(
-    Long id,
-    String email,
-    String displayName) {
+  Long id,
+  String email,
+  String displayName) {
 }
