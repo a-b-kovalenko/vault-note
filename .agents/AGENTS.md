@@ -23,6 +23,18 @@ change involves those concerns.
 - Never create a Git commit or push changes without the user's explicit command
   for that action.
 
+## RTK shell output
+
+RTK (Rust Token Killer) is a CLI proxy that compresses noisy shell output to
+reduce context usage by the AI agent.
+
+- RTK is configured globally for Codex through `rtk init -g --codex`.
+- Prefix shell commands with `rtk` to receive compact output and preserve
+  context, for example `rtk git status` or `rtk ./gradlew test`.
+- Use `rtk git diff --no-compact` when the complete diff is needed.
+- Use `rtk proxy <command>` when the original unfiltered output is required,
+  especially for detailed diagnostics.
+
 ## Java package structure
 
 - Organize packages by architectural role and feature ownership.
@@ -40,38 +52,14 @@ change involves those concerns.
 
 ## Obsidian knowledge vault
 
-Before editing the Obsidian vault, read the shared Markdown and Obsidian
-standard:
+Before editing `VaultNote Atlas/`, read its local instructions in
+`VaultNote Atlas/AGENTS.md` and the shared Markdown and Obsidian standard:
 `/Users/akovalenko/Projects/Personal/engineering-standards/obsidian/AGENT_RULES.md`.
 
-- `VaultNote Atlas/` is the Obsidian vault root. Open this directory in
-  Obsidian, not the repository root.
-- Keep the vault intentionally small and Ukrainian-only. Technical names,
-  identifiers, and code remain in their original form.
-- Follow this structure:
-
-  ```text
-  VaultNote Atlas/
-  ├── VaultNote_Atlas.md  central MOC and navigation
-  ├── content/            all learning notes
-  └── assets/             shared images and diagrams
-  ```
-
-- Use `VaultNote_Atlas.md` as the only MOC. Group notes there with headings
-  instead of creating domain sub-MOCs prematurely.
-- Store all learning notes directly in `content/`. Each new note begins with
-  `[⬅️](../VaultNote_Atlas.md)`, followed by `## 📝 TL;DR`; do not add an H1 to
-  the note body.
-- Use standard relative Markdown links with the `.md` extension. Do not use
-  Obsidian wiki-links.
-- Capture questions from conversations as draft notes in `content/`, then
-  refine them and register them in the central MOC.
-- Use Mermaid for diagrams and keep static assets in `VaultNote Atlas/assets/`.
-- Keep Ukrainian learning explanations separate from public project
-  documentation in `docs/`. Promote stable architecture decisions to ADRs;
-  do not duplicate the complete implementation documentation in the vault.
-- Do not add the Java-KB-specific EN/UK mirror, Quiz, or interview-case
-  structure unless the project scope explicitly grows to require it.
+When the user asks to create a note without naming another destination, treat
+it as a Ukrainian learning note in `VaultNote Atlas/content/`. If the request
+could refer either to the Atlas, public documentation, or an ADR, clarify the
+destination before creating the file.
 
 ## Project boundaries
 
