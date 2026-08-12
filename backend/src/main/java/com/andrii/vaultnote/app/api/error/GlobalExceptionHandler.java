@@ -3,9 +3,10 @@ package com.andrii.vaultnote.app.api.error;
 import com.andrii.vaultnote.app.exception.AuthenticationFailedException;
 import com.andrii.vaultnote.app.exception.EmailVerificationFailedException;
 import com.andrii.vaultnote.app.exception.EntityExistsException;
-import com.andrii.vaultnote.app.exception.RefreshTokenAuthenticationFailedException;
 import com.andrii.vaultnote.app.exception.NoteNotFoundException;
 import com.andrii.vaultnote.app.exception.NoteVersionConflictException;
+import com.andrii.vaultnote.app.exception.PasswordResetFailedException;
+import com.andrii.vaultnote.app.exception.RefreshTokenAuthenticationFailedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +41,19 @@ public class GlobalExceptionHandler {
     log.warn("Email verification failed: {}", exception.getMessage());
 
     var response = new ApiErrorResponse("EMAIL_VERIFICATION_FAILED", exception.getMessage());
+
+    return ResponseEntity
+        .status(HttpStatus.BAD_REQUEST)
+        .body(response);
+  }
+
+  @ExceptionHandler(PasswordResetFailedException.class)
+  public ResponseEntity<ApiErrorResponse> handlePasswordResetFailedException(
+      PasswordResetFailedException exception) {
+
+    log.warn("Password reset failed");
+
+    var response = new ApiErrorResponse("PASSWORD_RESET_FAILED", exception.getMessage());
 
     return ResponseEntity
         .status(HttpStatus.BAD_REQUEST)

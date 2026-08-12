@@ -42,18 +42,26 @@ public class NoteController {
   NoteService noteService;
 
   @Operation(summary = "Get current user's notes")
-  @ApiResponse(responseCode = "200", description = "Get current user's notes", content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))})
+  @ApiResponse(
+      responseCode = "200",
+      description = "Get current user's notes",
+      content = {
+          @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))})
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
   @GetMapping
   public Page<NoteInfoDto> getNotes(
-      @PageableDefault(size = 20) @SortDefault(sort = "updatedAt", direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
+      @PageableDefault(size = 20) @SortDefault(
+          sort = "updatedAt",
+          direction = Sort.Direction.DESC) @ParameterObject Pageable pageable) {
     return noteService.getNotes(pageable);
   }
 
   @Operation(summary = "Get current user's note")
-  @ApiResponse(responseCode = "200", description = "Get current user's note", content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = NoteInfoDto.class))})
+  @ApiResponse(
+      responseCode = "200",
+      description = "Get current user's note",
+      content = {
+          @Content(mediaType = "application/json", schema = @Schema(implementation = NoteInfoDto.class))})
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
   @ApiResponse(responseCode = "404", description = "Note not found", content = {@Content})
   @GetMapping("/{noteId}")
@@ -62,8 +70,11 @@ public class NoteController {
   }
 
   @Operation(summary = "Create note")
-  @ApiResponse(responseCode = "201", description = "Note created", content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = NoteInfoDto.class))})
+  @ApiResponse(
+      responseCode = "201",
+      description = "Note created",
+      content = {
+          @Content(mediaType = "application/json", schema = @Schema(implementation = NoteInfoDto.class))})
   @ApiResponse(responseCode = "400", description = "Invalid request", content = {@Content})
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
   @PostMapping
@@ -75,8 +86,11 @@ public class NoteController {
   }
 
   @Operation(summary = "Update note")
-  @ApiResponse(responseCode = "200", description = "Note updated", content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = NoteInfoDto.class))})
+  @ApiResponse(
+      responseCode = "200",
+      description = "Note updated",
+      content = {
+          @Content(mediaType = "application/json", schema = @Schema(implementation = NoteInfoDto.class))})
   @ApiResponse(responseCode = "400", description = "Invalid request", content = {@Content})
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
   @ApiResponse(responseCode = "404", description = "Note not found", content = {@Content})

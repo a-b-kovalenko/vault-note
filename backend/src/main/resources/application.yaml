@@ -28,6 +28,9 @@ app:
   email-verification:
     base-url: ${VAULTNOTE_EMAIL_VERIFICATION_BASE_URL:http://localhost:4200}
     token-ttl: ${VAULTNOTE_EMAIL_VERIFICATION_TOKEN_TTL:PT24H}
+  password-reset:
+    base-url: ${VAULTNOTE_PASSWORD_RESET_BASE_URL:http://localhost:4200}
+    token-ttl: ${VAULTNOTE_PASSWORD_RESET_TOKEN_TTL:PT1H}
   jwt:
     issuer: ${VAULTNOTE_JWT_ISSUER:vaultnote}
     secret: ${VAULTNOTE_JWT_SECRET:local-development-only-secret-change-me-please}

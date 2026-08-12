@@ -40,4 +40,15 @@ public interface RefreshTokenJpaRepository extends JpaRepository<RefreshTokenEnt
       @Param("tokenId") Long tokenId,
       @Param("revokedAt") Instant revokedAt);
 
+  @Modifying
+  @Query("""
+      update RefreshTokenEntity token
+         set token.revokedAt = :revokedAt
+       where token.user.id = :userId
+         and token.revokedAt is null
+      """)
+  int revokeActiveByUserId(
+      @Param("userId") Long userId,
+      @Param("revokedAt") Instant revokedAt);
+
 }
