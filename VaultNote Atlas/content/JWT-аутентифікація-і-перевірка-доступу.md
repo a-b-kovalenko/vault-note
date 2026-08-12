@@ -226,8 +226,33 @@ Spring Security не створює серверну HTTP-сесію для acce
 - перезапуск backend не анулює вже виданий JWT;
 - дострокове відкликання access JWT потребує окремого механізму.
 
-`STATELESS` не означає, що вся authentication без стану. Refresh token усе ще
-зберігається в `HttpOnly` cookie, а його hash і стан зберігаються в базі.
+`STATELESS` не означає, що вся authentication без стану. У VaultNote це
+гібридна модель: **stateless access authentication із stateful refresh session**.
+
+### Які стани існують одночасно
+
+| Стан | Де живе | Lifecycle |
+| --- | --- | --- |
+| `SecurityContext` | Пам'ять backend request | Тільки поточний HTTP request. |
+| Access JWT | Angular memory | До `exp` або повного reload frontend. |
+| Refresh session | Hash token-а, family, expiry і `revoked_at` у PostgreSQL; raw token у `HttpOnly` cookie | До rotation, logout або expiry. |
+| CSRF state | `XSRF-TOKEN` cookie і `X-XSRF-TOKEN` header | Для підтвердження browser mutation request. |
+
+Тому `POST /login` є state-changing request, хоча він не створює `HttpSession`:
+
+1. backend записує hash нового refresh token-а в PostgreSQL;
+2. backend встановлює `HttpOnly` `vaultnote_refresh_token` cookie;
+3. frontend отримує access JWT і зберігає його тільки в memory.
+
+Так само `POST /refresh` змінює refresh-token state через rotation, а
+`POST /logout` змінює його через revoke і очищення cookie. CSRF захищає саме
+ці побічні ефекти, а не наявність або відсутність Spring HTTP session.
+
+Коротка модель для запам'ятовування:
+
+> JWT — самодостатній короткоживучий access credential. Refresh token —
+> довгоживуча серверно контрольована refresh session. `SecurityContext` —
+> тимчасовий результат перевірки JWT для одного request.
 
 ## Ролі та межі поточної реалізації
 

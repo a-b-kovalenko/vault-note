@@ -108,7 +108,8 @@ Implement these flows:
 3. Allow verified users to log in. Issue a 15-minute JWT access token returned
    to Angular memory and a 7-day refresh token in an `HttpOnly` cookie. Validate
    the bearer JWT on protected requests and expose a current-user access-check
-   endpoint.
+   endpoint. Keep access authentication stateless while persisting the refresh
+   session for rotation and revocation.
 4. Store refresh tokens only as hashes. Rotate on every refresh, revoke the
    current session on logout, and clear the refresh-token cookie.
 5. When a rotated refresh token is reused, revoke every active token in the
@@ -121,6 +122,13 @@ refresh, logout, and other state-changing requests. Keep registration and
 email verification explicitly excluded until the public form flow has its own
 CSRF integration. Configure CORS as an explicit, environment-driven allowlist
 with credentials enabled; never use a wildcard origin with cookies.
+
+Distinguish stateless access authentication from application state. The
+backend must not use `HttpSession` or a server-side login session as the source
+of access authentication, but login, refresh, and logout still have side
+effects: they create, rotate, revoke, or clear the refresh session. CSRF
+protects those state-changing browser requests; it is not a requirement for
+creating a Spring HTTP session.
 
 Complete JWT authorization integration:
 
@@ -182,9 +190,14 @@ deferred until a preview or read-only mode is introduced.
 Create `frontend/` as a standalone Angular application with simple local
 styles and the generated client for the authentication endpoints.
 
-Implement only the email/password login page and the minimum auth state needed
-to hold the access token in memory and call the existing refresh and CSRF
-flows. Do not add Notes, profile, administrator, or Markdown screens yet.
+Implement the minimal authentication surface: the email/password login page,
+the authenticated `/me` screen, and current-session logout. Keep the access
+token in memory and use the existing CSRF, bearer, and refresh flows. The
+resulting model is stateless access authentication with a stateful rotating
+refresh session: no `HttpSession`, a per-request `SecurityContext`, an access
+JWT in Angular memory, and a hashed refresh session in PostgreSQL behind an
+`HttpOnly` cookie. Do not add Notes, profile editing, administrator, or
+Markdown screens yet.
 
 ## Phase 4.5 — Password management prerequisite
 
@@ -244,8 +257,8 @@ local styles, and no UI component library:
 - profile and display-name editing;
 - read-only administrator users and Notes lists;
 - authenticated and administrator route guards;
-- access-token attachment, single-flight refresh, CSRF handling, and standard
-  `ProblemDetail` error presentation.
+- standard `ProblemDetail` error presentation on top of the implemented auth
+  transport baseline.
 
 As the final step of this phase, add Markdown preview/read rendering:
 

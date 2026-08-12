@@ -10,7 +10,7 @@ import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '../api/api-config';
 import { csrfInterceptor } from './csrf.interceptor';
 import { AuthApiService } from './auth-api.service';
-import { LoginResponse } from './auth.models';
+import { CurrentUserResponse, LoginResponse } from './auth.models';
 
 describe('AuthApiService', () => {
   let service: AuthApiService;
@@ -86,5 +86,38 @@ describe('AuthApiService', () => {
     });
 
     expect(response?.accessToken).toBe('refreshed-access-token');
+  });
+
+  it('loads the current user and maps the generated API response', () => {
+    let response: CurrentUserResponse | undefined;
+
+    service.currentUser().subscribe((value) => {
+      response = value;
+    });
+
+    const request = httpMock.expectOne(`${API_BASE_URL}/api/v1/auth/me`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.withCredentials).toBe(true);
+    request.flush({ user_id: 42, roles: ['USER'] });
+
+    expect(response).toEqual({ userId: 42, roles: ['USER'] });
+  });
+
+  it('bootstraps CSRF before logout and sends credentials', () => {
+    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
+    let completed = false;
+
+    service.logout().subscribe({ complete: () => (completed = true) });
+
+    const csrfRequest = httpMock.expectOne(`${API_BASE_URL}/csrf`);
+    csrfRequest.flush({ token: 'csrf-token' });
+
+    const logoutRequest = httpMock.expectOne(`${API_BASE_URL}/api/v1/auth/logout`);
+    expect(logoutRequest.request.method).toBe('POST');
+    expect(logoutRequest.request.withCredentials).toBe(true);
+    expect(logoutRequest.request.headers.get('X-XSRF-TOKEN')).toBe('csrf-token');
+    logoutRequest.flush(null);
+
+    expect(completed).toBe(true);
   });
 });

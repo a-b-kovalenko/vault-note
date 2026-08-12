@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 
 import { AuthApiService } from './auth-api.service';
@@ -13,6 +14,7 @@ describe('LoginPage', () => {
   let loginRequests: LoginRequest[];
   let loginResponse: Observable<LoginResponse>;
   let authState: AuthStateService;
+  let navigate: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     loginRequests = [];
@@ -21,6 +23,7 @@ describe('LoginPage', () => {
       tokenType: 'Bearer',
       expiresIn: 900,
     });
+    navigate = vi.fn().mockResolvedValue(true);
     const authApiService = {
       login(request: LoginRequest): Observable<LoginResponse> {
         loginRequests.push(request);
@@ -30,7 +33,10 @@ describe('LoginPage', () => {
 
     await TestBed.configureTestingModule({
       imports: [LoginPage],
-      providers: [{ provide: AuthApiService, useValue: authApiService }],
+      providers: [
+        { provide: AuthApiService, useValue: authApiService },
+        { provide: Router, useValue: { navigate } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(LoginPage);
@@ -64,6 +70,29 @@ describe('LoginPage', () => {
     expect(submitButton.disabled).toBe(false);
   });
 
+  it('should toggle password visibility', () => {
+    const passwordInput = fixture.nativeElement.querySelector('#password') as HTMLInputElement;
+    const toggleButton = fixture.nativeElement.querySelector(
+      '.password-toggle',
+    ) as HTMLButtonElement;
+
+    expect(passwordInput.type).toBe('password');
+    expect(toggleButton.getAttribute('aria-label')).toBe('Show password');
+    expect(toggleButton.getAttribute('aria-pressed')).toBe('false');
+
+    toggleButton.click();
+    fixture.detectChanges();
+
+    expect(passwordInput.type).toBe('text');
+    expect(toggleButton.getAttribute('aria-label')).toBe('Hide password');
+    expect(toggleButton.getAttribute('aria-pressed')).toBe('true');
+
+    toggleButton.click();
+    fixture.detectChanges();
+
+    expect(passwordInput.type).toBe('password');
+  });
+
   it('should show an error after an invalid control is touched', () => {
     page.loginForm.controls.email.markAsTouched();
     fixture.detectChanges();
@@ -90,6 +119,7 @@ describe('LoginPage', () => {
       },
     ]);
     expect(authState.accessToken()).toBe('test-access-token');
+    expect(navigate).toHaveBeenCalledWith(['/me']);
     expect(page.isSubmitting()).toBe(false);
   });
 
