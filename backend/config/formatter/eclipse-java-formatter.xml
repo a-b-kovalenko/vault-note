@@ -5,7 +5,7 @@
     <setting id="org.eclipse.jdt.core.formatter.tabulation.size" value="2"/>
     <setting id="org.eclipse.jdt.core.formatter.indentation.size" value="2"/>
     <setting id="org.eclipse.jdt.core.formatter.lineSplit" value="120"/>
-    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_annotation" value="0"/>
+    <setting id="org.eclipse.jdt.core.formatter.alignment_for_arguments_in_annotation" value="48"/>
     <setting id="org.eclipse.jdt.core.formatter.join_wrapped_lines" value="false"/>
   </profile>
 </profiles>

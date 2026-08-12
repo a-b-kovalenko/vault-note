@@ -34,6 +34,9 @@ The backend foundation is in progress. The repository currently contains:
 * a refresh endpoint with token rotation and reuse detection;
 * a current-session logout endpoint that revokes the refresh token and clears
   the cookie;
+* a backend password-recovery baseline with generic requests, hashed expiring
+  one-time tokens, email links, email verification for unverified local
+  accounts, and refresh-session revocation;
 * an explicit CORS allowlist and SPA-compatible CSRF protection for
   state-changing requests;
 * a verified Angular authentication slice with `/login`, `/register`,
@@ -47,6 +50,8 @@ The backend foundation is in progress. The repository currently contains:
 
 The following parts remain planned:
 
+* the Angular forgot/reset-password screens and PostgreSQL recovery endpoint
+  coverage;
 * rate limiting and authentication audit events;
 * safe Markdown HTML rendering and sanitization as the final step of the Angular
   phase;
@@ -87,8 +92,9 @@ verification, JWT access tokens, rotating refresh sessions, and `USER` and
 read-only `ADMIN` roles.
 
 The first iteration does not include raw HTML in notes, attachments, note
-sharing, password reset, OAuth2, search, browser end-to-end tests, application
-CI, or production deployment.
+sharing, authenticated set/change-password, passwordless provider accounts,
+OAuth2, search, browser end-to-end tests, application CI, or production
+deployment.
 
 == Documentation map
 

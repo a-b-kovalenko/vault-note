@@ -55,6 +55,8 @@ public class SecurityConfig {
             .requestMatchers(GET, "/csrf").permitAll()
             .requestMatchers(POST, "/api/v1/auth/registrations").permitAll()
             .requestMatchers(POST, "/api/v1/auth/email-verification").permitAll()
+            .requestMatchers(POST, "/api/v1/auth/password-reset/request").permitAll()
+            .requestMatchers(POST, "/api/v1/auth/password-reset/confirm").permitAll()
             .requestMatchers(POST, "/api/v1/auth/login").permitAll()
             .requestMatchers(POST, "/api/v1/auth/refresh").permitAll()
             .requestMatchers(POST, "/api/v1/auth/logout").permitAll()

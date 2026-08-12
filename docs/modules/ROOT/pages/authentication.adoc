@@ -215,6 +215,96 @@ The public browser flow is:
   successful verification does not create a session; it offers navigation to
   `/login`, where the user can authenticate normally.
 
+== Password recovery
+
+VaultNote treats password recovery as a separate, unauthenticated token flow.
+It does not reuse an email-verification token. A successful recovery can,
+however, confirm the email of an unverified local account because possession of
+the recovery link is sufficient for this local-account onboarding path.
+
+=== Requesting a reset
+
+The request endpoint is:
+
+[source,http]
+----
+POST /api/v1/auth/password-reset/request
+Content-Type: application/json
+
+{
+  "email": "user@example.com"
+}
+----
+
+The endpoint returns `202 Accepted` with no account-specific response. An
+unknown email, an unverified account, and an existing eligible local account
+must not be distinguishable through the API. This prevents account enumeration.
+
+For an existing local account, `PasswordResetServiceImpl` invalidates older
+active reset records, generates a cryptographically random token, stores only
+its SHA-256 hash in `password_reset_tokens`, and sends the raw token in a
+Mailpit/email link:
+
+[source,text]
+----
+http://localhost:4200/reset-password?token=<raw-reset-token>
+----
+
+The raw token is never logged or persisted by the backend. The email includes
+the user's display name and explains that a successful reset also verifies an
+unverified local email.
+
+=== Confirming a reset
+
+The confirmation endpoint is:
+
+[source,http]
+----
+POST /api/v1/auth/password-reset/confirm
+Content-Type: application/json
+
+{
+  "token": "<raw-reset-token>",
+  "new_password": "NewPassword1234"
+}
+----
+
+The service hashes the presented token, locks the matching row, and accepts it
+only when it is not expired, used, or invalidated. In one transaction it:
+
+. hashes and stores the new password with the existing Argon2id
+  `PasswordEncoder`;
+. sets `users.email_verified` to `true`;
+. marks the reset token as used;
+. invalidates active email-verification tokens for the user;
+. revokes all active refresh sessions for the user.
+
+The controller returns `204 No Content` and clears the presented refresh cookie.
+The reset flow does not create a new authentication session; the user must log
+in again. Already issued access JWTs remain valid until their normal expiry,
+because access authentication is stateless and the reset flow revokes refresh
+sessions rather than maintaining a server-side JWT blacklist.
+
+Invalid, expired, used, or invalidated reset tokens return the stable
+`PASSWORD_RESET_FAILED` error with the neutral message:
+
+[source,json]
+----
+{
+  "code": "PASSWORD_RESET_FAILED",
+  "message": "Password reset link is invalid or has expired."
+}
+----
+
+The reset request and confirmation are state-changing browser requests and
+therefore participate in the existing CSRF contract. They are public with
+respect to Bearer authentication, but the Angular client must bootstrap CSRF
+and send `X-XSRF-TOKEN`.
+
+The backend service and token persistence baseline are implemented. The
+Angular forgot/reset-password screens, PostgreSQL endpoint scenarios, and
+passwordless provider-account support remain planned work.
+
 == Angular browser flow
 
 The implemented authenticated frontend flow is:

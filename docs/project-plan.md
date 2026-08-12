@@ -51,7 +51,9 @@ generated code and configuration boilerplate.
 Apply Spotless with the checked-in Eclipse Java formatter profile and make
 `check` depend on `spotlessCheck`, unit tests, `integrationTest`, Liquibase
 validation, and JaCoCo verification. The repository owns its formatter profile
-to keep IntelliJ IDEA, local Gradle checks, and CI aligned.
+to keep IntelliJ IDEA, local Gradle checks, and CI aligned. The profile uses a
+120-character line limit and wraps long annotation arguments on demand, so
+`@ApiResponse`, `@SortDefault`, and DTO annotations follow the same rule.
 
 Use explicit DTOs at REST boundaries and never expose JPA entities. Controllers
 perform binding, validation, mapping, and HTTP semantics only; services own
@@ -204,9 +206,14 @@ Do not add Notes, profile editing, administrator, or Markdown screens yet.
 
 ## Phase 4.5 — Password management prerequisite
 
-Complete local password management before starting OAuth2/OIDC. This lets a
-user who initially signs in through Google establish a second, local login
-method without creating a second VaultNote account:
+Complete local password management before starting OAuth2/OIDC. The backend
+already contains the first password-recovery slice for existing local accounts;
+the authenticated password-management use case and Angular recovery screens
+remain part of this phase.
+
+The target local password-management design lets a user who initially signs in
+through Google establish a second, local login method without creating a second
+VaultNote account:
 
 - make `users.password_hash` nullable for passwordless provider accounts;
 - add one authenticated `set/change password` use case and endpoint;
@@ -219,32 +226,31 @@ method without creating a second VaultNote account:
 - add unit and PostgreSQL integration coverage for both set and change
   scenarios.
 
-Add password recovery as a separate unauthenticated email flow:
+The implemented backend recovery baseline is a separate unauthenticated email
+flow:
 
-1. The Angular `Forgot password` page sends the email address to the planned
-   `POST /api/v1/auth/password-reset/request` endpoint.
-2. The backend always returns the same generic response, whether the account
-   exists, is verified, or is eligible for recovery. This prevents account
-   enumeration.
-3. For an eligible account, invalidate older active reset records, generate a
-   cryptographically random one-time token, store only its hash with the user,
-   expiry, and used-at metadata, then send the raw token only in a Mailpit/email
-   link to the planned `/reset-password` route. Never log the token.
-4. The Angular reset page submits the token and the new password to the planned
-   `POST /api/v1/auth/password-reset/confirm` endpoint. The backend validates
-   the token hash, expiry, and one-time state atomically, then applies the
+1. `POST /api/v1/auth/password-reset/request` always returns `202 Accepted`
+   without account-specific data, whether the account exists or is verified.
+   This prevents account enumeration.
+2. For an existing local account, invalidate older active reset records,
+   generate a cryptographically random one-time token, store only its hash with
+   expiry and used-at metadata, and send the raw token only in a Mailpit/email
+   link to `/reset-password`. The raw token is never logged.
+3. `POST /api/v1/auth/password-reset/confirm` validates the token hash, expiry,
+   invalidation, and one-time state under a pessimistic lock, then applies the
    existing password policy and `PasswordEncoder`.
-5. If the account has no local password yet, confirmation establishes one
-   without removing its provider identity. Otherwise it replaces the existing
-   password.
-6. A successful reset marks the token used, revokes all active refresh
-   sessions for the user, clears any presented refresh cookie, and requires a
-   fresh login. Access JWTs are not placed in the email link or reset response.
-7. Invalid or expired tokens return a stable `ProblemDetail` error without
-   revealing account information; the frontend offers a fresh recovery request.
-8. Add backend unit and PostgreSQL integration coverage for generic responses,
-   token expiry/reuse, passwordless accounts, session revocation, and the
-   concurrent one-time-use race.
+4. A successful reset marks the token used, sets the local password,
+   confirms an unverified email, invalidates active email-verification tokens,
+   revokes all active refresh sessions, clears the presented refresh cookie,
+   and requires a fresh login. Access JWTs are not placed in the email link or
+   reset response.
+5. Invalid or expired tokens return the stable `PASSWORD_RESET_FAILED` error
+   without revealing account information.
+
+The remaining recovery work is to add the Angular forgot/reset-password pages,
+remove the token from the address bar after success, add PostgreSQL endpoint and
+concurrency coverage, and extend the design for passwordless provider accounts
+after `password_hash` becomes nullable.
 
 ## Phase 5 — OAuth2/OIDC sign-in
 
@@ -387,3 +393,24 @@ Add refresh-token cleanup in the same final hardening phase. Remove records only
 after `expires_at`; retain revoked but not-yet-expired records so reuse
 detection continues to work. The cleanup may run as a scheduled job or an
 explicit maintenance task.
+
+## Future direction — separate React frontend
+
+The repository may later contain a second, independent React SPA alongside the
+existing Angular application. This is a multi-client setup, not a microfrontend
+architecture:
+
+- keep the current Angular SPA in `frontend/`;
+- add the React SPA in a separate directory such as `frontend-react/`;
+- keep one Spring Boot backend and one OpenAPI contract as the source of truth;
+- give each client its own routing, UI components, in-memory access-token state,
+  and HTTP/auth integration;
+- reuse the `HttpOnly` refresh-cookie and CSRF protocol rather than sharing
+  access tokens through browser storage;
+- add both local origins to the backend CORS allowlist;
+- implement the React client only after the Angular authentication and password
+  recovery flows are stable.
+
+The two SPAs should be independently runnable and deployable. They should not
+be combined into one runtime shell unless a future product requirement makes
+microfrontend composition necessary.

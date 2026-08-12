@@ -33,14 +33,19 @@ has been implemented and verified. Branch integration is tracked separately.
   display-name-personalized verification email, `/verify-email` confirms it,
   login redirects to `/me`, current user data is loaded, and logout revokes the
   refresh session and returns to `/login`.
+- The backend password-recovery baseline is implemented for local accounts:
+  generic reset requests, hashed expiring one-time tokens, Mailpit links,
+  password confirmation, email verification for unverified accounts, refresh
+  session revocation, and stable invalid-token errors.
 - The private Notes CRUD baseline is implemented: owner-only endpoints,
   pagination, DTO boundaries, `CurrentUserProvider` ownership checks,
   `NOTE_NOT_FOUND` handling, and PostgreSQL-backed integration coverage.
 - The Notes API currently returns source Markdown; safe HTML rendering is
   planned as the final step of the Angular phase, when a preview or read-only
   mode is introduced.
-- Next: implement Phase 4.5 local password management and password recovery
-  before OAuth; then continue with the Notes administrator view, profile
+- Next: finish the Angular forgot/reset-password screens and PostgreSQL
+  endpoint coverage, then implement authenticated local set/change-password
+  before OAuth. After that continue with the Notes administrator view, profile
   updates, authenticated route guards, and standard frontend API-error
   presentation. Remaining authentication hardening includes audit events.
 - The local profile is implemented and verified locally.
@@ -168,21 +173,27 @@ has been implemented and verified. Branch integration is tracked separately.
   - [ ] Reuse the existing password policy and `PasswordEncoder`.
   - [ ] Prevent removing the last available authentication method.
   - [ ] Add unit and PostgreSQL integration coverage for set and change cases.
-- [ ] Add unauthenticated password recovery through email.
-  - [ ] Add a generic `Forgot password` request response that prevents account
+- [x] Add the backend baseline for unauthenticated local-account password
+  recovery through email.
+  - [x] Return a generic `202 Accepted` request response that prevents account
     enumeration.
-  - [ ] Store only a hash of a cryptographically random, one-time reset token
+  - [x] Store only a hash of a cryptographically random, one-time reset token
     with expiry and used-at metadata.
-  - [ ] Send the raw token only through the recovery email link and never log
+  - [x] Send the raw token only through the recovery email link and never log
     it.
-  - [ ] Add reset confirmation with the existing password policy and
-    `PasswordEncoder`, including passwordless provider accounts.
-  - [ ] Atomically consume the token and revoke all active refresh sessions
+  - [x] Confirm the reset with the existing password policy and
+    `PasswordEncoder`; a successful reset also verifies an unverified local
+    account.
+  - [x] Atomically consume the token and revoke all active refresh sessions
     after a successful reset.
-  - [ ] Add invalid/expired-token `ProblemDetail` handling and a fresh-request
-    path in Angular.
-  - [ ] Add unit and PostgreSQL integration coverage for generic responses,
-    expiry, reuse, session revocation, and concurrent one-time use.
+  - [x] Add stable `PASSWORD_RESET_FAILED` handling for invalid or expired
+    tokens.
+  - [x] Add service unit coverage for generic requests, expiry, password
+    replacement, email verification, and session revocation.
+  - [ ] Add PostgreSQL endpoint coverage for generic responses, token reuse,
+    session revocation, and concurrent one-time use.
+  - [ ] Add the Angular forgot/reset-password screens, fresh-request path, and
+    token removal from the address bar after success.
 
 ## Phase 5 — OAuth2/OIDC sign-in
 
@@ -248,3 +259,18 @@ has been implemented and verified. Branch integration is tracked separately.
   - [ ] Remove records only after `expires_at`.
   - [ ] Retain revoked but not-yet-expired records so reuse detection remains
     possible.
+
+## Planned separate frontend client
+
+- [ ] Add an independent React SPA alongside the existing Angular SPA.
+  - [ ] Keep Angular in `frontend/` and add React in a separate directory such
+    as `frontend-react/`.
+  - [ ] Reuse the Spring Boot API and OpenAPI contract without duplicating
+    backend authentication logic.
+  - [ ] Keep access tokens in each client's memory and reuse the existing
+    `HttpOnly` refresh-cookie and CSRF protocol.
+  - [ ] Add both frontend origins to the backend CORS allowlist.
+  - [ ] Verify equivalent login, registration, email verification, password
+    recovery, refresh, `/me`, and logout flows.
+  - [ ] Keep the clients as separate SPAs; do not introduce microfrontend
+    composition without a concrete product requirement.
