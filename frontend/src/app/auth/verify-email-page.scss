@@ -1,0 +1,178 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+.verify-email-page {
+  display: grid;
+  min-height: 100dvh;
+  padding: 2rem 1rem;
+  place-items: center;
+  background:
+    radial-gradient(circle at 15% 15%, rgba(47, 107, 79, 0.18), transparent 32%),
+    radial-gradient(circle at 85% 85%, rgba(145, 181, 139, 0.22), transparent 30%), #f4f8f4;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #344767;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.brand-mark {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border-radius: 0.65rem;
+  color: #ffffff;
+  background: #2f6b4f;
+  box-shadow: 0 0.5rem 1rem rgba(47, 107, 79, 0.28);
+}
+
+.verify-email-heading {
+  margin-top: 0;
+}
+
+.eyebrow {
+  margin: 0 0 0.6rem;
+  color: #2f6b4f;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  color: #172033;
+  font-size: clamp(1.9rem, 6vw, 2.35rem);
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.verify-email-copy {
+  margin: 0.85rem 0 0;
+  color: #6e7b91;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.verification-status {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 2rem;
+  color: #6e7b91;
+  font-size: 0.85rem;
+}
+
+.verification-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #cce4d1;
+  border-top-color: #2f6b4f;
+  border-radius: 50%;
+  animation: verification-spin 800ms linear infinite;
+}
+
+.verify-login-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 0;
+  border-radius: 0.7rem;
+  color: #ffffff;
+  background: #2f6b4f;
+  box-shadow: 0 0.6rem 1rem rgba(47, 107, 79, 0.22);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  margin-top: 2rem;
+  transition:
+    background 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.verify-login-button:hover {
+  background: #24543e;
+  box-shadow: 0 0.8rem 1.2rem rgba(47, 107, 79, 0.28);
+  transform: translateY(-1px);
+}
+
+.verification-actions {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.verification-actions .verify-login-button {
+  margin-top: 0;
+}
+
+.secondary-button {
+  min-height: 2.85rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid #d7deea;
+  border-radius: 0.7rem;
+  color: #344767;
+  background: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.secondary-button:hover {
+  border-color: #aebbd0;
+  background: #fbfcfe;
+  box-shadow: 0 0.35rem 0.8rem rgba(31, 48, 81, 0.08);
+}
+
+.secondary-button:focus-visible,
+.verify-login-button:focus-visible {
+  outline: 3px solid rgba(47, 107, 79, 0.2);
+  outline-offset: 2px;
+}
+
+.security-note {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 1.75rem 0 0;
+  color: #8a96a9;
+  font-size: 0.78rem;
+}
+
+@keyframes verification-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 50rem) {
+  .verify-email-heading {
+    margin-top: 2.5rem;
+  }
+}
+
+@media (max-height: 75rem) {
+  .verify-email-page {
+    padding-block: 1rem;
+  }
+
+  .security-note {
+    margin-top: 1.1rem;
+  }
+}

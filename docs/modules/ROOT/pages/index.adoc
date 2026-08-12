@@ -36,8 +36,9 @@ The backend foundation is in progress. The repository currently contains:
   the cookie;
 * an explicit CORS allowlist and SPA-compatible CSRF protection for
   state-changing requests;
-* a verified Angular authentication slice with `/login`, `/me`, in-memory
-  access-token state, refresh handling, and current-session logout;
+* a verified Angular authentication slice with `/login`, `/register`,
+  `/verify-email`, `/me`, in-memory access-token state, refresh handling, and
+  current-session logout;
 * private notes CRUD with DTO boundaries, pagination, and service-level
   ownership checks;
 * unit coverage for the login, refresh, and token-generation services, plus
@@ -51,7 +52,7 @@ The following parts remain planned:
   phase;
 * OAuth2/OIDC sign-in as the next phase;
 * administrator note views and profile workflows;
-* registration, Notes, profile, and administrator Angular screens;
+* Notes, profile, and administrator Angular screens;
 * route guards and standard frontend API-error presentation.
 
 == Target architecture

@@ -26,21 +26,23 @@ has been implemented and verified. Branch integration is tracked separately.
   verified.
 - CORS and SPA-compatible CSRF protection are implemented and verified.
 - The Angular authentication slice is implemented: generated auth models,
-  `/login`, in-memory access-token state, CSRF bootstrap, bearer attachment,
-  single-flight refresh, `/me`, logout, password visibility toggle, and focused
-  unit tests.
-- The local browser flow was verified end to end: successful login redirects to
-  `/me`, current user data is loaded, and logout revokes the refresh session and
-  returns to `/login`.
+  `/login`, `/register`, `/verify-email`, in-memory access-token state, CSRF
+  bootstrap, bearer attachment, single-flight refresh, `/me`, logout, password
+  visibility toggles, and focused unit tests.
+- The local browser flows were verified end to end: registration sends a
+  display-name-personalized verification email, `/verify-email` confirms it,
+  login redirects to `/me`, current user data is loaded, and logout revokes the
+  refresh session and returns to `/login`.
 - The private Notes CRUD baseline is implemented: owner-only endpoints,
   pagination, DTO boundaries, `CurrentUserProvider` ownership checks,
   `NOTE_NOT_FOUND` handling, and PostgreSQL-backed integration coverage.
 - The Notes API currently returns source Markdown; safe HTML rendering is
   planned as the final step of the Angular phase, when a preview or read-only
   mode is introduced.
-- Next: finish the Notes administrator view, profile updates, authenticated
-  route guards, and standard frontend API-error presentation; the remaining
-  authentication hardening is authentication audit events.
+- Next: implement Phase 4.5 local password management and password recovery
+  before OAuth; then continue with the Notes administrator view, profile
+  updates, authenticated route guards, and standard frontend API-error
+  presentation. Remaining authentication hardening includes audit events.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -148,6 +150,12 @@ has been implemented and verified. Branch integration is tracked separately.
 - [x] Add current-session logout with local state clearing and login redirect.
 - [x] Add password visibility toggle and accessible button state.
 - [x] Verify the local browser flow: login → `/me` → logout → `/login`.
+- [x] Implement the public registration page with client-side validation,
+  password confirmation, and password visibility toggles.
+- [x] Implement the `/verify-email` route with loading, success, and
+  invalid-link states.
+- [x] Verify the local browser flow: registration → email verification →
+  login.
 
 ## Phase 4.5 — Password management prerequisite
 
@@ -158,9 +166,23 @@ has been implemented and verified. Branch integration is tracked separately.
   - [ ] Allow an authenticated provider user to set a password when no password
     exists.
   - [ ] Reuse the existing password policy and `PasswordEncoder`.
-  - [ ] Keep unauthenticated password reset through email as a separate flow.
   - [ ] Prevent removing the last available authentication method.
   - [ ] Add unit and PostgreSQL integration coverage for set and change cases.
+- [ ] Add unauthenticated password recovery through email.
+  - [ ] Add a generic `Forgot password` request response that prevents account
+    enumeration.
+  - [ ] Store only a hash of a cryptographically random, one-time reset token
+    with expiry and used-at metadata.
+  - [ ] Send the raw token only through the recovery email link and never log
+    it.
+  - [ ] Add reset confirmation with the existing password policy and
+    `PasswordEncoder`, including passwordless provider accounts.
+  - [ ] Atomically consume the token and revoke all active refresh sessions
+    after a successful reset.
+  - [ ] Add invalid/expired-token `ProblemDetail` handling and a fresh-request
+    path in Angular.
+  - [ ] Add unit and PostgreSQL integration coverage for generic responses,
+    expiry, reuse, session revocation, and concurrent one-time use.
 
 ## Phase 5 — OAuth2/OIDC sign-in
 
@@ -182,8 +204,7 @@ has been implemented and verified. Branch integration is tracked separately.
 
 ## Phase 6 — Remaining Angular frontend
 
-- [ ] Implement registration, email verification, Notes, profile, and
-  administrator screens.
+- [ ] Implement Notes, profile, and administrator screens.
 - [ ] Add authenticated and administrator route guards.
 - [ ] Add standard `ProblemDetail` error presentation.
 - [ ] Add focused frontend unit tests and production-build verification.

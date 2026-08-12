@@ -93,6 +93,16 @@ describe('LoginPage', () => {
     expect(passwordInput.type).toBe('password');
   });
 
+  it('should navigate to registration from the account prompt', () => {
+    const registrationButton = fixture.nativeElement.querySelector(
+      '.registration-button',
+    ) as HTMLButtonElement;
+
+    registrationButton.click();
+
+    expect(navigate).toHaveBeenCalledWith(['/register']);
+  });
+
   it('should show an error after an invalid control is touched', () => {
     page.loginForm.controls.email.markAsTouched();
     fixture.detectChanges();
@@ -144,10 +154,12 @@ describe('LoginPage', () => {
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     fixture.detectChanges();
 
-    expect(page.loginError()).toBe('Invalid email or password.');
+    expect(page.loginError()).toBe(
+      'Invalid email or password. If you registered recently, check your inbox and verify your email before signing in.',
+    );
     expect(
       (fixture.nativeElement.querySelector('#login-error') as HTMLElement).textContent,
-    ).toContain('Invalid email or password.');
+    ).toContain('check your inbox and verify your email');
     expect(page.isSubmitting()).toBe(false);
   });
 

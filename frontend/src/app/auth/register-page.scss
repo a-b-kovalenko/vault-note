@@ -3,7 +3,7 @@
   min-height: 100dvh;
 }
 
-.login-page {
+.register-page {
   display: grid;
   min-height: 100dvh;
   padding: 2rem 1rem;
@@ -13,7 +13,7 @@
     radial-gradient(circle at 85% 85%, rgba(145, 181, 139, 0.22), transparent 30%), #f4f8f4;
 }
 
-.login-card {
+.register-card {
   width: min(100%, 26rem);
   padding: 2.5rem;
   border: 1px solid #e1e7f0;
@@ -43,7 +43,8 @@
   box-shadow: 0 0.5rem 1rem rgba(47, 107, 79, 0.28);
 }
 
-.login-heading {
+.register-heading,
+.success-state {
   margin-top: 2.5rem;
 }
 
@@ -64,10 +65,17 @@ h1 {
   letter-spacing: -0.04em;
 }
 
-.subtitle {
+.subtitle,
+.success-copy {
   margin: 0.85rem 0 0;
   color: #6e7b91;
   font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.success-copy strong {
+  color: #344767;
+  overflow-wrap: anywhere;
 }
 
 .form-error {
@@ -81,7 +89,7 @@ h1 {
   line-height: 1.4;
 }
 
-.login-form {
+.register-form {
   display: grid;
   gap: 1.15rem;
   margin-top: 2rem;
@@ -163,16 +171,26 @@ h1 {
   color: #24543e;
 }
 
-.password-toggle:focus-visible {
+.password-toggle:focus-visible,
+.text-button:focus-visible,
+.submit-button:focus-visible {
   border-radius: 0.25rem;
   outline: 3px solid rgba(47, 107, 79, 0.2);
   outline-offset: 2px;
 }
 
+.field-help,
 .field-error {
-  color: #b54747;
   font-size: 0.75rem;
   font-weight: 500;
+}
+
+.field-help {
+  color: #7c899d;
+}
+
+.field-error {
+  color: #b54747;
 }
 
 .submit-button {
@@ -200,47 +218,6 @@ h1 {
   transform: translateY(-1px);
 }
 
-.submit-button:focus-visible {
-  outline: 3px solid rgba(47, 107, 79, 0.3);
-  outline-offset: 3px;
-}
-
-.account-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 0.45rem;
-}
-
-.text-button {
-  min-height: 1.75rem;
-  padding: 0.25rem;
-  border: 0;
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #2f6b4f;
-  background: transparent;
-  cursor: pointer;
-  transition:
-    background 160ms ease,
-    color 160ms ease;
-}
-
-.text-button:not(:disabled):hover {
-  color: #24543e;
-  background: #edf6ef;
-}
-
-.text-button:focus-visible {
-  outline: 3px solid rgba(47, 107, 79, 0.2);
-  outline-offset: 2px;
-}
-
-.text-button:disabled {
-  color: #9aa7bb;
-  cursor: not-allowed;
-}
-
 .submit-button:disabled {
   color: #ffffff;
   background: #abc5b3;
@@ -248,78 +225,7 @@ h1 {
   cursor: not-allowed;
 }
 
-.oauth-divider {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  margin: 1.75rem 0 1.15rem;
-  color: #9aa7bb;
-  font-size: 0.75rem;
-  white-space: nowrap;
-}
-
-.oauth-divider::before,
-.oauth-divider::after {
-  height: 1px;
-  flex: 1;
-  background: #e5eaf2;
-  content: '';
-}
-
-.oauth-buttons {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.oauth-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.65rem;
-  min-height: 2.85rem;
-  padding: 0.65rem 1rem;
-  border: 1px solid #d7deea;
-  border-radius: 0.7rem;
-  color: #344767;
-  background: #ffffff;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.oauth-button:not(:disabled):hover {
-  border-color: #aebbd0;
-  background: #fbfcfe;
-  box-shadow: 0 0.35rem 0.8rem rgba(31, 48, 81, 0.08);
-}
-
-.oauth-button:focus-visible {
-  outline: 3px solid rgba(47, 107, 79, 0.2);
-  outline-offset: 2px;
-}
-
-.oauth-button:disabled {
-  color: #9aa7bb;
-  background: #f5faf5;
-  cursor: not-allowed;
-}
-
-.oauth-icon {
-  display: block;
-  flex: 0 0 auto;
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.oauth-icon-github {
-  color: #172033;
-}
-
-.registration-prompt {
+.login-prompt {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -329,9 +235,21 @@ h1 {
   font-size: 0.8rem;
 }
 
-.registration-button {
-  min-height: 1.5rem;
-  padding-inline: 0.15rem;
+.text-button {
+  min-height: 1.75rem;
+  padding: 0.25rem;
+  border: 0;
+  color: #2f6b4f;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.text-button:hover {
+  color: #24543e;
+  background: #edf6ef;
 }
 
 .security-note {
@@ -344,34 +262,13 @@ h1 {
 }
 
 @media (max-width: 30rem) {
-  .login-card {
+  .register-card {
     padding: 2rem 1.35rem;
   }
 }
 
 @media (max-height: 75rem) {
-  .login-page {
+  .register-page {
     padding-block: 1rem;
-  }
-
-  .login-card {
-    padding-block: 1.75rem;
-  }
-
-  .login-heading {
-    margin-top: 1.75rem;
-  }
-
-  .login-form {
-    gap: 0.85rem;
-    margin-top: 1.35rem;
-  }
-
-  .field-input {
-    padding-block: 0.7rem;
-  }
-
-  .oauth-divider {
-    margin-block: 1.1rem 0.75rem;
   }
 }

@@ -3,6 +3,7 @@ import type {
   CurrentUserResponse as OpenApiCurrentUserResponse,
   LoginRequest,
   LoginResponse as OpenApiLoginResponse,
+  RegisterUserResponse as OpenApiRegisterUserResponse,
   ValidationViolation,
 } from '../api/generated';
 
@@ -15,6 +16,18 @@ export type CurrentUserApiResponse = OpenApiCurrentUserResponse;
 export type CurrentUserResponse = {
   userId: NonNullable<OpenApiCurrentUserResponse['user_id']>;
   roles: NonNullable<OpenApiCurrentUserResponse['roles']>;
+};
+
+export type RegisterUserRequest = {
+  email: string;
+  displayName: string;
+  password: string;
+};
+
+export type RegisterUserApiResponse = OpenApiRegisterUserResponse;
+
+export type RegisterUserResponse = {
+  userId: NonNullable<OpenApiRegisterUserResponse['userId']>;
 };
 
 /**
