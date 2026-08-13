@@ -40,22 +40,21 @@ The backend foundation is in progress. The repository currently contains:
 * an explicit CORS allowlist and SPA-compatible CSRF protection for
   state-changing requests;
 * a verified Angular authentication slice with `/login`, `/register`,
-  `/verify-email`, `/me`, in-memory access-token state, refresh handling, and
-  current-session logout;
+  `/verify-email`, `/forgot-password`, `/reset-password`, `/me`, in-memory
+  access-token state, refresh handling, and current-session logout;
 * private notes CRUD with DTO boundaries, pagination, and service-level
   ownership checks;
 * unit coverage for the login, refresh, and token-generation services, plus
   PostgreSQL integration coverage for health, registration, email verification,
-  login, refresh rotation, and Notes CRUD.
+  login, password recovery, refresh rotation, and Notes CRUD.
 
 The following parts remain planned:
 
-* the Angular forgot/reset-password screens and PostgreSQL recovery endpoint
-  coverage;
 * rate limiting and authentication audit events;
 * safe Markdown HTML rendering and sanitization as the final step of the Angular
   phase;
-* OAuth2/OIDC sign-in as the next phase;
+* OAuth2/OIDC sign-in as the next phase, beginning with a separate
+  `oauth_identities` table for `provider` and `provider_subject` values;
 * administrator note views and profile workflows;
 * Notes, profile, and administrator Angular screens;
 * route guards and standard frontend API-error presentation.

@@ -43,7 +43,7 @@
 - [Gradle-інтеграція Angular frontend](content/Angular-frontend-Gradle-інтеграція.md): запуск frontend-команд і спільний quality gate.
 - [Bootstrap, routing та application shell](content/Angular-bootstrap-routing-та-application-shell.md): запуск Angular, providers, маршрути і root shell.
 - [Providers, browser routing та root shell](content/Angular-application-providers-routing-root-shell.md): пояснення базових Angular application-концепцій і їхнього lifecycle.
-- [Auth feature Angular frontend](content/Angular-auth-feature.md): поточна структура login feature і наступні кроки.
+- [Auth feature Angular frontend](content/Angular-auth-feature.md): auth-сторінки, password recovery, API boundary, CSRF та refresh flow.
 
 ## Workflows
 

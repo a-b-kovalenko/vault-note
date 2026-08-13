@@ -103,6 +103,16 @@ describe('LoginPage', () => {
     expect(navigate).toHaveBeenCalledWith(['/register']);
   });
 
+  it('should navigate to password recovery from the forgot-password action', () => {
+    const forgotPasswordButton = fixture.nativeElement.querySelector(
+      '.account-actions .text-button',
+    ) as HTMLButtonElement;
+
+    forgotPasswordButton.click();
+
+    expect(navigate).toHaveBeenCalledWith(['/forgot-password']);
+  });
+
   it('should show an error after an invalid control is touched', () => {
     page.loginForm.controls.email.markAsTouched();
     fixture.detectChanges();

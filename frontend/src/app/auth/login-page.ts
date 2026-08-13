@@ -51,6 +51,10 @@ export class LoginPage {
     void this.router.navigate(['/register']);
   }
 
+  protected navigateToForgotPassword(): void {
+    void this.router.navigate(['/forgot-password']);
+  }
+
   protected onSubmit(): void {
     this.loginForm.markAllAsTouched();
     this.loginError.set(null);

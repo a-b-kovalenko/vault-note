@@ -10,6 +10,8 @@ import {
   LoginApiResponse,
   LoginRequest,
   LoginResponse,
+  PasswordResetConfirmRequest,
+  PasswordResetRequest,
   RegisterUserApiResponse,
   RegisterUserRequest,
   RegisterUserResponse,
@@ -55,6 +57,34 @@ export class AuthApiService {
       params: { token },
       withCredentials: true,
     });
+  }
+
+  requestPasswordReset(request: PasswordResetRequest): Observable<void> {
+    return this.csrfService
+      .ensureToken()
+      .pipe(
+        switchMap(() =>
+          this.http.post<void>(
+            `${API_BASE_URL}/api/v1/auth/password-reset/request`,
+            { email: request.email },
+            { withCredentials: true },
+          ),
+        ),
+      );
+  }
+
+  confirmPasswordReset(request: PasswordResetConfirmRequest): Observable<void> {
+    return this.csrfService
+      .ensureToken()
+      .pipe(
+        switchMap(() =>
+          this.http.post<void>(
+            `${API_BASE_URL}/api/v1/auth/password-reset/confirm`,
+            { token: request.token, new_password: request.newPassword },
+            { withCredentials: true },
+          ),
+        ),
+      );
   }
 
   refresh(): Observable<LoginResponse> {

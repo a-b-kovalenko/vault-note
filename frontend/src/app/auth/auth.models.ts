@@ -24,6 +24,15 @@ export type RegisterUserRequest = {
   password: string;
 };
 
+export type PasswordResetRequest = {
+  email: string;
+};
+
+export type PasswordResetConfirmRequest = {
+  token: string;
+  newPassword: string;
+};
+
 export type RegisterUserApiResponse = OpenApiRegisterUserResponse;
 
 export type RegisterUserResponse = {
