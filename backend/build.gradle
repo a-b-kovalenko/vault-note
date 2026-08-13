@@ -7,6 +7,7 @@ plugins {
   id 'com.github.node-gradle.node' version '7.1.0'
   id 'com.diffplug.spotless' version '8.9.0'
   id 'jacoco'
+  id 'idea'
   id 'java'
 }
 
@@ -98,6 +99,13 @@ sourceSets {
     resources.srcDir 'src/integrationTest/resources'
     compileClasspath += sourceSets.main.output
     runtimeClasspath += sourceSets.main.output
+  }
+}
+
+idea {
+  module {
+    testSources.from(sourceSets.integrationTest.java.srcDirs)
+    testResources.from(sourceSets.integrationTest.resources.srcDirs)
   }
 }
 

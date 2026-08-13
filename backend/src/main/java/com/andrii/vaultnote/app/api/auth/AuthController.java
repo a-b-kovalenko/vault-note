@@ -24,6 +24,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -58,7 +59,9 @@ public class AuthController {
     responseCode = "201",
     description = "Register user",
     content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = RegisterUserResponse.class))})
+      @Content(
+        mediaType = MediaType.APPLICATION_JSON_VALUE,
+        schema = @Schema(implementation = RegisterUserResponse.class))})
   @ApiResponse(responseCode = "400", description = "Invalid request", content = {@Content})
   @ApiResponse(responseCode = "409", description = "Email already registered", content = {@Content})
   @ApiResponse(responseCode = "500", description = "Server error", content = {@Content})
@@ -87,7 +90,9 @@ public class AuthController {
     responseCode = "400",
     description = "Invalid request",
     content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))})
+      @Content(
+        mediaType = MediaType.APPLICATION_JSON_VALUE,
+        schema = @Schema(implementation = ApiErrorResponse.class))})
   @ApiResponse(responseCode = "500", description = "Server error", content = {@Content})
   @PostMapping("/password-reset/request")
   @ResponseStatus(HttpStatus.ACCEPTED)
@@ -101,7 +106,9 @@ public class AuthController {
     responseCode = "400",
     description = "Invalid request or reset token",
     content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))})
+      @Content(
+        mediaType = MediaType.APPLICATION_JSON_VALUE,
+        schema = @Schema(implementation = ApiErrorResponse.class))})
   @ApiResponse(responseCode = "500", description = "Server error", content = {@Content})
   @PostMapping("/password-reset/confirm")
   public ResponseEntity<Void> confirmPasswordReset(
@@ -119,17 +126,21 @@ public class AuthController {
     responseCode = "200",
     description = "Login user",
     content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class))})
+      @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = LoginResponse.class))})
   @ApiResponse(
     responseCode = "400",
     description = "Invalid request",
     content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))})
+      @Content(
+        mediaType = MediaType.APPLICATION_JSON_VALUE,
+        schema = @Schema(implementation = ApiErrorResponse.class))})
   @ApiResponse(
     responseCode = "401",
     description = "Unauthorized",
     content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))})
+      @Content(
+        mediaType = MediaType.APPLICATION_JSON_VALUE,
+        schema = @Schema(implementation = ApiErrorResponse.class))})
   @ApiResponse(responseCode = "500", description = "Server error", content = {@Content})
 
   @PostMapping("/login")
@@ -142,12 +153,14 @@ public class AuthController {
     responseCode = "200",
     description = "Refresh access token",
     content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = LoginResponse.class))})
+      @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = LoginResponse.class))})
   @ApiResponse(
     responseCode = "401",
     description = "Invalid or expired refresh token",
     content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))})
+      @Content(
+        mediaType = MediaType.APPLICATION_JSON_VALUE,
+        schema = @Schema(implementation = ApiErrorResponse.class))})
   @PostMapping("/refresh")
   public ResponseEntity<LoginResponse> refresh(@CookieValue(name = "vaultnote_refresh_token") String rawRefreshToken) {
     return authenticationResponse(refreshTokenService.refresh(rawRefreshToken));
@@ -171,7 +184,9 @@ public class AuthController {
     responseCode = "200",
     description = "Get authenticated user",
     content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = CurrentUserResponse.class))})
+      @Content(
+        mediaType = MediaType.APPLICATION_JSON_VALUE,
+        schema = @Schema(implementation = CurrentUserResponse.class))})
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
   @SecurityRequirement(name = "bearerAuth")
   @GetMapping("/me")

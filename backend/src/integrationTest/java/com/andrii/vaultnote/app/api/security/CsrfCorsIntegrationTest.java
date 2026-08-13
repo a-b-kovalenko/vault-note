@@ -8,6 +8,7 @@ import com.andrii.vaultnote.support.AbstractBaseIntegrationTest;
 import com.andrii.vaultnote.users.domain.UserRole;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
+import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -78,7 +79,7 @@ class CsrfCorsIntegrationTest extends AbstractBaseIntegrationTest {
 
     var response = given()
       .port(port)
-      .contentType("application/json")
+      .contentType(ContentType.JSON)
       .body(LoginRequest.builder()
         .email(USER_EMAIL)
         .password(USER_PASSWORD)

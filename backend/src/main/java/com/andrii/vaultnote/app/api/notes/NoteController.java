@@ -19,6 +19,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,7 +47,7 @@ public class NoteController {
     responseCode = "200",
     description = "Get current user's notes",
     content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class))})
+      @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = Page.class))})
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
   @GetMapping
   public Page<NoteInfoDto> getNotes(
@@ -61,7 +62,7 @@ public class NoteController {
     responseCode = "200",
     description = "Get current user's note",
     content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = NoteInfoDto.class))})
+      @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = NoteInfoDto.class))})
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
   @ApiResponse(responseCode = "404", description = "Note not found", content = {@Content})
   @GetMapping("/{noteId}")
@@ -74,7 +75,7 @@ public class NoteController {
     responseCode = "201",
     description = "Note created",
     content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = NoteInfoDto.class))})
+      @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = NoteInfoDto.class))})
   @ApiResponse(responseCode = "400", description = "Invalid request", content = {@Content})
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
   @PostMapping
@@ -90,7 +91,7 @@ public class NoteController {
     responseCode = "200",
     description = "Note updated",
     content = {
-      @Content(mediaType = "application/json", schema = @Schema(implementation = NoteInfoDto.class))})
+      @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = NoteInfoDto.class))})
   @ApiResponse(responseCode = "400", description = "Invalid request", content = {@Content})
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
   @ApiResponse(responseCode = "404", description = "Note not found", content = {@Content})

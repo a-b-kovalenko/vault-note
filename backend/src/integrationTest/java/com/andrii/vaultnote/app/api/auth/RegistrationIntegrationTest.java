@@ -34,6 +34,7 @@ import org.springframework.http.HttpStatus;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
 
+  private static final String ENTITY_ALREADY_EXISTS_CODE = "ENTITY_ALREADY_EXISTS";
   private static final String PASSWORD = "Password1234";
 
   UserJpaRepository userJpaRepository;
@@ -139,7 +140,7 @@ class RegistrationIntegrationTest extends AbstractBaseIntegrationTest {
       .extract()
       .as(ApiErrorResponse.class);
 
-    assertThat(response.code()).isEqualTo("ENTITY_ALREADY_EXISTS");
+    assertThat(response.code()).isEqualTo(ENTITY_ALREADY_EXISTS_CODE);
   }
 
   /**
