@@ -28,7 +28,8 @@ has been implemented and verified. Branch integration is tracked separately.
 - The Angular authentication slice is implemented: generated auth models,
   `/login`, `/register`, `/verify-email`, in-memory access-token state, CSRF
   bootstrap, bearer attachment, single-flight refresh, `/me`, logout, password
-  visibility toggles, and focused unit tests.
+  visibility toggles, `/forgot-password`, `/reset-password`, and focused unit
+  tests.
 - The local browser flows were verified end to end: registration sends a
   display-name-personalized verification email, `/verify-email` confirms it,
   login redirects to `/me`, current user data is loaded, and logout revokes the
@@ -43,11 +44,10 @@ has been implemented and verified. Branch integration is tracked separately.
 - The Notes API currently returns source Markdown; safe HTML rendering is
   planned as the final step of the Angular phase, when a preview or read-only
   mode is introduced.
-- Next: finish the Angular forgot/reset-password screens and PostgreSQL
-  endpoint coverage, then implement authenticated local set/change-password
-  before OAuth. After that continue with the Notes administrator view, profile
-  updates, authenticated route guards, and standard frontend API-error
-  presentation. Remaining authentication hardening includes audit events.
+- Next: continue with OAuth. After that continue with the Notes administrator
+  view, profile updates, authenticated route guards, and standard frontend
+  API-error presentation. Remaining authentication hardening includes audit
+  events.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -164,15 +164,6 @@ has been implemented and verified. Branch integration is tracked separately.
 
 ## Phase 4.5 — Password management prerequisite
 
-- [ ] Complete local password management before OAuth.
-  - [ ] Make `users.password_hash` nullable for passwordless provider accounts.
-  - [ ] Add one authenticated set/change-password use case and endpoint.
-  - [ ] Require and verify `currentPassword` when a password already exists.
-  - [ ] Allow an authenticated provider user to set a password when no password
-    exists.
-  - [ ] Reuse the existing password policy and `PasswordEncoder`.
-  - [ ] Prevent removing the last available authentication method.
-  - [ ] Add unit and PostgreSQL integration coverage for set and change cases.
 - [x] Add the backend baseline for unauthenticated local-account password
   recovery through email.
   - [x] Return a generic `202 Accepted` request response that prevents account
@@ -190,20 +181,34 @@ has been implemented and verified. Branch integration is tracked separately.
     tokens.
   - [x] Add service unit coverage for generic requests, expiry, password
     replacement, email verification, and session revocation.
-  - [ ] Add PostgreSQL endpoint coverage for generic responses, token reuse,
+  - [x] Add PostgreSQL endpoint coverage for generic responses, token reuse,
     session revocation, and concurrent one-time use.
-  - [ ] Add the Angular forgot/reset-password screens, fresh-request path, and
+  - [x] Add the Angular forgot/reset-password screens, fresh-request path, and
     token removal from the address bar after success.
 
 ## Phase 5 — OAuth2/OIDC sign-in
 
+- [ ] Complete authenticated password management for provider/passwordless
+  accounts.
+  - [ ] Make `users.password_hash` nullable.
+  - [ ] Persist provider identities with uniqueness constraints.
+- [ ] Implement authenticated password management.
+  - [ ] Add authenticated set/change-password use cases and endpoint.
+  - [ ] Require and verify `currentPassword` when changing an existing password.
+  - [ ] Allow an authenticated provider user to set a password when none exists.
+  - [ ] Reuse the existing password policy and `PasswordEncoder`.
+- [ ] Prevent removing the last available authentication method.
+  - [ ] Add unit and PostgreSQL integration coverage for set, change, and
+    invariant cases.
 - [ ] Add backend OAuth2 Client integration.
   - [ ] Configure a provider such as Google or GitHub.
-  - [ ] Implement authorization redirect and callback handling.
   - [ ] Use a short-lived cookie-based authorization state compatible with the
     stateless application security model.
+  - [ ] Implement authorization redirect and callback handling.
   - [ ] Map verified provider identities to local users and assign `USER` by
     default.
+  - [ ] Handle explicit onboarding and account linking; never link by email
+    match alone.
   - [ ] Issue the existing JWT access token and refresh-token cookie.
   - [ ] Never place access or refresh tokens in redirect URLs.
 - [ ] Add the Angular OAuth flow.

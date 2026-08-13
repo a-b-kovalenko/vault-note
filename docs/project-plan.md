@@ -75,7 +75,8 @@ exceptions.
 Create Liquibase migrations in schema `vaultnote` for:
 
 - `users`: `BIGINT` ID, unique email, `display_name`, Argon2id password hash,
-  verification state, timestamps, and future-compatible auth-provider fields.
+  verification state, and timestamps. Phase 5 makes `password_hash` nullable
+  for accounts that initially use only an external provider.
 - `user_roles`: many-to-many user assignments with stable numeric role codes;
   the initial codes are `USER` (1) and `ADMIN` (2).
 - `notes`: owner relation, title, Markdown content, timestamps, and `@Version`.
@@ -83,6 +84,10 @@ Create Liquibase migrations in schema `vaultnote` for:
   revocation state.
 - `email_verification_tokens`: user relation, single-use hashed token, expiry,
   used timestamp, and creation timestamp for the email-verification MVP.
+- `oauth_identities` (Phase 5): user relation, a stable provider value such as
+  `GOOGLE` or `GITHUB`, the provider's stable subject identifier, and creation
+  timestamp. Store the provider enum as a stable string and enforce unique
+  `(provider, provider_subject)` and `(user_id, provider)` combinations.
 - `auth_audit_events`: successful/failed login, logout, and token revocation.
 
 The role migration assigns `USER` to existing users. Open registration grants
@@ -206,25 +211,9 @@ Do not add Notes, profile editing, administrator, or Markdown screens yet.
 
 ## Phase 4.5 — Password management prerequisite
 
-Complete local password management before starting OAuth2/OIDC. The backend
-already contains the first password-recovery slice for existing local accounts;
-the authenticated password-management use case and Angular recovery screens
-remain part of this phase.
-
-The target local password-management design lets a user who initially signs in
-through Google establish a second, local login method without creating a second
-VaultNote account:
-
-- make `users.password_hash` nullable for passwordless provider accounts;
-- add one authenticated `set/change password` use case and endpoint;
-- when a password already exists, require and verify `currentPassword`;
-- when no password exists, allow the authenticated user to set one without a
-  current password;
-- validate and hash the new password through the existing password policy and
-  `PasswordEncoder`;
-- prevent removing the last available authentication method;
-- add unit and PostgreSQL integration coverage for both set and change
-  scenarios.
+Finish the unauthenticated email password-recovery flow before starting
+OAuth2/OIDC. This phase covers existing local accounts and also verifies an
+unverified email after a successful reset.
 
 The implemented backend recovery baseline is a separate unauthenticated email
 flow:
@@ -247,40 +236,50 @@ flow:
 5. Invalid or expired tokens return the stable `PASSWORD_RESET_FAILED` error
    without revealing account information.
 
-The remaining recovery work is to add the Angular forgot/reset-password pages,
-remove the token from the address bar after success, add PostgreSQL endpoint and
-concurrency coverage, and extend the design for passwordless provider accounts
-after `password_hash` becomes nullable.
+The backend recovery baseline, PostgreSQL endpoint and concurrency coverage,
+and Angular forgot/reset-password pages are complete. The reset token is
+removed from the address bar after a successful confirmation. The next planned
+work is Phase 5's provider/passwordless account model, starting with the
+separate `oauth_identities` table described above.
 
 ## Phase 5 — OAuth2/OIDC sign-in
 
-After password management is complete and the minimal Angular login flow is
-working, add external sign-in through an OAuth2/OIDC provider such as Google or
-GitHub:
+After password recovery and the minimal Angular login flow are working, add
+external sign-in through an OAuth2/OIDC provider such as Google or GitHub in
+this order:
 
-- add Spring Security OAuth2 Client support and provider configuration;
-- implement the authorization redirect and callback flow;
-- keep the application stateless after login, using a short-lived
-  cookie-based authorization state for the OAuth handshake;
-- map a verified provider identity to a local `User`, assigning `USER` by
-  default and requiring explicit rules for account linking;
-- handle a new provider identity through an explicit onboarding flow rather
-  than an opaque login failure: show the verified provider email as read-only,
-  collect or confirm `displayName`, create the local `User` with
-  `email_verified = true`, `password_hash = null`, and role `USER`, persist the
-  provider identity, and then issue VaultNote tokens;
-- do not require a phone number for OAuth onboarding; phone-based
-  authentication is outside the current VaultNote scope;
-- never silently link a new provider identity to an existing local account
-  using only a matching email; require an authenticated local login and an
-  explicit account-linking action;
-- issue VaultNote's existing JWT access token and refresh-token cookie after
-  successful provider authentication;
-- never place access or refresh tokens in redirect URLs;
-- add login buttons and an OAuth callback route in Angular;
-- obtain the access token through the existing refresh flow and keep it only in
-  frontend memory;
-- add provider-mocked integration coverage and a local manual verification flow.
+1. Prepare the account model for provider/passwordless users:
+   make `users.password_hash` nullable and add the `oauth_identities` table.
+   Store `provider` (`GOOGLE`, `GITHUB`, and future providers) together with
+   `provider_subject`, `user_id`, and timestamps. Enforce unique
+   `(provider, provider_subject)` and `(user_id, provider)` constraints.
+2. Implement authenticated password management:
+   add set/change-password use cases and endpoint; require `currentPassword`
+   when changing an existing password; allow setting a password when none
+   exists; reuse the existing password policy and `PasswordEncoder`.
+3. Enforce the account-recovery invariant:
+   prevent removing the last available authentication method, so a user keeps
+   either a local password or at least one linked provider identity. Add unit
+   and PostgreSQL integration coverage for set, change, and invariant cases.
+4. Configure Spring Security OAuth2 Client and the selected provider, then
+   implement the authorization redirect and callback with a short-lived,
+   cookie-based authorization state compatible with the stateless security
+   model.
+5. Resolve provider identity and onboarding:
+   map a verified identity to a local `User`, assign `USER` by default, and for
+   a new identity collect or confirm `displayName`, create the user with
+   `email_verified = true` and `password_hash = null`, and persist the provider
+   identity. Existing accounts require explicit authenticated linking; matching
+   email alone must never link accounts.
+6. Complete the security handoff:
+   issue VaultNote's existing JWT access token and refresh-token cookie, keep
+   access tokens out of redirect URLs, and obtain the frontend access token
+   through the existing refresh flow.
+7. Add the Angular OAuth flow:
+   provider buttons, callback route, and access-token storage only in frontend
+   memory. Phone-based authentication remains outside the current scope.
+8. Add provider-mocked integration coverage and a local manual verification
+   flow.
 
 ## Phase 6 — Remaining Angular frontend
 

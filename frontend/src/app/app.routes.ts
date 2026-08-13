@@ -10,6 +10,16 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/register-page').then(({ RegisterPage }) => RegisterPage),
   },
   {
+    path: 'forgot-password',
+    loadComponent: () =>
+      import('./auth/forgot-password-page').then(({ ForgotPasswordPage }) => ForgotPasswordPage),
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./auth/reset-password-page').then(({ ResetPasswordPage }) => ResetPasswordPage),
+  },
+  {
     path: 'verify-email',
     loadComponent: () =>
       import('./auth/verify-email-page').then(({ VerifyEmailPage }) => VerifyEmailPage),

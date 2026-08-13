@@ -135,6 +135,49 @@ describe('AuthApiService', () => {
     expect(completed).toBe(true);
   });
 
+  it('bootstraps CSRF before requesting a password reset', () => {
+    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
+    let completed = false;
+
+    service.requestPasswordReset({ email: 'user@example.com' }).subscribe({
+      complete: () => (completed = true),
+    });
+
+    httpMock.expectOne(`${API_BASE_URL}/csrf`).flush({ token: 'csrf-token' });
+
+    const request = httpMock.expectOne(`${API_BASE_URL}/api/v1/auth/password-reset/request`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.withCredentials).toBe(true);
+    expect(request.request.headers.get('X-XSRF-TOKEN')).toBe('csrf-token');
+    expect(request.request.body).toEqual({ email: 'user@example.com' });
+    request.flush(null);
+
+    expect(completed).toBe(true);
+  });
+
+  it('bootstraps CSRF before confirming a password reset', () => {
+    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
+    let completed = false;
+
+    service
+      .confirmPasswordReset({ token: 'raw-token', newPassword: 'NewPassword1234' })
+      .subscribe({ complete: () => (completed = true) });
+
+    httpMock.expectOne(`${API_BASE_URL}/csrf`).flush({ token: 'csrf-token' });
+
+    const request = httpMock.expectOne(`${API_BASE_URL}/api/v1/auth/password-reset/confirm`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.withCredentials).toBe(true);
+    expect(request.request.headers.get('X-XSRF-TOKEN')).toBe('csrf-token');
+    expect(request.request.body).toEqual({
+      token: 'raw-token',
+      new_password: 'NewPassword1234',
+    });
+    request.flush(null);
+
+    expect(completed).toBe(true);
+  });
+
   it('loads the current user and maps the generated API response', () => {
     let response: CurrentUserResponse | undefined;
 

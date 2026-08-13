@@ -41,6 +41,30 @@ user_id = 42
 `provider + provider_subject` — на номер документа в конкретній системі
 ідентифікації.
 
+## Де зберігається provider
+
+У Phase 5 provider identity буде окремим persistence-зв'язком, а не полем у
+`users`. Планована таблиця `oauth_identities` матиме приблизно такі поля:
+
+```text
+id
+user_id
+provider          -- GOOGLE, GITHUB, ...
+provider_subject  -- стабільний ID користувача у провайдера
+created_at
+```
+
+`provider` зберігаємо як стабільне string-представлення enum. Унікальні
+обмеження мають заборонити:
+
+- повторне використання пари `(provider, provider_subject)` для різних
+  VaultNote User;
+- повторне підключення того самого provider до одного User через
+  `(user_id, provider)`.
+
+Тому тип провайдера читається з `oauth_identities.provider`, а локальний User
+визначається через `oauth_identities.user_id`.
+
 ## Небезпека автоматичного linking
 
 Припустімо, у базі вже є локальний акаунт:

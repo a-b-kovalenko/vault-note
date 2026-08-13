@@ -301,9 +301,26 @@ therefore participate in the existing CSRF contract. They are public with
 respect to Bearer authentication, but the Angular client must bootstrap CSRF
 and send `X-XSRF-TOKEN`.
 
-The backend service and token persistence baseline are implemented. The
-Angular forgot/reset-password screens, PostgreSQL endpoint scenarios, and
-passwordless provider-account support remain planned work.
+The backend service and token persistence baseline are implemented, including
+PostgreSQL endpoint and concurrency scenarios. The Angular forgot/reset-password
+screens remove the token from the address bar after a successful confirmation.
+Passwordless provider-account support remains planned for Phase 5.
+
+== Planned OAuth provider identity storage
+
+OAuth2/OIDC will not add a provider type or provider subject directly to the
+`users` table. Phase 5 will introduce a separate `oauth_identities` table with:
+
+* `user_id` — the local VaultNote user;
+* `provider` — a stable string value such as `GOOGLE` or `GITHUB`;
+* `provider_subject` — the stable identifier issued by that provider;
+* `created_at` — when the external identity was linked.
+
+The database will enforce unique `(provider, provider_subject)` so one external
+identity cannot belong to multiple VaultNote users, and unique
+`(user_id, provider)` so one user cannot link the same provider twice. The
+provider type is therefore stored in `oauth_identities.provider`, not in
+`users`.
 
 == Angular browser flow
 

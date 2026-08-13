@@ -96,6 +96,22 @@ describe('authInterceptor', () => {
     expect(error).toBeInstanceOf(HttpErrorResponse);
   });
 
+  it('does not attach a stale bearer token to password reset requests', () => {
+    authState.setSession({
+      accessToken: 'stale-access-token',
+      tokenType: 'Bearer',
+      expiresIn: 900,
+    });
+
+    httpClient().post(`${API_BASE_URL}/api/v1/auth/password-reset/request`, {}).subscribe();
+
+    const request = httpMock.expectOne(`${API_BASE_URL}/api/v1/auth/password-reset/request`);
+    expect(request.request.headers.has('Authorization')).toBe(false);
+    request.flush(null);
+
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
   it('clears the session when refresh fails', () => {
     const refreshError = new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' });
     refresh.mockReturnValue(throwError(() => refreshError));

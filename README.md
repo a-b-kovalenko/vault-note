@@ -5,12 +5,13 @@ an Angular single-page application, a Spring Boot API, PostgreSQL, and a
 production-inspired authentication lifecycle.
 
 > **Project status:** the Angular workspace includes the OpenAPI-generated
-> authentication client and the email/password login page. The repository
-> contains registration, email verification, login, JWT access
-> tokens, rotating refresh sessions, current-session logout, users and Notes
-> APIs, optimistic locking, local/test profiles, CORS, SPA-compatible CSRF
-> protection, PostgreSQL integration coverage, and an Angular workspace. Rate
-> limiting, audit events, and the remaining frontend screens are still planned.
+> authentication client and the complete public authentication surface:
+> registration, email verification, login, password recovery, `/me`, and
+> current-session logout. The repository also contains JWT access tokens,
+> rotating refresh sessions, users and Notes APIs, optimistic locking,
+> local/test profiles, CORS, SPA-compatible CSRF protection, PostgreSQL
+> integration coverage, and an Angular workspace. Rate limiting, audit events,
+> OAuth2/OIDC, and the remaining frontend screens are still planned.
 
 ## Planned architecture
 
@@ -26,6 +27,13 @@ The backend uses package-level boundaries for `common`, `users`, `notes`,
 `security`, and the runnable `app` package. OpenAPI is the API source of truth;
 the frontend client and its TypeScript models are generated from the backend
 document.
+
+Future OAuth2/OIDC provider identities will be stored separately from local
+user credentials in a planned `vaultnote.oauth_identities` table. Each row will
+contain the local `user_id`, a stable `provider` value such as `GOOGLE` or
+`GITHUB`, and the provider's stable subject identifier. Unique constraints on
+`(provider, provider_subject)` and `(user_id, provider)` will prevent duplicate
+identities and duplicate links for one user.
 
 ## Obsidian knowledge vault
 
@@ -53,19 +61,24 @@ rules are in [.agents/AGENTS.md](.agents/AGENTS.md).
 - Private Markdown notes with owner-only CRUD, pagination, and optimistic
   locking.
 - Email/password registration with email verification.
+- Unauthenticated password recovery that also verifies an unverified local
+  email after successful token confirmation.
 - A 15-minute JWT access token held only in Angular memory and a rotating,
   7-day `HttpOnly` refresh-token cookie.
 - `USER` and read-only `ADMIN` roles.
 - PostgreSQL database `vault_note`, using the non-public `vaultnote` schema.
 - Mailpit for local email testing; PostgreSQL remains an existing local server.
 
-Raw HTML, attachments, note sharing, password reset, OAuth2, search, browser
-e2e tests, application CI, and production deployment are outside the first
-iteration.
+Raw HTML, attachments, note sharing, authenticated set/change-password,
+passwordless provider accounts, OAuth2, search, browser e2e tests, application
+CI, and production deployment are outside the first iteration.
 
 ## Delivery phases
 
-- Phase 4: minimal Angular workspace with the email/password login page.
+- Phase 4: Angular authentication workspace with registration, email
+  verification, password recovery, login, `/me`, and logout.
+- Phase 4.5: unauthenticated email password-recovery flow and its PostgreSQL
+  endpoint coverage.
 - Phase 5: OAuth2/OIDC sign-in with provider buttons and a callback flow.
 - Phase 6: remaining Angular screens, route guards, refresh handling, and
   frontend Markdown preview/read rendering.
@@ -164,9 +177,9 @@ cd backend
 ## Implemented authentication API
 
 The backend currently supports registration, email verification, login,
-refresh-token rotation, current-session logout, and browser CSRF/CORS
-protection. Before a state-changing authentication request, obtain a CSRF
-token and preserve its cookie:
+password recovery, refresh-token rotation, current-session logout, and browser
+CSRF/CORS protection. Before a state-changing authentication request, obtain a
+CSRF token and preserve its cookie:
 
 ```shell
 curl --include --cookie-jar cookies.txt http://localhost:8080/csrf
@@ -212,6 +225,14 @@ curl --include --request POST http://localhost:8080/api/v1/auth/logout \
 The endpoint returns `204`, revokes the matching refresh token, and clears the
 cookie with `Max-Age=0`. An absent or already invalid cookie is handled
 idempotently. An issued access JWT remains valid until its expiration.
+
+Password recovery uses `POST /api/v1/auth/password-reset/request` and
+`POST /api/v1/auth/password-reset/confirm`. The request response is always
+generic (`202 Accepted`), while confirmation accepts a single-use expiring
+token, replaces the Argon2id password, verifies an unverified local email, and
+revokes active refresh sessions. The Angular `/forgot-password` and
+`/reset-password` pages implement this flow without storing the reset token in
+frontend state after successful confirmation.
 
 ## Implemented registration API
 
