@@ -23,6 +23,19 @@ change involves those concerns.
 - Never create a Git commit or push changes without the user's explicit command
   for that action.
 
+## IDE problem checks
+
+- When the user asks to check IDE problems, issues, warnings, errors, or uses
+  an equivalent Ukrainian or English phrase such as “перевір проблеми”,
+  “problems”, “issues”, or “що підсвічує IDE” without naming a file, use
+  IntelliJ IDEA MCP to inspect problems in the currently open file.
+- When the user provides a file path, check whether it is open; open it in
+  IntelliJ IDEA first when necessary, then inspect its problems through the IDE
+  MCP.
+- Fix reported problems when the change is appropriate and safe. Use a focused
+  verification after the fix when needed.
+- Do not run a full IntelliJ IDEA build for these checks.
+
 ## RTK shell output
 
 RTK (Rust Token Killer) is a CLI proxy that compresses noisy shell output to

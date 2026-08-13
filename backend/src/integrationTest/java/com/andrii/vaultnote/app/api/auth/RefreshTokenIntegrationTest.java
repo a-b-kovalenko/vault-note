@@ -12,6 +12,7 @@ import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.RefreshTokenJpaRepository;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
 import com.github.database.rider.core.api.dataset.DataSet;
+import io.restassured.http.ContentType;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.EnumSet;
@@ -70,7 +71,7 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
 
     var loginResponse = givenWithCsrf()
       .port(port)
-      .contentType("application/json")
+      .contentType(ContentType.JSON)
       .body(loginRequest)
       .when()
       .post(LOGIN_ENDPOINT)
@@ -146,7 +147,7 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
       .build();
     var loginResponse = givenWithCsrf()
       .port(port)
-      .contentType("application/json")
+      .contentType(ContentType.JSON)
       .body(loginRequest)
       .when()
       .post(LOGIN_ENDPOINT)

@@ -30,6 +30,8 @@ import org.springframework.http.HttpStatus;
 class NotesIntegrationTest extends AbstractBaseIntegrationTest {
 
   private static final String NOTES_ENDPOINT = "/api/v1/notes";
+  private static final String NOTE_NOT_FOUND_CODE = "NOTE_NOT_FOUND";
+  private static final String NOTE_VERSION_CONFLICT_CODE = "NOTE_VERSION_CONFLICT";
   private static final String OWNER_EMAIL = "existing@example.com";
   private static final String OTHER_OWNER_EMAIL = "verification@example.com";
 
@@ -132,7 +134,7 @@ class NotesIntegrationTest extends AbstractBaseIntegrationTest {
       .extract()
       .as(ApiErrorResponse.class);
 
-    assertThat(conflictResponse.code()).isEqualTo("NOTE_VERSION_CONFLICT");
+    assertThat(conflictResponse.code()).isEqualTo(NOTE_VERSION_CONFLICT_CODE);
 
     var savedNote = noteRepository.findById(noteId).orElseThrow();
     assertThat(savedNote)
@@ -269,7 +271,7 @@ class NotesIntegrationTest extends AbstractBaseIntegrationTest {
       .extract()
       .as(ApiErrorResponse.class);
 
-    assertThat(response.code()).isEqualTo("NOTE_NOT_FOUND");
+    assertThat(response.code()).isEqualTo(NOTE_NOT_FOUND_CODE);
   }
 
   /**

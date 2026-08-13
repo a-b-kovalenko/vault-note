@@ -40,6 +40,7 @@ import org.springframework.context.annotation.Primary;
 class EmailVerificationIntegrationTest extends AbstractBaseIntegrationTest {
 
   private static final String EMAIL_VERIFICATION_ENDPOINT = "/api/v1/auth/email-verification";
+  private static final String EMAIL_VERIFICATION_FAILED_CODE = "EMAIL_VERIFICATION_FAILED";
   private static final Instant FIXED_NOW = Instant.parse("2099-01-01T00:00:00Z");
   private static final String USER_EMAIL = "verification@example.com";
 
@@ -120,7 +121,7 @@ class EmailVerificationIntegrationTest extends AbstractBaseIntegrationTest {
       .extract()
       .as(ApiErrorResponse.class);
 
-    assertThat(response.code()).isEqualTo("EMAIL_VERIFICATION_FAILED");
+    assertThat(response.code()).isEqualTo(EMAIL_VERIFICATION_FAILED_CODE);
 
     var user = userRepository.findByEmail(USER_EMAIL).orElseThrow();
     assertThat(user.isEmailVerified()).isFalse();
@@ -155,7 +156,7 @@ class EmailVerificationIntegrationTest extends AbstractBaseIntegrationTest {
       .extract()
       .as(ApiErrorResponse.class);
 
-    assertThat(response.code()).isEqualTo("EMAIL_VERIFICATION_FAILED");
+    assertThat(response.code()).isEqualTo(EMAIL_VERIFICATION_FAILED_CODE);
 
     var unchangedUser = userRepository.findByEmail(USER_EMAIL).orElseThrow();
     assertThat(unchangedUser.isEmailVerified()).isFalse();
@@ -206,7 +207,7 @@ class EmailVerificationIntegrationTest extends AbstractBaseIntegrationTest {
       .extract()
       .as(ApiErrorResponse.class);
 
-    assertThat(response.code()).isEqualTo("EMAIL_VERIFICATION_FAILED");
+    assertThat(response.code()).isEqualTo(EMAIL_VERIFICATION_FAILED_CODE);
 
     var verifiedUser = userRepository.findByEmail(USER_EMAIL).orElseThrow();
     assertThat(verifiedUser.isEmailVerified()).isTrue();
@@ -267,7 +268,7 @@ class EmailVerificationIntegrationTest extends AbstractBaseIntegrationTest {
         .findFirst()
         .orElseThrow()
         .as(ApiErrorResponse.class);
-      assertThat(failedResponse.code()).isEqualTo("EMAIL_VERIFICATION_FAILED");
+      assertThat(failedResponse.code()).isEqualTo(EMAIL_VERIFICATION_FAILED_CODE);
     }
 
     var verifiedUser = userRepository.findByEmail(USER_EMAIL).orElseThrow();

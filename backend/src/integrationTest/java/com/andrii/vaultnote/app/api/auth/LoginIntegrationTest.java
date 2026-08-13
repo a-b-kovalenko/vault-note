@@ -13,6 +13,7 @@ import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.RefreshTokenJpaRepository;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
 import com.github.database.rider.core.api.dataset.DataSet;
+import io.restassured.http.ContentType;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.EnumSet;
@@ -28,6 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 class LoginIntegrationTest extends AbstractBaseIntegrationTest {
 
   private static final String LOGIN_ENDPOINT = "/api/v1/auth/login";
+  private static final String AUTHENTICATION_FAILED_CODE = "AUTHENTICATION_FAILED";
   private static final String USER_EMAIL = "login@example.com";
   private static final String UNVERIFIED_USER_EMAIL = "unverified-login@example.com";
   private static final String PASSWORD = "Password1234";
@@ -76,7 +78,7 @@ class LoginIntegrationTest extends AbstractBaseIntegrationTest {
 
     var response = givenWithCsrf()
       .port(port)
-      .contentType("application/json")
+      .contentType(ContentType.JSON)
       .body(request)
       .when()
       .post(LOGIN_ENDPOINT)
@@ -141,7 +143,7 @@ class LoginIntegrationTest extends AbstractBaseIntegrationTest {
 
     var response = givenWithCsrf()
       .port(port)
-      .contentType("application/json")
+      .contentType(ContentType.JSON)
       .body(request)
       .when()
       .post(LOGIN_ENDPOINT)
@@ -152,7 +154,7 @@ class LoginIntegrationTest extends AbstractBaseIntegrationTest {
 
     var errorResponse = response.as(ApiErrorResponse.class);
 
-    assertThat(errorResponse.code()).isEqualTo("AUTHENTICATION_FAILED");
+    assertThat(errorResponse.code()).isEqualTo(AUTHENTICATION_FAILED_CODE);
     assertThat(response.getHeader("Set-Cookie")).isNull();
     assertThat(refreshTokenRepository.findAll()).isEmpty();
   }
@@ -180,7 +182,7 @@ class LoginIntegrationTest extends AbstractBaseIntegrationTest {
 
     var response = givenWithCsrf()
       .port(port)
-      .contentType("application/json")
+      .contentType(ContentType.JSON)
       .body(request)
       .when()
       .post(LOGIN_ENDPOINT)
@@ -191,7 +193,7 @@ class LoginIntegrationTest extends AbstractBaseIntegrationTest {
 
     var errorResponse = response.as(ApiErrorResponse.class);
 
-    assertThat(errorResponse.code()).isEqualTo("AUTHENTICATION_FAILED");
+    assertThat(errorResponse.code()).isEqualTo(AUTHENTICATION_FAILED_CODE);
     assertThat(response.getHeader("Set-Cookie")).isNull();
     assertThat(refreshTokenRepository.findAll()).isEmpty();
   }

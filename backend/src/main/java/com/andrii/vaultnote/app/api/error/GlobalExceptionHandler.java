@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
 
     log.warn("Entity already exists: {}", exception.getMessage());
 
-    var response = new ApiErrorResponse("ENTITY_ALREADY_EXISTS", exception.getMessage());
+    var response = new ApiErrorResponse(EntityExistsException.CODE, exception.getMessage());
 
     return ResponseEntity
       .status(HttpStatus.CONFLICT)
@@ -40,7 +40,9 @@ public class GlobalExceptionHandler {
 
     log.warn("Email verification failed: {}", exception.getMessage());
 
-    var response = new ApiErrorResponse("EMAIL_VERIFICATION_FAILED", exception.getMessage());
+    var response = new ApiErrorResponse(
+      EmailVerificationFailedException.CODE,
+      exception.getMessage());
 
     return ResponseEntity
       .status(HttpStatus.BAD_REQUEST)
@@ -53,7 +55,7 @@ public class GlobalExceptionHandler {
 
     log.warn("Password reset failed");
 
-    var response = new ApiErrorResponse("PASSWORD_RESET_FAILED", exception.getMessage());
+    var response = new ApiErrorResponse(PasswordResetFailedException.CODE, exception.getMessage());
 
     return ResponseEntity
       .status(HttpStatus.BAD_REQUEST)
@@ -66,7 +68,7 @@ public class GlobalExceptionHandler {
 
     log.warn("Authentication failed");
 
-    var response = new ApiErrorResponse("AUTHENTICATION_FAILED", exception.getMessage());
+    var response = new ApiErrorResponse(AuthenticationFailedException.CODE, exception.getMessage());
 
     return ResponseEntity
       .status(HttpStatus.UNAUTHORIZED)
@@ -80,7 +82,7 @@ public class GlobalExceptionHandler {
     log.warn("Refresh token authentication failed");
 
     var response = new ApiErrorResponse(
-      "REFRESH_TOKEN_AUTHENTICATION_FAILED",
+      RefreshTokenAuthenticationFailedException.CODE,
       exception.getMessage());
 
     return ResponseEntity
@@ -94,7 +96,7 @@ public class GlobalExceptionHandler {
 
     log.warn("Note not found: {}", exception.getMessage());
 
-    var response = new ApiErrorResponse("NOTE_NOT_FOUND", exception.getMessage());
+    var response = new ApiErrorResponse(NoteNotFoundException.CODE, exception.getMessage());
 
     return ResponseEntity
       .status(HttpStatus.NOT_FOUND)
@@ -107,7 +109,9 @@ public class GlobalExceptionHandler {
 
     log.warn("Note version conflict: {}", exception.getMessage());
 
-    var response = new ApiErrorResponse("NOTE_VERSION_CONFLICT", exception.getMessage());
+    var response = new ApiErrorResponse(
+      NoteVersionConflictException.CODE,
+      exception.getMessage());
 
     return ResponseEntity
       .status(HttpStatus.CONFLICT)
