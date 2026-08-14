@@ -22,15 +22,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.TestPropertySource;
 
 @DataSet(value = "auth-baseline.yml", skipCleaningFor = {"databasechangelog", "databasechangeloglock"})
+@TestPropertySource(properties = "app.refresh-token.cookie-name=custom_refresh_token")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
 
   private static final String LOGIN_ENDPOINT = "/api/v1/auth/login";
   private static final String REFRESH_ENDPOINT = "/api/v1/auth/refresh";
   private static final String LOGOUT_ENDPOINT = "/api/v1/auth/logout";
-  private static final String REFRESH_COOKIE_NAME = "vaultnote_refresh_token";
+  private static final String REFRESH_COOKIE_NAME = "custom_refresh_token";
+  private static final String DEFAULT_REFRESH_COOKIE_NAME = "vaultnote_refresh_token";
   private static final String USER_EMAIL = "refresh@example.com";
   private static final String PASSWORD = "Password1234";
   private static final Duration ACCESS_TOKEN_TTL = Duration.ofMinutes(15);
@@ -240,6 +243,9 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
       .contains("SameSite=Lax");
     assertThat(revokedToken.getUser().getId()).isEqualTo(user.getId());
     assertThat(revokedToken.getRevokedAt()).isNotNull();
+
+    assertRefreshTokenRejectedAfterLogout(rawRefreshToken, REFRESH_COOKIE_NAME);
+    assertRefreshTokenRejectedAfterLogout(rawRefreshToken, DEFAULT_REFRESH_COOKIE_NAME);
   }
 
   /**
@@ -273,5 +279,15 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
       .emailVerified(true)
       .roles(EnumSet.of(UserRole.USER))
       .build());
+  }
+
+  private void assertRefreshTokenRejectedAfterLogout(String rawRefreshToken, String cookieName) {
+    givenWithCsrf()
+      .port(port)
+      .cookie(cookieName, rawRefreshToken)
+      .when()
+      .post(REFRESH_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.UNAUTHORIZED.value());
   }
 }
