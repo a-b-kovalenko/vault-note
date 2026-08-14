@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -141,11 +142,20 @@ public class AuthController {
       @Content(
         mediaType = MediaType.APPLICATION_JSON_VALUE,
         schema = @Schema(implementation = ApiErrorResponse.class))})
+  @ApiResponse(
+    responseCode = "429",
+    description = "Too many login requests",
+    content = {
+      @Content(
+        mediaType = MediaType.APPLICATION_JSON_VALUE,
+        schema = @Schema(implementation = ApiErrorResponse.class))})
   @ApiResponse(responseCode = "500", description = "Server error", content = {@Content})
 
   @PostMapping("/login")
-  public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
-    return authenticationResponse(loginService.login(request));
+  public ResponseEntity<LoginResponse> login(
+    HttpServletRequest servletRequest,
+    @RequestBody @Valid LoginRequest request) {
+    return authenticationResponse(loginService.login(request, servletRequest.getRemoteAddr()));
   }
 
   @Operation(summary = "Refresh access token")

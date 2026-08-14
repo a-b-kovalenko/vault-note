@@ -38,22 +38,25 @@ has been implemented and verified. Branch integration is tracked separately.
   generic reset requests, hashed expiring one-time tokens, Mailpit links,
   password confirmation, email verification for unverified accounts, refresh
   session revocation, and stable invalid-token errors.
-- The first two security-audit remediations (`HIGH-1` and `MEDIUM-1`) are
-  implemented: JWT signing secrets are mandatory, known development
-  placeholders are rejected, and refresh-token family revocation commits
-  before a reuse error is returned.
+- The first three security-audit remediations (`HIGH-1`, `MEDIUM-1`, and
+  `MEDIUM-2`) are implemented: JWT signing secrets are mandatory, known
+  development placeholders are rejected, refresh-token family revocation
+  commits before a reuse error is returned, and the refresh-cookie name comes
+  from one configuration source.
+- The login part of `MEDIUM-3` is implemented: a bounded local limiter checks
+  IP and normalized email before user lookup and Argon2, returns `429` with
+  `Retry-After`, and is covered by unit and PostgreSQL integration tests.
 - The private Notes CRUD baseline is implemented: owner-only endpoints,
   pagination, DTO boundaries, `CurrentUserProvider` ownership checks,
   `NOTE_NOT_FOUND` handling, and PostgreSQL-backed integration coverage.
 - The Notes API currently returns source Markdown; safe HTML rendering is
   planned as the final step of the Angular phase, when a preview or read-only
   mode is introduced.
-- Next: `MEDIUM-2` — finish the confirmed security-audit remediation before
-  OAuth by using the configured refresh-cookie name consistently. `MEDIUM-3`
-  rate limiting and deployment-sensitive hardening remain required before
-  exposing the backend to an untrusted network. After that continue with OAuth,
-  the Notes administrator view, profile updates, authenticated route guards, and
-  standard frontend API-error presentation.
+- Next: finish `MEDIUM-3` for registration and password reset, then complete
+  deployment-sensitive hardening before exposing the backend to an untrusted
+  network. After that continue with OAuth, the Notes administrator view,
+  profile updates, authenticated route guards, and standard frontend API-error
+  presentation.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -199,12 +202,17 @@ has been implemented and verified. Branch integration is tracked separately.
 - [x] (`MEDIUM-1`) Make refresh-token family revocation commit independently
   when reuse detection returns an authentication error; add PostgreSQL
   committed-state coverage.
-- [ ] (`MEDIUM-2`) Use the configured refresh-cookie name consistently in login,
+- [x] (`MEDIUM-2`) Use the configured refresh-cookie name consistently in login,
   refresh, logout, and cookie clearing; add non-default cookie-name integration
   coverage.
 - [ ] (`MEDIUM-3`) Define and implement rate limiting for login, registration,
   and password reset with `429`/`Retry-After`, without account lockout or
   enumeration.
+  - [x] Add IP and normalized-email limits for login with bounded local storage,
+    early rejection, and endpoint integration coverage.
+  - [ ] Add limits for registration and password reset.
+  - [ ] Select shared atomic storage or edge/WAF enforcement for multi-instance
+    deployments.
 - [ ] Verify deployment-sensitive transport, SMTP, Mailpit, Swagger,
   registration-enumeration, and dependency supply-chain controls when a target
   deployment exists.
@@ -273,11 +281,12 @@ has been implemented and verified. Branch integration is tracked separately.
 - [ ] Revisit outbox delivery, retry, and SMTP-failure semantics when reliable
   asynchronous email delivery becomes necessary.
 
-## Final priority — Rate limiting
+## Final priority — Remaining rate limiting
 
-- [ ] Add rate limiting after the core product, frontend, and deployment work.
-  - [ ] Protect login and verification-email resend with IP- and email-aware
-    limits without locking user accounts.
+- [ ] Complete rate limiting for the remaining public authentication flows.
+  - [x] Protect login with IP- and email-aware limits without locking user
+    accounts.
+  - [ ] Protect registration and password reset with IP- and email-aware limits.
   - [ ] Prefer Cloudflare or another edge/WAF rule for public traffic.
   - [ ] Add application-level limits only for direct-origin or internal
     traffic, or for email-specific rules the edge cannot enforce.

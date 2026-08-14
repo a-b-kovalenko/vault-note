@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -13,9 +14,11 @@ import com.andrii.vaultnote.app.api.auth.dto.LoginResponse;
 import com.andrii.vaultnote.app.api.auth.dto.TokenType;
 import com.andrii.vaultnote.app.config.RefreshTokenProperties;
 import com.andrii.vaultnote.app.exception.AuthenticationFailedException;
+import com.andrii.vaultnote.app.exception.RateLimitExceededException;
 import com.andrii.vaultnote.app.security.SecureTokenGenerator;
 import com.andrii.vaultnote.app.service.AuthenticationResultFactory;
 import com.andrii.vaultnote.app.service.LoginResult;
+import com.andrii.vaultnote.app.service.RateLimitService;
 import com.andrii.vaultnote.users.domain.UserRole;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.RefreshTokenEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
@@ -64,6 +67,8 @@ class LoginServiceImplTest {
   RefreshTokenProperties refreshTokenProperties;
   @Mock
   Clock clock;
+  @Mock
+  RateLimitService rateLimitService;
 
   @InjectMocks
   LoginServiceImpl loginService;
@@ -89,7 +94,7 @@ class LoginServiceImplTest {
     when(clock.instant()).thenReturn(NOW);
     when(refreshTokenProperties.ttl()).thenReturn(REFRESH_TOKEN_TTL);
 
-    var result = loginService.login(request);
+    var result = loginService.login(request, "127.0.0.1");
 
     var refreshTokenCaptor = ArgumentCaptor.forClass(RefreshTokenEntity.class);
     verify(refreshTokenRepository).save(refreshTokenCaptor.capture());
@@ -102,8 +107,31 @@ class LoginServiceImplTest {
     assertThat(result).isSameAs(expectedResult);
 
     verify(passwordEncoder).matches(PASSWORD, PASSWORD_HASH);
+    verify(rateLimitService).checkLogin("127.0.0.1", EMAIL);
     verify(secureTokenGenerator).generate();
     verify(authenticationResultFactory).create(user, RAW_REFRESH_TOKEN);
+  }
+
+  @Test
+  void shouldRejectBeforeLookingUpUserWhenRateLimitIsExceeded() {
+    var exception = new RateLimitExceededException(Duration.ofSeconds(30));
+    doThrow(exception)
+      .when(rateLimitService)
+      .checkLogin("127.0.0.1", EMAIL);
+
+    assertThatExceptionOfType(RateLimitExceededException.class)
+      .isThrownBy(() -> loginService.login(loginRequest(), "127.0.0.1"))
+      .isSameAs(exception);
+
+    verify(rateLimitService).checkLogin("127.0.0.1", EMAIL);
+    verifyNoInteractions(
+      userRepository,
+      passwordEncoder,
+      secureTokenGenerator,
+      refreshTokenRepository,
+      authenticationResultFactory,
+      refreshTokenProperties,
+      clock);
   }
 
   @Test
@@ -111,7 +139,7 @@ class LoginServiceImplTest {
     when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
 
     assertThatExceptionOfType(AuthenticationFailedException.class)
-      .isThrownBy(() -> loginService.login(loginRequest()))
+      .isThrownBy(() -> loginService.login(loginRequest(), "127.0.0.1"))
       .withMessage("Invalid email or password.");
 
     verifyNoInteractions(
@@ -131,7 +159,7 @@ class LoginServiceImplTest {
     when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
 
     assertThatExceptionOfType(AuthenticationFailedException.class)
-      .isThrownBy(() -> loginService.login(loginRequest()))
+      .isThrownBy(() -> loginService.login(loginRequest(), "127.0.0.1"))
       .withMessage("Invalid email or password.");
 
     verifyNoInteractions(
@@ -150,7 +178,7 @@ class LoginServiceImplTest {
     when(passwordEncoder.matches(PASSWORD, PASSWORD_HASH)).thenReturn(false);
 
     assertThatExceptionOfType(AuthenticationFailedException.class)
-      .isThrownBy(() -> loginService.login(loginRequest()))
+      .isThrownBy(() -> loginService.login(loginRequest(), "127.0.0.1"))
       .withMessage("Invalid email or password.");
 
     verify(passwordEncoder).matches(PASSWORD, PASSWORD_HASH);

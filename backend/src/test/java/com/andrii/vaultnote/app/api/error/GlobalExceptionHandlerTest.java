@@ -3,9 +3,12 @@ package com.andrii.vaultnote.app.api.error;
 import com.andrii.vaultnote.app.exception.EntityExistsException;
 import com.andrii.vaultnote.app.exception.EmailVerificationFailedException;
 import com.andrii.vaultnote.app.exception.NoteNotFoundException;
+import com.andrii.vaultnote.app.exception.RateLimitExceededException;
+import java.time.Duration;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.core.MethodParameter;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -61,6 +64,21 @@ class GlobalExceptionHandlerTest {
       .isNotNull()
       .extracting(ApiErrorResponse::code, ApiErrorResponse::message)
       .containsExactly("NOTE_NOT_FOUND", "Note with id '11' was not found.");
+  }
+
+  @Test
+  void shouldHandleRateLimitExceededException() {
+    var response = handler.handleRateLimitExceededException(
+      new RateLimitExceededException(Duration.ofMillis(1_500)));
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS);
+    assertThat(response.getHeaders().getFirst(HttpHeaders.RETRY_AFTER)).isEqualTo("2");
+    assertThat(response.getBody())
+      .isNotNull()
+      .extracting(ApiErrorResponse::code, ApiErrorResponse::message)
+      .containsExactly(
+        "RATE_LIMIT_EXCEEDED",
+        "Too many requests. Please try again later.");
   }
 
   @Test
