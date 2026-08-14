@@ -8,6 +8,7 @@ import com.andrii.vaultnote.app.api.auth.dto.PasswordResetRequest;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserRequest;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserResponse;
 import com.andrii.vaultnote.app.api.error.ApiErrorResponse;
+import com.andrii.vaultnote.app.exception.RefreshTokenAuthenticationFailedException;
 import com.andrii.vaultnote.app.service.EmailVerificationService;
 import com.andrii.vaultnote.app.service.LoginResult;
 import com.andrii.vaultnote.app.service.LoginService;
@@ -19,6 +20,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
@@ -28,7 +30,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -54,6 +55,7 @@ public class AuthController {
   RefreshTokenService refreshTokenService;
 
   RefreshTokenCookieFactory refreshTokenCookieFactory;
+  RefreshTokenCookieExtractor refreshTokenCookieExtractor;
 
   @Operation
   @ApiResponse(
@@ -172,15 +174,18 @@ public class AuthController {
         mediaType = MediaType.APPLICATION_JSON_VALUE,
         schema = @Schema(implementation = ApiErrorResponse.class))})
   @PostMapping("/refresh")
-  public ResponseEntity<LoginResponse> refresh(@CookieValue(name = "vaultnote_refresh_token") String rawRefreshToken) {
+  public ResponseEntity<LoginResponse> refresh(HttpServletRequest request) {
+    var rawRefreshToken = refreshTokenCookieExtractor.extract(request)
+      .orElseThrow(RefreshTokenAuthenticationFailedException::new);
+
     return authenticationResponse(refreshTokenService.refresh(rawRefreshToken));
   }
 
   @Operation(summary = "Logout")
   @ApiResponse(responseCode = "204", description = "Logout user")
   @PostMapping("/logout")
-  public ResponseEntity<Void> logout(
-    @CookieValue(name = "vaultnote_refresh_token", required = false) String rawRefreshToken) {
+  public ResponseEntity<Void> logout(HttpServletRequest request) {
+    var rawRefreshToken = refreshTokenCookieExtractor.extract(request).orElse(null);
     refreshTokenService.logout(rawRefreshToken);
 
     return ResponseEntity
