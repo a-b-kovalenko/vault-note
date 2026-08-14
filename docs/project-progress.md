@@ -49,11 +49,13 @@ has been implemented and verified. Branch integration is tracked separately.
 - The Notes API currently returns source Markdown; safe HTML rendering is
   planned as the final step of the Angular phase, when a preview or read-only
   mode is introduced.
-- Next: `MEDIUM-3` — define and implement rate limiting before exposing the
-  backend to an untrusted network. Deployment-sensitive hardening remains
-  required as well. After that continue with OAuth, the Notes administrator
-  view, profile updates, authenticated route guards, and standard frontend
-  API-error presentation.
+- `MEDIUM-3` is in progress: login and registration now have bounded local
+  IP- and normalized-email-aware limits with neutral `429` responses. Password
+  reset limits and the shared-storage or edge/WAF policy for multi-instance
+  deployment remain. Deployment-sensitive hardening is also still required.
+  After that continue with OAuth, the Notes administrator view, profile
+  updates, authenticated route guards, and standard frontend API-error
+  presentation.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -207,7 +209,9 @@ has been implemented and verified. Branch integration is tracked separately.
   enumeration.
   - [x] Add IP and normalized-email limits for login with bounded local storage,
     early rejection, and endpoint integration coverage.
-  - [ ] Add limits for registration and password reset.
+  - [x] Add IP and normalized-email limits for registration with bounded local
+    storage, early rejection, and endpoint integration coverage.
+  - [ ] Add limits for password reset.
   - [ ] Select shared atomic storage or edge/WAF enforcement for multi-instance
     deployments.
 - [ ] Verify deployment-sensitive transport, SMTP, Mailpit, Swagger,
@@ -283,7 +287,8 @@ has been implemented and verified. Branch integration is tracked separately.
 - [ ] Complete rate limiting for the remaining public authentication flows.
   - [x] Protect login with IP- and email-aware limits without locking user
     accounts.
-  - [ ] Protect registration and password reset with IP- and email-aware limits.
+  - [x] Protect registration with IP- and email-aware limits.
+  - [ ] Protect password reset with IP- and email-aware limits.
   - [ ] Prefer Cloudflare or another edge/WAF rule for public traffic.
   - [ ] Add application-level limits only for direct-origin or internal
     traffic, or for email-specific rules the edge cannot enforce.

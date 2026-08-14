@@ -6,6 +6,7 @@ import com.andrii.vaultnote.app.exception.EntityExistsException;
 import com.andrii.vaultnote.app.mapper.UserMapper;
 import com.andrii.vaultnote.app.security.SecureTokenGenerator;
 import com.andrii.vaultnote.app.service.EmailVerificationService;
+import com.andrii.vaultnote.app.service.RateLimitService;
 import com.andrii.vaultnote.app.service.RegistrationService;
 import com.andrii.vaultnote.users.domain.UserRole;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
@@ -35,10 +36,12 @@ public class RegistrationServiceImpl implements RegistrationService {
   PasswordEncoder passwordEncoder;
   EmailVerificationService emailVerificationService;
   SecureTokenGenerator tokenGenerator;
+  RateLimitService rateLimitService;
 
   @Override
   @Transactional
-  public RegisterUserResponse registerUser(RegisterUserRequest request) {
+  public RegisterUserResponse registerUser(RegisterUserRequest request, String clientIp) {
+    rateLimitService.checkRegistration(clientIp, request.email());
     log.info("Received request to register user");
     var email = request.email();
     if (userJpaRepository.existsByEmail(email)) {

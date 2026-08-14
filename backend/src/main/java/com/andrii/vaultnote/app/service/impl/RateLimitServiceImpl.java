@@ -6,6 +6,7 @@ import com.andrii.vaultnote.app.security.ratelimit.RateLimitRule;
 import com.andrii.vaultnote.app.security.ratelimit.RateLimitStore;
 import com.andrii.vaultnote.app.service.RateLimitService;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import lombok.AccessLevel;
@@ -29,15 +30,47 @@ public class RateLimitServiceImpl implements RateLimitService {
     }
 
     var loginProperties = properties.login();
+    check(
+      "login",
+      loginProperties.ipLimit(),
+      loginProperties.emailLimit(),
+      loginProperties.window(),
+      clientIp,
+      email);
+  }
+
+  @Override
+  public void checkRegistration(String clientIp, String email) {
+    if (!properties.enabled()) {
+      return;
+    }
+
+    var registrationProperties = properties.registration();
+    check(
+      "registration",
+      registrationProperties.ipLimit(),
+      registrationProperties.emailLimit(),
+      registrationProperties.window(),
+      clientIp,
+      email);
+  }
+
+  private void check(
+    String scope,
+    int ipLimit,
+    int emailLimit,
+    Duration window,
+    String clientIp,
+    String email) {
     var rules = List.of(
       new RateLimitRule(
-        "login:ip:" + normalizeClientIp(clientIp),
-        loginProperties.ipLimit(),
-        loginProperties.window()),
+        scope + ":ip:" + normalizeClientIp(clientIp),
+        ipLimit,
+        window),
       new RateLimitRule(
-        "login:email:" + normalizeEmail(email),
-        loginProperties.emailLimit(),
-        loginProperties.window()));
+        scope + ":email:" + normalizeEmail(email),
+        emailLimit,
+        window));
     var decision = store.consume(rules, clock.instant());
 
     if (!decision.allowed()) {

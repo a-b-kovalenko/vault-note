@@ -22,7 +22,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -67,12 +66,21 @@ public class AuthController {
         schema = @Schema(implementation = RegisterUserResponse.class))})
   @ApiResponse(responseCode = "400", description = "Invalid request", content = {@Content})
   @ApiResponse(responseCode = "409", description = "Email already registered", content = {@Content})
+  @ApiResponse(
+    responseCode = "429",
+    description = "Too many registration requests",
+    content = {
+      @Content(
+        mediaType = MediaType.APPLICATION_JSON_VALUE,
+        schema = @Schema(implementation = ApiErrorResponse.class))})
   @ApiResponse(responseCode = "500", description = "Server error", content = {@Content})
 
   @PostMapping("/registrations")
   @ResponseStatus(HttpStatus.CREATED)
-  public RegisterUserResponse registerUser(@RequestBody @Valid RegisterUserRequest request) {
-    return registrationService.registerUser(request);
+  public RegisterUserResponse registerUser(
+    HttpServletRequest servletRequest,
+    @RequestBody @Valid RegisterUserRequest request) {
+    return registrationService.registerUser(request, servletRequest.getRemoteAddr());
   }
 
   @Operation

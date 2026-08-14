@@ -244,7 +244,9 @@ the remaining confirmed security-audit findings are handled in Phase 4.75.
 ## Phase 4.75 — Security audit remediation
 
 The defensive audit found one HIGH finding and three MEDIUM findings. `HIGH-1`,
-`MEDIUM-1`, and `MEDIUM-2` are resolved; `MEDIUM-3` remains open. The
+`MEDIUM-1`, and `MEDIUM-2` are resolved. `MEDIUM-3` is in progress: login and
+registration are protected by bounded local IP- and normalized-email-aware
+limits, while password reset and multi-instance deployment policy remain. The
 remaining work is ordered by authentication/session correctness before adding
 another authentication provider:
 
@@ -263,7 +265,7 @@ another authentication provider:
    or reveal account existence.
    - [x] Protect login by IP and normalized email before database access and
      Argon2, with bounded local storage, `429`, and `Retry-After`.
-   - [ ] Protect registration by IP and normalized email/device quota.
+   - [x] Protect registration by IP and normalized email/device quota.
    - [ ] Protect password reset by IP and normalized email.
 5. [ ] Verify deployment-sensitive controls when a deployment target exists:
    TLS and secure cookies, SMTP encryption, Mailpit loopback binding, Swagger

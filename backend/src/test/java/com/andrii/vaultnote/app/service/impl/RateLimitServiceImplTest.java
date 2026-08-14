@@ -46,8 +46,28 @@ class RateLimitServiceImplTest {
   @BeforeEach
   void setUp() {
     var loginProperties = new RateLimitProperties.LoginProperties(5, 7, WINDOW);
-    var properties = new RateLimitProperties(true, loginProperties, 100);
+    var registrationProperties = new RateLimitProperties.RegistrationProperties(11, 13, WINDOW);
+    var properties = new RateLimitProperties(true, loginProperties, registrationProperties, 100);
     rateLimitService = new RateLimitServiceImpl(properties, store, clock);
+  }
+
+  @Test
+  void shouldUseRegistrationScopeAndLimits() {
+    when(clock.instant()).thenReturn(NOW);
+    when(store.consume(anyList(), eq(NOW))).thenReturn(RateLimitDecision.allow());
+
+    rateLimitService.checkRegistration(" 192.168.0.10 ", " User@Example.COM ");
+
+    verify(store).consume(rulesCaptor.capture(), eq(NOW));
+
+    assertThat(rulesCaptor.getValue())
+      .extracting(RateLimitRule::key)
+      .containsExactly(
+        "registration:ip:192.168.0.10",
+        "registration:email:user@example.com");
+    assertThat(rulesCaptor.getValue())
+      .extracting(RateLimitRule::limit)
+      .containsExactly(11, 13);
   }
 
   @Test
@@ -83,7 +103,12 @@ class RateLimitServiceImplTest {
   @Test
   void shouldSkipStoreWhenRateLimitingIsDisabled() {
     var loginProperties = new RateLimitProperties.LoginProperties(5, 7, WINDOW);
-    var disabledProperties = new RateLimitProperties(false, loginProperties, 100);
+    var registrationProperties = new RateLimitProperties.RegistrationProperties(11, 13, WINDOW);
+    var disabledProperties = new RateLimitProperties(
+      false,
+      loginProperties,
+      registrationProperties,
+      100);
     var disabledService = new RateLimitServiceImpl(disabledProperties, store, clock);
 
     disabledService.checkLogin("127.0.0.1", "user@example.com");
