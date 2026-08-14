@@ -243,8 +243,8 @@ the remaining confirmed security-audit findings are handled in Phase 4.75.
 
 ## Phase 4.75 — Security audit remediation
 
-The defensive audit found one HIGH finding and three MEDIUM findings. `HIGH-1`
-and `MEDIUM-1` are resolved; `MEDIUM-2` and `MEDIUM-3` remain open. The
+The defensive audit found one HIGH finding and three MEDIUM findings. `HIGH-1`,
+`MEDIUM-1`, and `MEDIUM-2` are resolved; `MEDIUM-3` remains open. The
 remaining work is ordered by authentication/session correctness before adding
 another authentication provider:
 
@@ -253,9 +253,9 @@ another authentication provider:
 2. [x] (`MEDIUM-1`) Make refresh-token family revocation commit independently
    when reuse detection returns an authentication error. Add PostgreSQL
    coverage that verifies the committed revoked state.
-3. [ ] (`MEDIUM-2`) Use the configured refresh-cookie name consistently in
-   login, refresh, logout, and cookie clearing. Add integration coverage with a
-   non-default cookie name.
+3. [x] (`MEDIUM-2`) Use the configured refresh-cookie name consistently in
+   login, refresh, logout, and cookie clearing. Add extractor unit coverage,
+   startup validation, and integration coverage with a non-default cookie name.
 4. [ ] (`MEDIUM-3`) Define and implement rate limiting for login, registration,
    and password reset. Select storage based on the deployment model: an
    in-memory limiter is suitable only for one local instance; shared atomic

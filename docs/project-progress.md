@@ -38,22 +38,22 @@ has been implemented and verified. Branch integration is tracked separately.
   generic reset requests, hashed expiring one-time tokens, Mailpit links,
   password confirmation, email verification for unverified accounts, refresh
   session revocation, and stable invalid-token errors.
-- The first two security-audit remediations (`HIGH-1` and `MEDIUM-1`) are
-  implemented: JWT signing secrets are mandatory, known development
-  placeholders are rejected, and refresh-token family revocation commits
-  before a reuse error is returned.
+- The first three security-audit remediations (`HIGH-1`, `MEDIUM-1`, and
+  `MEDIUM-2`) are implemented: JWT signing secrets are mandatory, known
+  development placeholders are rejected, refresh-token family revocation
+  commits before a reuse error is returned, and refresh/logout use the
+  configured refresh-cookie name.
 - The private Notes CRUD baseline is implemented: owner-only endpoints,
   pagination, DTO boundaries, `CurrentUserProvider` ownership checks,
   `NOTE_NOT_FOUND` handling, and PostgreSQL-backed integration coverage.
 - The Notes API currently returns source Markdown; safe HTML rendering is
   planned as the final step of the Angular phase, when a preview or read-only
   mode is introduced.
-- Next: `MEDIUM-2` — finish the confirmed security-audit remediation before
-  OAuth by using the configured refresh-cookie name consistently. `MEDIUM-3`
-  rate limiting and deployment-sensitive hardening remain required before
-  exposing the backend to an untrusted network. After that continue with OAuth,
-  the Notes administrator view, profile updates, authenticated route guards, and
-  standard frontend API-error presentation.
+- Next: `MEDIUM-3` — define and implement rate limiting before exposing the
+  backend to an untrusted network. Deployment-sensitive hardening remains
+  required as well. After that continue with OAuth, the Notes administrator
+  view, profile updates, authenticated route guards, and standard frontend
+  API-error presentation.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -199,9 +199,9 @@ has been implemented and verified. Branch integration is tracked separately.
 - [x] (`MEDIUM-1`) Make refresh-token family revocation commit independently
   when reuse detection returns an authentication error; add PostgreSQL
   committed-state coverage.
-- [ ] (`MEDIUM-2`) Use the configured refresh-cookie name consistently in login,
-  refresh, logout, and cookie clearing; add non-default cookie-name integration
-  coverage.
+- [x] (`MEDIUM-2`) Use the configured refresh-cookie name consistently in login,
+  refresh, logout, and cookie clearing; add extractor unit coverage, startup
+  validation, and non-default cookie-name integration coverage.
 - [ ] (`MEDIUM-3`) Define and implement rate limiting for login, registration,
   and password reset with `429`/`Retry-After`, without account lockout or
   enumeration.
