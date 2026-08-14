@@ -135,6 +135,66 @@ class RefreshTokenIntegrationTest extends AbstractBaseIntegrationTest {
   }
 
   /**
+   * Reusing a rotated token must commit revocation of every active token in the
+   * family before the endpoint returns an authentication error.
+   */
+  @Test
+  void shouldCommitTokenFamilyRevocationAfterReuseAgainstPostgres() {
+    saveUser();
+    var loginRequest = LoginRequest.builder()
+      .email(USER_EMAIL)
+      .password(PASSWORD)
+      .build();
+
+    var loginResponse = givenWithCsrf()
+      .port(port)
+      .contentType(ContentType.JSON)
+      .body(loginRequest)
+      .when()
+      .post(LOGIN_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.OK.value())
+      .extract()
+      .response();
+    var originalRawRefreshToken = loginResponse.getCookie(REFRESH_COOKIE_NAME);
+
+    var rotationResponse = givenWithCsrf()
+      .port(port)
+      .cookie(REFRESH_COOKIE_NAME, originalRawRefreshToken)
+      .when()
+      .post(REFRESH_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.OK.value())
+      .extract()
+      .response();
+    var replacementRawRefreshToken = rotationResponse.getCookie(REFRESH_COOKIE_NAME);
+
+    givenWithCsrf()
+      .port(port)
+      .cookie(REFRESH_COOKIE_NAME, originalRawRefreshToken)
+      .when()
+      .post(REFRESH_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.UNAUTHORIZED.value());
+
+    var familyTokensAfterReuse = refreshTokenRepository.findAll();
+
+    assertThat(familyTokensAfterReuse).hasSize(2);
+    assertThat(familyTokensAfterReuse)
+      .allSatisfy(token -> assertThat(token.getRevokedAt()).isNotNull());
+    assertThat(familyTokensAfterReuse.get(0).getTokenFamilyId())
+      .isEqualTo(familyTokensAfterReuse.get(1).getTokenFamilyId());
+
+    givenWithCsrf()
+      .port(port)
+      .cookie(REFRESH_COOKIE_NAME, replacementRawRefreshToken)
+      .when()
+      .post(REFRESH_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.UNAUTHORIZED.value());
+  }
+
+  /**
    * Revokes the current refresh token through the HTTP logout endpoint and clears
    * the refresh-token cookie.
    */
