@@ -49,13 +49,13 @@ has been implemented and verified. Branch integration is tracked separately.
 - The Notes API currently returns source Markdown; safe HTML rendering is
   planned as the final step of the Angular phase, when a preview or read-only
   mode is introduced.
-- `MEDIUM-3` is in progress: login and registration now have bounded local
-  IP- and normalized-email-aware limits with neutral `429` responses. Password
-  reset limits and the shared-storage or edge/WAF policy for multi-instance
-  deployment remain. Deployment-sensitive hardening is also still required.
-  After that continue with OAuth, the Notes administrator view, profile
-  updates, authenticated route guards, and standard frontend API-error
-  presentation.
+- `MEDIUM-3` is in progress: login and registration now use transactional
+  PostgreSQL counters with IP- and normalized-email-aware limits and neutral
+  `429` responses. The same PostgreSQL store is used by local and IDE launches
+  as well as deployments. Password-reset limits, cleanup/failure policy, and
+  edge/WAF hardening remain. After that continue with OAuth, the Notes
+  administrator view, profile updates, authenticated route guards, and
+  standard frontend API-error presentation.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -207,13 +207,15 @@ has been implemented and verified. Branch integration is tracked separately.
 - [ ] (`MEDIUM-3`) Define and implement rate limiting for login, registration,
   and password reset with `429`/`Retry-After`, without account lockout or
   enumeration.
-  - [x] Add IP and normalized-email limits for login with bounded local storage,
-    early rejection, and endpoint integration coverage.
-  - [x] Add IP and normalized-email limits for registration with bounded local
-    storage, early rejection, and endpoint integration coverage.
+  - [x] Add IP and normalized-email limits for login with transactional
+    PostgreSQL storage, early rejection, and endpoint integration coverage.
+  - [x] Add IP and normalized-email limits for registration with transactional
+    PostgreSQL storage, early rejection, and endpoint integration coverage.
   - [ ] Add limits for password reset.
-  - [ ] Select shared atomic storage or edge/WAF enforcement for multi-instance
-    deployments.
+  - [x] Select and document PostgreSQL as the shared atomic store for all
+    environments; use edge/WAF for coarse public IP protection.
+  - [ ] Add expiration cleanup, PostgreSQL failure policy, and deployment
+    edge/WAF hardening.
 - [ ] Verify deployment-sensitive transport, SMTP, Mailpit, Swagger,
   registration-enumeration, and dependency supply-chain controls when a target
   deployment exists.
@@ -289,7 +291,10 @@ has been implemented and verified. Branch integration is tracked separately.
     accounts.
   - [x] Protect registration with IP- and email-aware limits.
   - [ ] Protect password reset with IP- and email-aware limits.
-  - [ ] Prefer Cloudflare or another edge/WAF rule for public traffic.
+  - [x] Use PostgreSQL as the shared application store and prefer Cloudflare or
+    another edge/WAF rule for public traffic.
+  - [ ] Add cleanup/failure handling and edge/WAF configuration for a concrete
+    deployment target.
   - [ ] Add application-level limits only for direct-origin or internal
     traffic, or for email-specific rules the edge cannot enforce.
 - [ ] Add authentication audit events for successful and failed login,

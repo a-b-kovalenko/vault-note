@@ -26,7 +26,6 @@ app:
   security:
     rate-limit:
       enabled: ${VAULTNOTE_RATE_LIMIT_ENABLED:true}
-      max-entries: ${VAULTNOTE_RATE_LIMIT_MAX_ENTRIES:10000}
       login:
         ip-limit: ${VAULTNOTE_RATE_LIMIT_LOGIN_IP_LIMIT:100}
         email-limit: ${VAULTNOTE_RATE_LIMIT_LOGIN_EMAIL_LIMIT:20}

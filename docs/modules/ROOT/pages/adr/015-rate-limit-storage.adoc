@@ -1,0 +1,53 @@
+= ADR 015: Rate-limit storage
+:status: accepted
+:date: 2026-08-15
+
+== Context
+
+VaultNote protects login and registration with a shared rate-limit store. The
+application already depends on PostgreSQL for its users and authentication
+data, and all backend instances must see the same counters when the application
+is scaled horizontally.
+
+An edge or WAF layer remains useful for coarse IP protection before traffic
+reaches the application, but application-level rules such as normalized-email
+quotas belong to the backend security boundary.
+
+== Decision
+
+Use PostgreSQL as the only rate-limit store for local development, IDE launches,
+and deployments:
+
+* all environments use the existing `vaultnote` PostgreSQL schema and the
+  Liquibase-created counter table;
+* there is no in-memory fallback or storage selector in application
+  configuration;
+* persist one counter row per hashed rate-limit key and expiration window;
+* update counters inside a PostgreSQL transaction with row locks and a
+  deterministic key order;
+* treat the IP and normalized-email rules as one atomic operation, so a
+  rejected request does not partially consume the other rule;
+* keep raw IP and email keys out of the counter table by storing their SHA-256
+  hash.
+
+For public traffic, use an edge/WAF rule for coarse IP flood protection and use
+PostgreSQL for application-level rules. PostgreSQL is not intended to absorb
+volumetric DDoS traffic. Cleanup scheduling and the final failure policy for
+unavailable PostgreSQL remain deployment hardening work.
+
+== Consequences
+
+* Local startup continues to use the existing PostgreSQL dependency and
+  applies the same shared limiter as other environments.
+* All backend instances connected to the database share the same counters.
+* PostgreSQL receives an additional transactional read/write pair for each
+  rate-limited authentication request.
+* Local development and deployments must keep PostgreSQL available; the
+  application no longer has an in-memory fallback.
+* An edge/WAF remains recommended for public traffic because the database is
+  not a volumetric DDoS shield.
+
+== Status
+
+Accepted and implemented. PostgreSQL is the sole runtime store; cleanup,
+failure handling, and edge/WAF configuration remain deployment hardening work.
