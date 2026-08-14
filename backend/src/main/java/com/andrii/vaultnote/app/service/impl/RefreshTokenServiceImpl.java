@@ -5,6 +5,7 @@ import com.andrii.vaultnote.app.exception.RefreshTokenAuthenticationFailedExcept
 import com.andrii.vaultnote.app.security.SecureTokenGenerator;
 import com.andrii.vaultnote.app.service.AuthenticationResultFactory;
 import com.andrii.vaultnote.app.service.LoginResult;
+import com.andrii.vaultnote.app.service.RefreshTokenFamilyRevocationService;
 import com.andrii.vaultnote.app.service.RefreshTokenService;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.RefreshTokenEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.RefreshTokenJpaRepository;
@@ -28,6 +29,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
   SecureTokenGenerator secureTokenGenerator;
   AuthenticationResultFactory authenticationResultFactory;
+  RefreshTokenFamilyRevocationService refreshTokenFamilyRevocationService;
   RefreshTokenJpaRepository refreshTokenRepository;
   RefreshTokenProperties refreshTokenProperties;
   Clock clock;
@@ -45,7 +47,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     if (nonNull(token.getRevokedAt())) {
       log.warn("Refresh token reuse detected for family {}", token.getTokenFamilyId());
-      refreshTokenRepository.revokeActiveByTokenFamilyId(token.getTokenFamilyId(), now);
+      var revokedTokens = refreshTokenFamilyRevocationService.revokeActiveTokens(
+        token.getTokenFamilyId(),
+        now);
+      log.info("Revoked {} active refresh token(s) after reuse detection", revokedTokens);
       throw new RefreshTokenAuthenticationFailedException();
     }
 

@@ -38,19 +38,22 @@ has been implemented and verified. Branch integration is tracked separately.
   generic reset requests, hashed expiring one-time tokens, Mailpit links,
   password confirmation, email verification for unverified accounts, refresh
   session revocation, and stable invalid-token errors.
-- The first security-audit remediation is implemented: JWT signing secrets are
-  mandatory, known development placeholders are rejected, and local/test
-  configuration documents explicit secret generation.
+- The first two security-audit remediations (`HIGH-1` and `MEDIUM-1`) are
+  implemented: JWT signing secrets are mandatory, known development
+  placeholders are rejected, and refresh-token family revocation commits
+  before a reuse error is returned.
 - The private Notes CRUD baseline is implemented: owner-only endpoints,
   pagination, DTO boundaries, `CurrentUserProvider` ownership checks,
   `NOTE_NOT_FOUND` handling, and PostgreSQL-backed integration coverage.
 - The Notes API currently returns source Markdown; safe HTML rendering is
   planned as the final step of the Angular phase, when a preview or read-only
   mode is introduced.
-- Next: continue with OAuth. After that continue with the Notes administrator
-  view, profile updates, authenticated route guards, and standard frontend
-  API-error presentation. Remaining authentication hardening includes audit
-  events.
+- Next: `MEDIUM-2` — finish the confirmed security-audit remediation before
+  OAuth by using the configured refresh-cookie name consistently. `MEDIUM-3`
+  rate limiting and deployment-sensitive hardening remain required before
+  exposing the backend to an untrusted network. After that continue with OAuth,
+  the Notes administrator view, profile updates, authenticated route guards, and
+  standard frontend API-error presentation.
 - The local profile is implemented and verified locally.
 
 ## Phase 0 — Foundation
@@ -186,8 +189,25 @@ has been implemented and verified. Branch integration is tracked separately.
     replacement, email verification, and session revocation.
   - [x] Add PostgreSQL endpoint coverage for generic responses, token reuse,
     session revocation, and concurrent one-time use.
-  - [x] Add the Angular forgot/reset-password screens, fresh-request path, and
-    token removal from the address bar after success.
+- [x] Add the Angular forgot/reset-password screens, fresh-request path, and
+  token removal from the address bar after success.
+
+## Phase 4.75 — Security audit remediation
+
+- [x] (`HIGH-1`) Remove the known JWT fallback, require an explicit secret, and
+  add stable local profile secret loading for Gradle and IntelliJ.
+- [x] (`MEDIUM-1`) Make refresh-token family revocation commit independently
+  when reuse detection returns an authentication error; add PostgreSQL
+  committed-state coverage.
+- [ ] (`MEDIUM-2`) Use the configured refresh-cookie name consistently in login,
+  refresh, logout, and cookie clearing; add non-default cookie-name integration
+  coverage.
+- [ ] (`MEDIUM-3`) Define and implement rate limiting for login, registration,
+  and password reset with `429`/`Retry-After`, without account lockout or
+  enumeration.
+- [ ] Verify deployment-sensitive transport, SMTP, Mailpit, Swagger,
+  registration-enumeration, and dependency supply-chain controls when a target
+  deployment exists.
 
 ## Phase 5 — OAuth2/OIDC sign-in
 

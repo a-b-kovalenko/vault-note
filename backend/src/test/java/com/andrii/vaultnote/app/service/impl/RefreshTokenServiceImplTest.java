@@ -15,6 +15,7 @@ import com.andrii.vaultnote.app.exception.RefreshTokenAuthenticationFailedExcept
 import com.andrii.vaultnote.app.security.SecureTokenGenerator;
 import com.andrii.vaultnote.app.service.AuthenticationResultFactory;
 import com.andrii.vaultnote.app.service.LoginResult;
+import com.andrii.vaultnote.app.service.RefreshTokenFamilyRevocationService;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.RefreshTokenEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.RefreshTokenJpaRepository;
@@ -52,6 +53,8 @@ class RefreshTokenServiceImplTest {
   RefreshTokenProperties refreshTokenProperties;
   @Mock
   AuthenticationResultFactory authenticationResultFactory;
+  @Mock
+  RefreshTokenFamilyRevocationService refreshTokenFamilyRevocationService;
   @Mock
   Clock clock;
 
@@ -168,7 +171,7 @@ class RefreshTokenServiceImplTest {
     when(refreshTokenRepository.findByTokenHash(REFRESH_TOKEN_HASH))
       .thenReturn(Optional.of(token));
     when(clock.instant()).thenReturn(NOW);
-    when(refreshTokenRepository.revokeActiveByTokenFamilyId(tokenFamilyId, NOW))
+    when(refreshTokenFamilyRevocationService.revokeActiveTokens(tokenFamilyId, NOW))
       .thenReturn(1);
 
     assertThatExceptionOfType(RefreshTokenAuthenticationFailedException.class)
@@ -179,8 +182,8 @@ class RefreshTokenServiceImplTest {
     verify(secureTokenGenerator, never()).generate();
     verifyNoMoreInteractions(secureTokenGenerator);
     verify(refreshTokenRepository).findByTokenHash(REFRESH_TOKEN_HASH);
-    verify(refreshTokenRepository).revokeActiveByTokenFamilyId(tokenFamilyId, NOW);
     verifyNoMoreInteractions(refreshTokenRepository);
+    verify(refreshTokenFamilyRevocationService).revokeActiveTokens(tokenFamilyId, NOW);
     verify(clock).instant();
     verifyNoInteractions(refreshTokenProperties, authenticationResultFactory);
   }
