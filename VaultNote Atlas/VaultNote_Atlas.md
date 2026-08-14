@@ -22,6 +22,18 @@
 - [Refresh token rotation і reuse detection](content/Refresh-token-rotation-і-reuse-detection.md): як оновлюються refresh tokens і чому reuse завершує всю token family.
 - [Logout-флоу](content/Logout-флоу.md): як завершується поточна refresh-сесія і чому access JWT ще живе до `exp`.
 - [CSRF та CORS](content/CSRF-та-CORS.md): чим відрізняються browser cross-origin правила і захист cookie-based запитів.
+
+### Результати security-аудиту
+
+- [HIGH-1: відомий JWT secret](content/Безпековий-аудит-HIGH-1-JWT-secret.md): чому fallback signing key дозволяв підробити будь-яку identity і як це виправлено.
+- [MEDIUM-1: rollback token-family revocation](content/Безпековий-аудит-MEDIUM-1-refresh-token-family.md): чому reuse detection не зберігав відкликання і як допоміг `REQUIRES_NEW`.
+- [MEDIUM-2: конфігурована refresh cookie](content/Безпековий-аудит-MEDIUM-2-refresh-cookie.md): чому hardcoded cookie name ламав refresh/logout і як з'явилося єдине джерело конфігурації.
+- [MEDIUM-3: відсутній rate limiting](content/Безпековий-аудит-MEDIUM-3-rate-limiting.md): login уже захищений, а registration і password reset залишаються в роботі.
+- [Production transport configuration](content/Безпековий-аудит-production-transport.md): чому `Secure`, HTTPS і SMTP TLS потрібно перевірити на реальному deployment.
+- [Mailpit exposure](content/Безпековий-аудит-Mailpit-exposure.md): ризик доступу до локальних листів і token links зі спільної мережі.
+- [Registration enumeration](content/Безпековий-аудит-registration-enumeration.md): як різні відповіді registration можуть розкривати існування email.
+- [Dependency supply chain](content/Безпековий-аудит-dependency-supply-chain.md): відсутні Gradle verification, wrapper checksum і повний SCA контроль.
+
 - [OAuth2/OIDC простими словами](content/OAuth2-OIDC-простими-словами.md): як зовнішній login підтверджує identity і як VaultNote після цього видаватиме власні JWT.
 - [OAuth identity та account linking](content/OAuth-identity-та-account-linking.md): чому email не є достатньою підставою для автоматичного об'єднання акаунтів.
 - [OAuth-провайдери: Google, Apple, Facebook і GitHub](content/OAuth-провайдери-Google-Apple-Facebook.md): вимоги провайдерів, локальне тестування і рішення почати з Google.

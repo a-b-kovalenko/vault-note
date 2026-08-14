@@ -205,6 +205,11 @@ has been implemented and verified. Branch integration is tracked separately.
 - [ ] (`MEDIUM-3`) Define and implement rate limiting for login, registration,
   and password reset with `429`/`Retry-After`, without account lockout or
   enumeration.
+  - [x] Add IP and normalized-email limits for login with bounded local storage,
+    early rejection, and endpoint integration coverage.
+  - [ ] Add limits for registration and password reset.
+  - [ ] Select shared atomic storage or edge/WAF enforcement for multi-instance
+    deployments.
 - [ ] Verify deployment-sensitive transport, SMTP, Mailpit, Swagger,
   registration-enumeration, and dependency supply-chain controls when a target
   deployment exists.
@@ -273,11 +278,12 @@ has been implemented and verified. Branch integration is tracked separately.
 - [ ] Revisit outbox delivery, retry, and SMTP-failure semantics when reliable
   asynchronous email delivery becomes necessary.
 
-## Final priority — Rate limiting
+## Final priority — Remaining rate limiting
 
-- [ ] Add rate limiting after the core product, frontend, and deployment work.
-  - [ ] Protect login and verification-email resend with IP- and email-aware
-    limits without locking user accounts.
+- [ ] Complete rate limiting for the remaining public authentication flows.
+  - [x] Protect login with IP- and email-aware limits without locking user
+    accounts.
+  - [ ] Protect registration and password reset with IP- and email-aware limits.
   - [ ] Prefer Cloudflare or another edge/WAF rule for public traffic.
   - [ ] Add application-level limits only for direct-origin or internal
     traffic, or for email-specific rules the edge cannot enforce.

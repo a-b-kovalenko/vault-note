@@ -261,14 +261,19 @@ another authentication provider:
    in-memory limiter is suitable only for one local instance; shared atomic
    storage is required for multiple instances. Do not lock accounts permanently
    or reveal account existence.
+   - [x] Protect login by IP and normalized email before database access and
+     Argon2, with bounded local storage, `429`, and `Retry-After`.
+   - [ ] Protect registration by IP and normalized email/device quota.
+   - [ ] Protect password reset by IP and normalized email.
 5. [ ] Verify deployment-sensitive controls when a deployment target exists:
    TLS and secure cookies, SMTP encryption, Mailpit loopback binding, Swagger
    exposure, registration enumeration policy, and dependency supply-chain
    hardening.
 
 OAuth starts after the refresh-session correctness findings `MEDIUM-1` and
-`MEDIUM-2` are closed. Rate limiting and deployment-sensitive checks must be
-complete before exposing the backend to an untrusted network.
+`MEDIUM-2` are closed. The remaining rate-limiting scopes and deployment-
+sensitive checks must be complete before exposing the backend to an untrusted
+network.
 
 ## Phase 5 — OAuth2/OIDC sign-in
 

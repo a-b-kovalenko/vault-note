@@ -7,6 +7,7 @@ import com.andrii.vaultnote.app.security.SecureTokenGenerator;
 import com.andrii.vaultnote.app.service.AuthenticationResultFactory;
 import com.andrii.vaultnote.app.service.LoginResult;
 import com.andrii.vaultnote.app.service.LoginService;
+import com.andrii.vaultnote.app.service.RateLimitService;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.RefreshTokenEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.RefreshTokenJpaRepository;
@@ -34,10 +35,12 @@ public class LoginServiceImpl implements LoginService {
   UserJpaRepository userRepository;
   PasswordEncoder passwordEncoder;
   Clock clock;
+  RateLimitService rateLimitService;
 
   @Override
   @Transactional
-  public LoginResult login(LoginRequest request) {
+  public LoginResult login(LoginRequest request, String clientIp) {
+    rateLimitService.checkLogin(clientIp, request.email());
     log.info("Received request to login user");
 
     var user = userRepository.findByEmail(request.email())

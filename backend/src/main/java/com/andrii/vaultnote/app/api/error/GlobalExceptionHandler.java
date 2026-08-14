@@ -6,8 +6,11 @@ import com.andrii.vaultnote.app.exception.EntityExistsException;
 import com.andrii.vaultnote.app.exception.NoteNotFoundException;
 import com.andrii.vaultnote.app.exception.NoteVersionConflictException;
 import com.andrii.vaultnote.app.exception.PasswordResetFailedException;
+import com.andrii.vaultnote.app.exception.RateLimitExceededException;
 import com.andrii.vaultnote.app.exception.RefreshTokenAuthenticationFailedException;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -72,6 +75,20 @@ public class GlobalExceptionHandler {
 
     return ResponseEntity
       .status(HttpStatus.UNAUTHORIZED)
+      .body(response);
+  }
+
+  @ExceptionHandler(RateLimitExceededException.class)
+  public ResponseEntity<ApiErrorResponse> handleRateLimitExceededException(
+    RateLimitExceededException exception) {
+
+    log.warn("Rate limit exceeded");
+
+    var response = new ApiErrorResponse(RateLimitExceededException.CODE, exception.getMessage());
+
+    return ResponseEntity
+      .status(HttpStatus.TOO_MANY_REQUESTS)
+      .header(HttpHeaders.RETRY_AFTER, retryAfterSeconds(exception.retryAfter()))
       .body(response);
   }
 
@@ -154,5 +171,11 @@ public class GlobalExceptionHandler {
       case "PasswordPolicy" -> "PASSWORD_POLICY";
       default -> "INVALID_VALUE";
     };
+  }
+
+  private static String retryAfterSeconds(Duration retryAfter) {
+    var milliseconds = retryAfter.toMillis();
+    var seconds = (milliseconds + 999L) / 1000L;
+    return Long.toString(Math.max(1L, seconds));
   }
 }

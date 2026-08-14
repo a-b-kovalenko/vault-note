@@ -4,6 +4,6 @@ import com.andrii.vaultnote.app.api.auth.dto.LoginRequest;
 
 public interface LoginService {
 
-  LoginResult login(LoginRequest request);
+  LoginResult login(LoginRequest request, String clientIp);
 
 }
