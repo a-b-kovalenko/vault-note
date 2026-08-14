@@ -47,7 +47,10 @@ class RateLimitServiceImplTest {
   void setUp() {
     var loginProperties = new RateLimitProperties.LoginProperties(5, 7, WINDOW);
     var registrationProperties = new RateLimitProperties.RegistrationProperties(11, 13, WINDOW);
-    var properties = new RateLimitProperties(true, loginProperties, registrationProperties, 100);
+    var properties = new RateLimitProperties(
+      true,
+      loginProperties,
+      registrationProperties);
     rateLimitService = new RateLimitServiceImpl(properties, store, clock);
   }
 
@@ -107,8 +110,7 @@ class RateLimitServiceImplTest {
     var disabledProperties = new RateLimitProperties(
       false,
       loginProperties,
-      registrationProperties,
-      100);
+      registrationProperties);
     var disabledService = new RateLimitServiceImpl(disabledProperties, store, clock);
 
     disabledService.checkLogin("127.0.0.1", "user@example.com");

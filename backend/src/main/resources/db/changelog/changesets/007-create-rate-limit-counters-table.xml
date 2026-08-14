@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="007-create-rate-limit-counters-table" author="andrii" dbms="postgresql">
+        <sql>
+            CREATE TABLE vaultnote.rate_limit_counters (
+                rate_limit_key_hash CHAR(64) NOT NULL,
+                request_count INTEGER NOT NULL,
+                expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                CONSTRAINT pk_rate_limit_counters PRIMARY KEY (rate_limit_key_hash),
+                CONSTRAINT ck_rate_limit_counters_request_count CHECK (request_count &gt;= 0)
+            );
+
+            CREATE INDEX ix_rate_limit_counters_expires_at
+                ON vaultnote.rate_limit_counters (expires_at);
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

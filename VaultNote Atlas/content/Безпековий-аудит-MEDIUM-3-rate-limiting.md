@@ -5,9 +5,10 @@
 **Статус:** `PARTIALLY RESOLVED`  
 **Рівень:** `MEDIUM`
 
-Публічні registration і password-reset endpoint-и поки не мають server-side
-rate limiting. Login уже захищений лімітами за IP та нормалізованим email, але
-решта публічних auth-flow ще може запускати дорогі операції без обмеження.
+Login і registration тепер мають IP- та normalized-email-aware rate limiting.
+Лічильники зберігаються тільки в PostgreSQL і працюють однаково під час
+локального запуску з IDE та в deployment. Password reset ще потрібно захистити
+окремим лімітом.
 
 ## У чому проблема
 
@@ -25,44 +26,101 @@ CSRF token і надсилати багато запитів до публічн
 Можливі credential stuffing, CPU/memory exhaustion, масове створення акаунтів,
 SMTP abuse і denial-of-service для password recovery.
 
-## Як це потрібно вирішити
+## Загальний принцип рішення
 
-План передбачає:
+Rate limiting не блокує акаунт назавжди. Він обмежує частоту запитів за двома
+незалежними ключами:
 
-- ліміт за IP і нормалізованим email для login;
-- IP та email/device quota для registration;
-- IP та email limit для password reset;
-- однакове застосування email-ліміту для існуючих і неіснуючих акаунтів;
-- перевірку ліміту до Argon2, database writes і SMTP;
-- `429 Too Many Requests` та `Retry-After`;
-- generic error без account enumeration;
-- жодного постійного блокування акаунта.
+- IP-адреса клієнта;
+- нормалізований email — обрізані пробіли та lower case.
 
-Для одного локального процесу достатньо bounded in-memory storage з expiry. Для
-кількох backend-інстансів потрібне shared atomic storage, наприклад Redis, або
-rate limiting на edge/WAF.
+Перевірка відбувається до Argon2, пошуку користувача, database writes і SMTP.
+Після перевищення повертається `429 Too Many Requests`, `Retry-After` і
+нейтральний код `RATE_LIMIT_EXCEEDED`, без пояснення, який саме ключ спрацював.
 
-## Що вже реалізовано для login
+## Чому storage — тільки PostgreSQL
 
-- `LoginService` перевіряє ліміти до пошуку користувача та Argon2.
-- Ліміти застосовуються одночасно за IP і нормалізованим email.
-- Для локального запуску використовується bounded in-memory store з expiry,
-  cleanup і максимальним числом записів.
-- Перевищення повертає `429 Too Many Requests`, generic
-  `RATE_LIMIT_EXCEEDED` і `Retry-After`.
-- Unit-тести перевіряють atomic behavior, expiry, нормалізацію та відсутність
-  виклику login-процесу після відмови; integration test перевіряє HTTP endpoint.
+PostgreSQL уже є обов’язковою залежністю локального backend, тому окремий Redis
+для rate limiting не потрібен. Усі backend-інстанси використовують спільну
+таблицю `vaultnote.rate_limit_counters`.
 
-## Що ще потрібно перевірити
+Для кожного ліміту зберігаються hashed key, кількість запитів і час завершення
+вікна. Ліміт перевіряється транзакційно:
 
-Потрібні unit-тести з controllable clock, integration tests для трьох endpoint-ів
-і перевірка, що після `429` не виконуються Argon2, repository та mail sender.
-Також потрібно додати метрики або audit events, не записуючи паролі, raw tokens
-і повні email-адреси в logs.
+- row створюється через `INSERT ... ON CONFLICT DO NOTHING`;
+- рядок блокується через `SELECT ... FOR UPDATE`;
+- IP та email counters обробляються в детермінованому порядку;
+- якщо будь-який ліміт перевищено, вся операція відкочується;
+- якщо всі правила дозволяють запит, counters оновлюються разом.
 
-## Поточний висновок
+Тому кілька backend-інстансів не мають власних розрізнених лічильників.
+Локальний запуск з IDE використовує ту саму PostgreSQL-таблицю, що й
+deployment.
 
-Login-частину finding закрито для одного локального процесу. Потрібно додати
-обмеження для registration і password reset, а для кількох backend-інстансів
-вибрати shared atomic storage або edge/WAF. До цього backend не слід виставляти
-в недовірену публічну мережу.
+## Чому `JdbcTemplate`, а не JPA repository
+
+Це не звичайний CRUD над domain entity. Rate-limit counter потребує
+PostgreSQL-specific atomic operations, row locking і контролю порядку оновлення.
+
+Звичайна схема через JPA repository:
+
+```text
+find counter → перевірити limit → змінити entity → save
+```
+
+не є безпечною під паралельними запитами. Два потоки можуть прочитати однакове
+значення. Щоб зробити JPA-варіант коректним, усе одно знадобилися б entity,
+pessimistic locking, native `ON CONFLICT` queries і обробка race під час
+першої вставки.
+
+`JdbcTemplate` тут використано свідомо:
+
+- SQL і `FOR UPDATE` видно безпосередньо;
+- немає JPA first-level cache, dirty checking або зайвої domain entity;
+- PostgreSQL-specific поведінка залишається в одному infrastructure adapter;
+- `RateLimitStore` зберігає application contract, тому service не залежить від
+  деталей JDBC.
+
+Це не означає, що repository підхід неможливий. Він просто додав би JPA-шар,
+але не прибрав би потребу в тому самому native SQL для атомарності.
+
+## Чому використано `REQUIRES_NEW`
+
+Rate-limit counter має зберегтися навіть тоді, коли сам login або registration
+завершилися помилкою.
+
+Наприклад:
+
+- неправильний пароль викликає rollback login transaction;
+- duplicate email викликає rollback registration transaction.
+
+Якби counter оновлювався в цій самій транзакції, невдала спроба не рахувалася б.
+Тому PostgreSQL store комітить rate-limit операцію в окремій JDBC-транзакції
+через `JdbcTransactionManager` з propagation `REQUIRES_NEW`. Це відокремлює
+лічильник від JPA-транзакції login або registration на рівні фізичного
+PostgreSQL connection.
+
+## Що вже реалізовано
+
+- Login має IP та normalized-email limits до пошуку користувача й Argon2.
+- Registration має IP та normalized-email limits до Argon2, PostgreSQL write і
+  verification email.
+- PostgreSQL counter table додана через Liquibase changeset `007`.
+- Ключі зберігаються як SHA-256 hashes, а не як raw email або IP.
+- Невдалі downstream-операції не відкочують counters.
+- Додані unit-тести для atomic behavior, expiry, rollback і rejected decisions.
+- Доданий PostgreSQL Testcontainers integration test.
+- Повний `./gradlew check` проходить.
+
+## Що ще потрібно зробити
+
+- Додати IP та normalized-email rate limiting для
+  `POST /api/v1/auth/password-reset/request`.
+- Додати cleanup прострочених counter rows.
+- Визначити failure policy для недоступного PostgreSQL.
+- Додати edge/WAF для coarse IP flood protection у публічному deployment.
+- Додати низькокардинальні metrics або audit events без паролів, raw tokens і
+  повних email-адрес у logs.
+
+До завершення цих пунктів backend не слід виставляти в недовірену публічну
+мережу.
