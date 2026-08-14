@@ -95,8 +95,10 @@ Rate-limit counter має зберегтися навіть тоді, коли �
 - duplicate email викликає rollback registration transaction.
 
 Якби counter оновлювався в цій самій транзакції, невдала спроба не рахувалася б.
-Тому PostgreSQL store комітить rate-limit операцію в окремій транзакції через
-`REQUIRES_NEW`.
+Тому PostgreSQL store комітить rate-limit операцію в окремій JDBC-транзакції
+через `JdbcTransactionManager` з propagation `REQUIRES_NEW`. Це відокремлює
+лічильник від JPA-транзакції login або registration на рівні фізичного
+PostgreSQL connection.
 
 ## Що вже реалізовано
 

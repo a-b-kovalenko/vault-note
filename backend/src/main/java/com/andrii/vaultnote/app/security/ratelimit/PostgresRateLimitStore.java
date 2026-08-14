@@ -8,10 +8,12 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import org.springframework.beans.factory.annotation.Autowired;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.JdbcTransactionManager;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -45,6 +47,18 @@ public class PostgresRateLimitStore implements RateLimitStore {
   JdbcTemplate jdbcTemplate;
   SecureTokenGenerator secureTokenGenerator;
   TransactionTemplate transactionTemplate;
+
+  @Autowired
+  public PostgresRateLimitStore(
+    JdbcTemplate jdbcTemplate,
+    SecureTokenGenerator secureTokenGenerator) {
+    this(
+      jdbcTemplate,
+      secureTokenGenerator,
+      new JdbcTransactionManager(Objects.requireNonNull(
+        jdbcTemplate.getDataSource(),
+        "JDBC data source must not be null.")));
+  }
 
   public PostgresRateLimitStore(
     JdbcTemplate jdbcTemplate,

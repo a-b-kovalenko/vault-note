@@ -25,6 +25,9 @@ and deployments:
 * persist one counter row per hashed rate-limit key and expiration window;
 * update counters inside a PostgreSQL transaction with row locks and a
   deterministic key order;
+* execute the counter transaction through a dedicated JDBC transaction manager
+  with `REQUIRES_NEW`, so failed JPA login or registration transactions do not
+  roll back an already-consumed attempt;
 * treat the IP and normalized-email rules as one atomic operation, so a
   rejected request does not partially consume the other rule;
 * keep raw IP and email keys out of the counter table by storing their SHA-256
