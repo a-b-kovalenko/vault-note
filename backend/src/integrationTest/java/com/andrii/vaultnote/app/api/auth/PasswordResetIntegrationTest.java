@@ -47,9 +47,18 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @DataSet(value = "auth-baseline.yml", skipCleaningFor = {"databasechangelog", "databasechangeloglock"})
+@TestPropertySource(
+  properties = {
+    "app.security.rate-limit.enabled=true",
+    "app.security.rate-limit.max-entries=100",
+    "app.security.rate-limit.password-reset.ip-limit=100",
+    "app.security.rate-limit.password-reset.email-limit=2",
+    "app.security.rate-limit.password-reset.window=PT1M"
+  })
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Import(PasswordResetIntegrationTest.TestClockConfiguration.class)
 class PasswordResetIntegrationTest extends AbstractBaseIntegrationTest {
@@ -57,6 +66,7 @@ class PasswordResetIntegrationTest extends AbstractBaseIntegrationTest {
   private static final String PASSWORD_RESET_REQUEST_ENDPOINT = "/api/v1/auth/password-reset/request";
   private static final String PASSWORD_RESET_CONFIRM_ENDPOINT = "/api/v1/auth/password-reset/confirm";
   private static final String PASSWORD_RESET_FAILED_CODE = "PASSWORD_RESET_FAILED";
+  private static final String RATE_LIMIT_EXCEEDED_CODE = "RATE_LIMIT_EXCEEDED";
   private static final String LOGIN_ENDPOINT = "/api/v1/auth/login";
   private static final String REFRESH_COOKIE_NAME = "vaultnote_refresh_token";
   private static final String PASSWORD = "Password1234";
@@ -114,6 +124,73 @@ class PasswordResetIntegrationTest extends AbstractBaseIntegrationTest {
       .response();
 
     assertThat(response.asByteArray()).isEmpty();
+    assertThat(passwordResetTokenRepository.findAll()).isEmpty();
+    verifyNoInteractions(mailSender);
+  }
+
+  /**
+   * Rejects a reset request before creating another token or sending another
+   * email.
+   */
+  @Test
+  void shouldRejectPasswordResetAfterEmailLimitBeforeCreatingSideEffects() {
+    var email = uniqueEmail();
+    saveUser(email, false);
+
+    requestPasswordReset(email);
+    requestPasswordReset(email);
+    clearInvocations(mailSender);
+    var tokenCountBeforeRejectedRequest = passwordResetTokenRepository.count();
+
+    var response = givenWithCsrf()
+      .port(port)
+      .contentType(ContentType.JSON)
+      .body(PasswordResetRequest.builder().email(email).build())
+      .when()
+      .post(PASSWORD_RESET_REQUEST_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.TOO_MANY_REQUESTS.value())
+      .extract()
+      .response();
+
+    var error = response.as(ApiErrorResponse.class);
+    assertThat(error.code()).isEqualTo(RATE_LIMIT_EXCEEDED_CODE);
+    assertThat(response.getHeader("Retry-After")).isNotBlank();
+    assertThat(passwordResetTokenRepository.count()).isEqualTo(tokenCountBeforeRejectedRequest);
+    verifyNoInteractions(mailSender);
+  }
+
+  /**
+   * Consumes the email limit even when the account does not exist.
+   */
+  @Test
+  void shouldApplyPasswordResetEmailLimitToUnknownEmail() {
+    var email = uniqueEmail();
+    var request = PasswordResetRequest.builder().email(email).build();
+
+    IntStream.range(0, 2).forEach(ignored -> givenWithCsrf()
+      .port(port)
+      .contentType(ContentType.JSON)
+      .body(request)
+      .when()
+      .post(PASSWORD_RESET_REQUEST_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.ACCEPTED.value()));
+    clearInvocations(mailSender);
+
+    var response = givenWithCsrf()
+      .port(port)
+      .contentType(ContentType.JSON)
+      .body(request)
+      .when()
+      .post(PASSWORD_RESET_REQUEST_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.TOO_MANY_REQUESTS.value())
+      .extract()
+      .response();
+
+    assertThat(response.as(ApiErrorResponse.class).code()).isEqualTo(RATE_LIMIT_EXCEEDED_CODE);
+    assertThat(response.getHeader("Retry-After")).isNotBlank();
     assertThat(passwordResetTokenRepository.findAll()).isEmpty();
     verifyNoInteractions(mailSender);
   }

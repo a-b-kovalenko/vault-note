@@ -5,9 +5,10 @@
 **Статус:** `PARTIALLY RESOLVED`  
 **Рівень:** `MEDIUM`
 
-Публічні registration і password-reset endpoint-и поки не мають server-side
-rate limiting. Login уже захищений лімітами за IP та нормалізованим email, але
-решта публічних auth-flow ще може запускати дорогі операції без обмеження.
+Login, registration і password-reset request тепер мають server-side rate
+limiting за IP та нормалізованим email. Поточне сховище — bounded in-memory
+store для одного JVM-процесу; shared storage для кількох backend-інстансів ще
+не підключено.
 
 ## У чому проблема
 
@@ -39,30 +40,96 @@ SMTP abuse і denial-of-service для password recovery.
 - жодного постійного блокування акаунта.
 
 Для одного локального процесу достатньо bounded in-memory storage з expiry. Для
-кількох backend-інстансів потрібне shared atomic storage, наприклад Redis, або
-rate limiting на edge/WAF.
+кількох backend-інстансів потрібне shared atomic storage. Для VaultNote
+цільовим storage обрано PostgreSQL, а edge/WAF потрібен для coarse IP flood
+protection.
 
-## Що вже реалізовано для login
+## Що вже реалізовано
 
 - `LoginService` перевіряє ліміти до пошуку користувача та Argon2.
-- Ліміти застосовуються одночасно за IP і нормалізованим email.
+- `RegistrationService` перевіряє ліміти до Argon2, запису користувача та
+  verification email.
+- `PasswordResetService` перевіряє ліміти до пошуку користувача, створення
+  reset token і відправлення email. Email-лічильник збільшується навіть для
+  невідомого користувача.
+- Усі ліміти застосовуються одночасно за IP і нормалізованим email.
+- `RateLimitScope` обʼєднує login, registration і password reset в один
+  типобезпечний `RateLimitService.check(...)` без raw scope strings у callers.
 - Для локального запуску використовується bounded in-memory store з expiry,
   cleanup і максимальним числом записів.
 - Перевищення повертає `429 Too Many Requests`, generic
   `RATE_LIMIT_EXCEEDED` і `Retry-After`.
-- Unit-тести перевіряють atomic behavior, expiry, нормалізацію та відсутність
-  виклику login-процесу після відмови; integration test перевіряє HTTP endpoint.
+- Unit- та integration-тести перевіряють пороги, expiry, нормалізацію,
+  generic response і відсутність downstream side effects після відмови.
 
-## Що ще потрібно перевірити
+## Що ще потрібно зробити
 
-Потрібні unit-тести з controllable clock, integration tests для трьох endpoint-ів
-і перевірка, що після `429` не виконуються Argon2, repository та mail sender.
-Також потрібно додати метрики або audit events, не записуючи паролі, raw tokens
-і повні email-адреси в logs.
+- Перевести counters із in-memory у shared atomic storage після розбору
+  нестабільної PostgreSQL-гілки.
+- Додати failure policy для недоступного shared storage і вирішити, чи
+  дозволяти запити при помилці ліміту.
+- Додати edge/WAF для coarse IP flood protection у публічному deployment.
+- Додати метрики або audit events, не записуючи паролі, raw tokens і повні
+  email-адреси в logs.
 
 ## Поточний висновок
 
-Login-частину finding закрито для одного локального процесу. Потрібно додати
-обмеження для registration і password reset, а для кількох backend-інстансів
-вибрати shared atomic storage або edge/WAF. До цього backend не слід виставляти
-в недовірену публічну мережу.
+Login, registration і password-reset request захищені для одного локального
+процесу. In-memory counters скидаються після restart і не синхронізуються між
+інстансами, тому до підключення shared storage та edge/WAF backend не слід
+виставляти в недовірену публічну мережу.
+
+## Історія гілки `feat/postgres-rate-limit-storage`
+
+Ця гілка була створена, щоб реалізувати наступний етап `MEDIUM-3` — спільне
+PostgreSQL-сховище для rate limiting login і registration. Гілка залишилася
+окремою і не була злита в `main`.
+
+### Що сталося
+
+Локально targeted integration tests і повний `./gradlew check --no-daemon`
+проходили. У CI rate-limit integration tests продовжували падати
+непослідовно: у різних запусках не спрацьовувала очікувана відмова після
+досягнення ліміту для login, registration або прямого PostgreSQL store.
+
+Точну причину не встановлено. Найбільш підозрілими залишилися активація
+конфігурації rate limiting, межі транзакцій і test/transaction isolation у CI.
+
+### Зміни гілки
+
+- `99029ef` — counters перенесено з in-memory підходу в PostgreSQL; додано
+  Liquibase-схему, atomic store, limits для login і registration та тести.
+- `e8dcb8b` — у rate-limit integration tests явно увімкнено
+  `app.security.rate-limit.enabled=true`, щоб тестовий profile не вимикав
+  перевірку випадково.
+- `832dd29` — production `PostgresRateLimitStore` переведено на окремий
+  `JdbcTransactionManager` з `REQUIRES_NEW`, щоб commit counter-а був фізично
+  відокремлений від JPA-транзакції login або registration.
+
+Після обох спроб локальні перевірки проходили, але стабільного CI-результату
+отримати не вдалося. Тому цю гілку призупинено, а `MEDIUM-3` не можна вважати
+повністю закритим. Наступне розслідування потрібно почати з актуальних
+CI-логів для `832dd29`, відтворення конкретного сценарію в PostgreSQL
+integration test і перевірки меж транзакцій та ізоляції тестів.
+
+## Історія гілки `feat/password-reset-rate-limiting`
+
+Ця гілка додала password-reset rate limiting поверх поточного in-memory
+storage, не змінюючи тимчасову модель локального запуску.
+
+### Що було зроблено
+
+- Додано окремі configurable IP/email limits для password reset із типовими
+  значеннями 20 запитів з IP та 3 запити для email за одну годину.
+- Перевірку підключено в `PasswordResetService`, до пошуку користувача,
+  створення token і відправлення email.
+- Невідомі email споживають email-ліміт, але отримують ту саму generic відповідь,
+  що й відомі email до моменту перевищення ліміту.
+- Додано `429`, `Retry-After`, unit-тести та PostgreSQL integration test для
+  endpoint-а з in-memory rate-limit store.
+- Замість трьох майже однакових методів використано один
+  `RateLimitService.check(...)` з enum `RateLimitScope`.
+
+Повний `./gradlew check --no-daemon` проходить. Ця гілка не вирішує проблему
+shared storage для multi-instance deployment; вона закриває password-reset
+частину поведінки для поточного локального in-memory режиму.

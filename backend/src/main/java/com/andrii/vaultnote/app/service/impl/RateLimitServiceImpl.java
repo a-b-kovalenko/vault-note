@@ -3,10 +3,10 @@ package com.andrii.vaultnote.app.service.impl;
 import com.andrii.vaultnote.app.config.RateLimitProperties;
 import com.andrii.vaultnote.app.exception.RateLimitExceededException;
 import com.andrii.vaultnote.app.security.ratelimit.RateLimitRule;
+import com.andrii.vaultnote.app.security.ratelimit.RateLimitScope;
 import com.andrii.vaultnote.app.security.ratelimit.RateLimitStore;
 import com.andrii.vaultnote.app.service.RateLimitService;
 import java.time.Clock;
-import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import lombok.AccessLevel;
@@ -24,53 +24,33 @@ public class RateLimitServiceImpl implements RateLimitService {
   Clock clock;
 
   @Override
-  public void checkLogin(String clientIp, String email) {
-    if (!properties.enabled()) {
-      return;
-    }
-
-    var loginProperties = properties.login();
-    check(
-      "login",
-      loginProperties.ipLimit(),
-      loginProperties.emailLimit(),
-      loginProperties.window(),
-      clientIp,
-      email);
+  public void check(RateLimitScope scope, String clientIp, String email) {
+    var limits = switch (scope) {
+      case LOGIN -> properties.login();
+      case REGISTRATION -> properties.registration();
+      case PASSWORD_RESET -> properties.passwordReset();
+    };
+    enforce(scope.getKey(), limits, clientIp, email);
   }
 
-  @Override
-  public void checkRegistration(String clientIp, String email) {
-    if (!properties.enabled()) {
-      return;
-    }
-
-    var registrationProperties = properties.registration();
-    check(
-      "registration",
-      registrationProperties.ipLimit(),
-      registrationProperties.emailLimit(),
-      registrationProperties.window(),
-      clientIp,
-      email);
-  }
-
-  private void check(
+  private void enforce(
     String scope,
-    int ipLimit,
-    int emailLimit,
-    Duration window,
+    RateLimitProperties.Limits limits,
     String clientIp,
     String email) {
+    if (!properties.enabled()) {
+      return;
+    }
+
     var rules = List.of(
       new RateLimitRule(
         scope + ":ip:" + normalizeClientIp(clientIp),
-        ipLimit,
-        window),
+        limits.ipLimit(),
+        limits.window()),
       new RateLimitRule(
         scope + ":email:" + normalizeEmail(email),
-        emailLimit,
-        window));
+        limits.emailLimit(),
+        limits.window()));
     var decision = store.consume(rules, clock.instant());
 
     if (!decision.allowed()) {

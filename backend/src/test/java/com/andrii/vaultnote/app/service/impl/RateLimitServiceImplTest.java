@@ -12,6 +12,7 @@ import com.andrii.vaultnote.app.config.RateLimitProperties;
 import com.andrii.vaultnote.app.exception.RateLimitExceededException;
 import com.andrii.vaultnote.app.security.ratelimit.RateLimitDecision;
 import com.andrii.vaultnote.app.security.ratelimit.RateLimitRule;
+import com.andrii.vaultnote.app.security.ratelimit.RateLimitScope;
 import com.andrii.vaultnote.app.security.ratelimit.RateLimitStore;
 import java.time.Clock;
 import java.time.Duration;
@@ -47,7 +48,13 @@ class RateLimitServiceImplTest {
   void setUp() {
     var loginProperties = new RateLimitProperties.LoginProperties(5, 7, WINDOW);
     var registrationProperties = new RateLimitProperties.RegistrationProperties(11, 13, WINDOW);
-    var properties = new RateLimitProperties(true, loginProperties, registrationProperties, 100);
+    var passwordResetProperties = new RateLimitProperties.PasswordResetProperties(17, 19, WINDOW);
+    var properties = new RateLimitProperties(
+      true,
+      loginProperties,
+      registrationProperties,
+      passwordResetProperties,
+      100);
     rateLimitService = new RateLimitServiceImpl(properties, store, clock);
   }
 
@@ -56,7 +63,10 @@ class RateLimitServiceImplTest {
     when(clock.instant()).thenReturn(NOW);
     when(store.consume(anyList(), eq(NOW))).thenReturn(RateLimitDecision.allow());
 
-    rateLimitService.checkRegistration(" 192.168.0.10 ", " User@Example.COM ");
+    rateLimitService.check(
+      RateLimitScope.REGISTRATION,
+      " 192.168.0.10 ",
+      " User@Example.COM ");
 
     verify(store).consume(rulesCaptor.capture(), eq(NOW));
 
@@ -75,7 +85,7 @@ class RateLimitServiceImplTest {
     when(clock.instant()).thenReturn(NOW);
     when(store.consume(anyList(), eq(NOW))).thenReturn(RateLimitDecision.allow());
 
-    rateLimitService.checkLogin(" 127.0.0.1 ", " User@Example.COM ");
+    rateLimitService.check(RateLimitScope.LOGIN, " 127.0.0.1 ", " User@Example.COM ");
 
     verify(store).consume(rulesCaptor.capture(), eq(NOW));
 
@@ -90,13 +100,38 @@ class RateLimitServiceImplTest {
   }
 
   @Test
+  void shouldUsePasswordResetScopeAndLimits() {
+    when(clock.instant()).thenReturn(NOW);
+    when(store.consume(anyList(), eq(NOW))).thenReturn(RateLimitDecision.allow());
+
+    rateLimitService.check(
+      RateLimitScope.PASSWORD_RESET,
+      " 127.0.0.1 ",
+      " User@Example.COM ");
+
+    verify(store).consume(rulesCaptor.capture(), eq(NOW));
+
+    assertThat(rulesCaptor.getValue())
+      .extracting(RateLimitRule::key)
+      .containsExactly(
+        "password-reset:ip:127.0.0.1",
+        "password-reset:email:user@example.com");
+    assertThat(rulesCaptor.getValue())
+      .extracting(RateLimitRule::limit)
+      .containsExactly(17, 19);
+  }
+
+  @Test
   void shouldThrowRateLimitExceptionWhenStoreRejects() {
     var retryAfter = Duration.ofSeconds(42);
     when(clock.instant()).thenReturn(NOW);
     when(store.consume(anyList(), eq(NOW))).thenReturn(RateLimitDecision.rejected(retryAfter));
 
     assertThatExceptionOfType(RateLimitExceededException.class)
-      .isThrownBy(() -> rateLimitService.checkLogin("127.0.0.1", "user@example.com"))
+      .isThrownBy(() -> rateLimitService.check(
+        RateLimitScope.LOGIN,
+        "127.0.0.1",
+        "user@example.com"))
       .satisfies(exception -> assertThat(exception.retryAfter()).isEqualTo(retryAfter));
   }
 
@@ -104,14 +139,16 @@ class RateLimitServiceImplTest {
   void shouldSkipStoreWhenRateLimitingIsDisabled() {
     var loginProperties = new RateLimitProperties.LoginProperties(5, 7, WINDOW);
     var registrationProperties = new RateLimitProperties.RegistrationProperties(11, 13, WINDOW);
+    var passwordResetProperties = new RateLimitProperties.PasswordResetProperties(17, 19, WINDOW);
     var disabledProperties = new RateLimitProperties(
       false,
       loginProperties,
       registrationProperties,
+      passwordResetProperties,
       100);
     var disabledService = new RateLimitServiceImpl(disabledProperties, store, clock);
 
-    disabledService.checkLogin("127.0.0.1", "user@example.com");
+    disabledService.check(RateLimitScope.LOGIN, "127.0.0.1", "user@example.com");
 
     verifyNoInteractions(store, clock);
   }

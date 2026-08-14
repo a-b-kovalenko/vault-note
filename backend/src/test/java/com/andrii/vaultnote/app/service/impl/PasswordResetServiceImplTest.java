@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -12,10 +13,13 @@ import com.andrii.vaultnote.app.api.auth.dto.PasswordResetConfirmRequest;
 import com.andrii.vaultnote.app.api.auth.dto.PasswordResetRequest;
 import com.andrii.vaultnote.app.config.PasswordResetProperties;
 import com.andrii.vaultnote.app.exception.PasswordResetFailedException;
+import com.andrii.vaultnote.app.exception.RateLimitExceededException;
 import com.andrii.vaultnote.app.mail.MailMessage;
 import com.andrii.vaultnote.app.mail.MailSender;
 import com.andrii.vaultnote.app.security.SecureTokenGenerator;
 import com.andrii.vaultnote.app.security.SecureTokenGenerator.GeneratedToken;
+import com.andrii.vaultnote.app.security.ratelimit.RateLimitScope;
+import com.andrii.vaultnote.app.service.RateLimitService;
 import com.andrii.vaultnote.users.domain.UserRole;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.PasswordResetTokenEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
@@ -68,6 +72,8 @@ class PasswordResetServiceImplTest {
   PasswordEncoder passwordEncoder;
   @Mock
   Clock clock;
+  @Mock
+  RateLimitService rateLimitService;
 
   @InjectMocks
   PasswordResetServiceImpl passwordResetService;
@@ -85,8 +91,9 @@ class PasswordResetServiceImplTest {
     when(tokenGenerator.generate()).thenReturn(generatedToken);
     when(passwordResetTokenRepository.invalidateActiveByUserId(user.getId(), NOW)).thenReturn(1);
 
-    passwordResetService.requestPasswordReset(request);
+    passwordResetService.requestPasswordReset(request, "127.0.0.1");
 
+    verify(rateLimitService).check(RateLimitScope.PASSWORD_RESET, "127.0.0.1", EMAIL);
     verify(passwordResetTokenRepository).invalidateActiveByUserId(user.getId(), NOW);
     var tokenCaptor = ArgumentCaptor.forClass(PasswordResetTokenEntity.class);
     verify(passwordResetTokenRepository).save(tokenCaptor.capture());
@@ -112,9 +119,31 @@ class PasswordResetServiceImplTest {
     var request = PasswordResetRequest.builder().email(EMAIL).build();
     when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
 
-    passwordResetService.requestPasswordReset(request);
+    passwordResetService.requestPasswordReset(request, "127.0.0.1");
 
+    verify(rateLimitService).check(RateLimitScope.PASSWORD_RESET, "127.0.0.1", EMAIL);
     verifyNoInteractions(
+      passwordResetTokenRepository,
+      emailVerificationTokenRepository,
+      refreshTokenRepository,
+      tokenGenerator,
+      mailSender,
+      passwordEncoder);
+  }
+
+  @Test
+  void shouldRejectPasswordResetBeforeLookingUpUserWhenRateLimitIsExceeded() {
+    var request = PasswordResetRequest.builder().email(EMAIL).build();
+    doThrow(new RateLimitExceededException(Duration.ofSeconds(30)))
+      .when(rateLimitService)
+      .check(RateLimitScope.PASSWORD_RESET, "127.0.0.1", EMAIL);
+
+    assertThatExceptionOfType(RateLimitExceededException.class)
+      .isThrownBy(() -> passwordResetService.requestPasswordReset(request, "127.0.0.1"));
+
+    verify(rateLimitService).check(RateLimitScope.PASSWORD_RESET, "127.0.0.1", EMAIL);
+    verifyNoInteractions(
+      userRepository,
       passwordResetTokenRepository,
       emailVerificationTokenRepository,
       refreshTokenRepository,

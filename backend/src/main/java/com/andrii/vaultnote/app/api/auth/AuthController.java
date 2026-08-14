@@ -104,11 +104,20 @@ public class AuthController {
       @Content(
         mediaType = MediaType.APPLICATION_JSON_VALUE,
         schema = @Schema(implementation = ApiErrorResponse.class))})
+  @ApiResponse(
+    responseCode = "429",
+    description = "Too many password reset requests",
+    content = {
+      @Content(
+        mediaType = MediaType.APPLICATION_JSON_VALUE,
+        schema = @Schema(implementation = ApiErrorResponse.class))})
   @ApiResponse(responseCode = "500", description = "Server error", content = {@Content})
   @PostMapping("/password-reset/request")
   @ResponseStatus(HttpStatus.ACCEPTED)
-  public void requestPasswordReset(@RequestBody @Valid PasswordResetRequest request) {
-    passwordResetService.requestPasswordReset(request);
+  public void requestPasswordReset(
+    HttpServletRequest servletRequest,
+    @RequestBody @Valid PasswordResetRequest request) {
+    passwordResetService.requestPasswordReset(request, servletRequest.getRemoteAddr());
   }
 
   @Operation(summary = "Confirm a password reset")

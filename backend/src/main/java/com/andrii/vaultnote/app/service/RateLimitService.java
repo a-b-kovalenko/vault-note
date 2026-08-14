@@ -1,8 +1,8 @@
 package com.andrii.vaultnote.app.service;
 
+import com.andrii.vaultnote.app.security.ratelimit.RateLimitScope;
+
 public interface RateLimitService {
 
-  void checkLogin(String clientIp, String email);
-
-  void checkRegistration(String clientIp, String email);
+  void check(RateLimitScope scope, String clientIp, String email);
 }

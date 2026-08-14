@@ -5,7 +5,7 @@ import com.andrii.vaultnote.app.api.auth.dto.PasswordResetRequest;
 
 public interface PasswordResetService {
 
-  void requestPasswordReset(PasswordResetRequest request);
+  void requestPasswordReset(PasswordResetRequest request, String clientIp);
 
   void confirmPasswordReset(PasswordResetConfirmRequest request);
 
