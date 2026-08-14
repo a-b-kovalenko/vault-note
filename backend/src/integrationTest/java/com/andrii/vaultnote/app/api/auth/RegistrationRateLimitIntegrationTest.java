@@ -24,6 +24,7 @@ import org.springframework.test.context.TestPropertySource;
 @DataSet(value = "auth-baseline.yml", skipCleaningFor = {"databasechangelog", "databasechangeloglock"})
 @TestPropertySource(
   properties = {
+    "app.security.rate-limit.enabled=true",
     "app.security.rate-limit.registration.ip-limit=100",
     "app.security.rate-limit.registration.email-limit=2",
     "app.security.rate-limit.registration.window=PT1M"

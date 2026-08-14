@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @DataSet(value = "auth-baseline.yml", skipCleaningFor = {"databasechangelog", "databasechangeloglock"})
 @TestPropertySource(
   properties = {
+    "app.security.rate-limit.enabled=true",
     "app.security.rate-limit.login.ip-limit=100",
     "app.security.rate-limit.login.email-limit=2",
     "app.security.rate-limit.login.window=PT1M"
