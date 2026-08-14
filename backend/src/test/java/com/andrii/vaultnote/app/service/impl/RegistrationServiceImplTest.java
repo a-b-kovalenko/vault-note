@@ -6,6 +6,7 @@ import com.andrii.vaultnote.app.exception.EntityExistsException;
 import com.andrii.vaultnote.app.exception.RateLimitExceededException;
 import com.andrii.vaultnote.app.mapper.UserMapper;
 import com.andrii.vaultnote.app.service.EmailVerificationService;
+import com.andrii.vaultnote.app.security.ratelimit.RateLimitScope;
 import com.andrii.vaultnote.app.service.RateLimitService;
 import com.andrii.vaultnote.users.domain.UserRole;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
@@ -79,7 +80,7 @@ class RegistrationServiceImplTest {
     var response = registrationService.registerUser(request, "127.0.0.1");
 
     verify(passwordEncoder, times(1)).encode(RAW_PASSWORD);
-    verify(rateLimitService).checkRegistration("127.0.0.1", EMAIL);
+    verify(rateLimitService).check(RateLimitScope.REGISTRATION, "127.0.0.1", EMAIL);
     verify(userMapper).toUserEntity(request, MOCK_HASH);
     var userCaptor = ArgumentCaptor.forClass(UserEntity.class);
     verify(userJpaRepository).save(userCaptor.capture());
@@ -160,13 +161,13 @@ class RegistrationServiceImplTest {
     var exception = new RateLimitExceededException(java.time.Duration.ofSeconds(30));
     doThrow(exception)
       .when(rateLimitService)
-      .checkRegistration("127.0.0.1", EMAIL);
+      .check(RateLimitScope.REGISTRATION, "127.0.0.1", EMAIL);
 
     assertThatExceptionOfType(RateLimitExceededException.class)
       .isThrownBy(() -> registrationService.registerUser(request, "127.0.0.1"))
       .isSameAs(exception);
 
-    verify(rateLimitService).checkRegistration("127.0.0.1", EMAIL);
+    verify(rateLimitService).check(RateLimitScope.REGISTRATION, "127.0.0.1", EMAIL);
     verifyNoInteractions(
       userJpaRepository,
       userMapper,

@@ -49,10 +49,11 @@ has been implemented and verified. Branch integration is tracked separately.
 - The Notes API currently returns source Markdown; safe HTML rendering is
   planned as the final step of the Angular phase, when a preview or read-only
   mode is introduced.
-- `MEDIUM-3` is in progress: login and registration now have bounded local
-  IP- and normalized-email-aware limits with neutral `429` responses. Password
-  reset limits and the shared-storage or edge/WAF policy for multi-instance
-  deployment remain. Deployment-sensitive hardening is also still required.
+- `MEDIUM-3` is in progress: login, registration, and password-reset requests
+  now have bounded in-memory IP- and normalized-email-aware limits with
+  neutral `429` responses. The check is performed in the application services,
+  including before password-reset lookup, token creation, and email delivery.
+  Shared storage and edge/WAF hardening for multi-instance deployment remain.
   After that continue with OAuth, the Notes administrator view, profile
   updates, authenticated route guards, and standard frontend API-error
   presentation.
@@ -211,9 +212,13 @@ has been implemented and verified. Branch integration is tracked separately.
     early rejection, and endpoint integration coverage.
   - [x] Add IP and normalized-email limits for registration with bounded local
     storage, early rejection, and endpoint integration coverage.
-  - [ ] Add limits for password reset.
-  - [ ] Select shared atomic storage or edge/WAF enforcement for multi-instance
-    deployments.
+  - [x] Add IP and normalized-email limits for password-reset requests with
+    bounded local storage, generic responses, early rejection, and endpoint
+    integration coverage.
+  - [x] Select PostgreSQL as the target shared atomic storage and document the
+    decision; it is not active in the current local in-memory mode.
+  - [ ] Stabilize and activate shared storage, then add edge/WAF enforcement for
+    coarse public IP flood protection.
 - [ ] Verify deployment-sensitive transport, SMTP, Mailpit, Swagger,
   registration-enumeration, and dependency supply-chain controls when a target
   deployment exists.
@@ -288,7 +293,8 @@ has been implemented and verified. Branch integration is tracked separately.
   - [x] Protect login with IP- and email-aware limits without locking user
     accounts.
   - [x] Protect registration with IP- and email-aware limits.
-  - [ ] Protect password reset with IP- and email-aware limits.
+  - [x] Protect password-reset requests with IP- and email-aware limits.
+  - [ ] Move counters from bounded in-memory storage to a stable shared store.
   - [ ] Prefer Cloudflare or another edge/WAF rule for public traffic.
   - [ ] Add application-level limits only for direct-origin or internal
     traffic, or for email-specific rules the edge cannot enforce.

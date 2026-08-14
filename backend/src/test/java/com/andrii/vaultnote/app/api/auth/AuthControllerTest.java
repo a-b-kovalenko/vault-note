@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.andrii.vaultnote.app.api.auth.dto.LoginRequest;
+import com.andrii.vaultnote.app.api.auth.dto.PasswordResetRequest;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserRequest;
 import com.andrii.vaultnote.app.service.EmailVerificationService;
 import com.andrii.vaultnote.app.service.LoginService;
@@ -76,5 +77,19 @@ class AuthControllerTest {
       .isSameAs(exception);
 
     verify(registrationService).registerUser(registrationRequest, "127.0.0.1");
+  }
+
+  @Test
+  void shouldPassClientIpToPasswordResetService() {
+    var servletRequest = new MockHttpServletRequest();
+    servletRequest.setRemoteAddr("127.0.0.1");
+    var passwordResetRequest = PasswordResetRequest.builder()
+      .email(EMAIL)
+      .build();
+
+    authController.requestPasswordReset(servletRequest, passwordResetRequest);
+
+    verify(passwordResetService)
+      .requestPasswordReset(passwordResetRequest, "127.0.0.1");
   }
 }

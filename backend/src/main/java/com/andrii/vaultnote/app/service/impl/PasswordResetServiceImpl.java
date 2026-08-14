@@ -7,7 +7,9 @@ import com.andrii.vaultnote.app.exception.PasswordResetFailedException;
 import com.andrii.vaultnote.app.mail.MailMessage;
 import com.andrii.vaultnote.app.mail.MailSender;
 import com.andrii.vaultnote.app.security.SecureTokenGenerator;
+import com.andrii.vaultnote.app.security.ratelimit.RateLimitScope;
 import com.andrii.vaultnote.app.service.PasswordResetService;
+import com.andrii.vaultnote.app.service.RateLimitService;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.PasswordResetTokenEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.EmailVerificationTokenJpaRepository;
@@ -48,10 +50,12 @@ public class PasswordResetServiceImpl implements PasswordResetService {
   MailSender mailSender;
   PasswordEncoder passwordEncoder;
   Clock clock;
+  RateLimitService rateLimitService;
 
   @Override
   @Transactional
-  public void requestPasswordReset(PasswordResetRequest request) {
+  public void requestPasswordReset(PasswordResetRequest request, String clientIp) {
+    rateLimitService.check(RateLimitScope.PASSWORD_RESET, clientIp, request.email());
     log.info("Received password reset request for email={}", maskEmail(request.email()));
     userRepository.findByEmail(request.email())
       .ifPresent(this::issuePasswordReset);

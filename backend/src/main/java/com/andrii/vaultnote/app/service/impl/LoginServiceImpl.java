@@ -4,6 +4,7 @@ import com.andrii.vaultnote.app.api.auth.dto.LoginRequest;
 import com.andrii.vaultnote.app.config.RefreshTokenProperties;
 import com.andrii.vaultnote.app.exception.AuthenticationFailedException;
 import com.andrii.vaultnote.app.security.SecureTokenGenerator;
+import com.andrii.vaultnote.app.security.ratelimit.RateLimitScope;
 import com.andrii.vaultnote.app.service.AuthenticationResultFactory;
 import com.andrii.vaultnote.app.service.LoginResult;
 import com.andrii.vaultnote.app.service.LoginService;
@@ -40,7 +41,7 @@ public class LoginServiceImpl implements LoginService {
   @Override
   @Transactional
   public LoginResult login(LoginRequest request, String clientIp) {
-    rateLimitService.checkLogin(clientIp, request.email());
+    rateLimitService.check(RateLimitScope.LOGIN, clientIp, request.email());
     log.info("Received request to login user");
 
     var user = userRepository.findByEmail(request.email())
