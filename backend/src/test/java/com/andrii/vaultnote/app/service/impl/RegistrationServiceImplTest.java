@@ -3,8 +3,10 @@ package com.andrii.vaultnote.app.service.impl;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserRequest;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserResponse;
 import com.andrii.vaultnote.app.exception.EntityExistsException;
+import com.andrii.vaultnote.app.exception.RateLimitExceededException;
 import com.andrii.vaultnote.app.mapper.UserMapper;
 import com.andrii.vaultnote.app.service.EmailVerificationService;
+import com.andrii.vaultnote.app.service.RateLimitService;
 import com.andrii.vaultnote.users.domain.UserRole;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
@@ -25,6 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -46,6 +49,8 @@ class RegistrationServiceImplTest {
   PasswordEncoder passwordEncoder;
   @Mock
   EmailVerificationService emailVerificationService;
+  @Mock
+  RateLimitService rateLimitService;
 
   @Spy
   UserMapper userMapper = Mappers.getMapper(UserMapper.class);
@@ -71,9 +76,10 @@ class RegistrationServiceImplTest {
         .build();
     });
 
-    var response = registrationService.registerUser(request);
+    var response = registrationService.registerUser(request, "127.0.0.1");
 
     verify(passwordEncoder, times(1)).encode(RAW_PASSWORD);
+    verify(rateLimitService).checkRegistration("127.0.0.1", EMAIL);
     verify(userMapper).toUserEntity(request, MOCK_HASH);
     var userCaptor = ArgumentCaptor.forClass(UserEntity.class);
     verify(userJpaRepository).save(userCaptor.capture());
@@ -95,7 +101,7 @@ class RegistrationServiceImplTest {
     when(userJpaRepository.existsByEmail(EMAIL)).thenReturn(true);
 
     assertThatExceptionOfType(EntityExistsException.class)
-      .isThrownBy(() -> registrationService.registerUser(request))
+      .isThrownBy(() -> registrationService.registerUser(request, "127.0.0.1"))
       .withMessage("UserEntity with email '" + EMAIL + "' already exists.");
 
     verifyNoInteractions(userMapper);
@@ -120,7 +126,7 @@ class RegistrationServiceImplTest {
           "23505")));
 
     assertThatExceptionOfType(EntityExistsException.class)
-      .isThrownBy(() -> registrationService.registerUser(request))
+      .isThrownBy(() -> registrationService.registerUser(request, "127.0.0.1"))
       .withMessage("UserEntity with email '" + EMAIL + "' already exists.");
   }
 
@@ -140,7 +146,31 @@ class RegistrationServiceImplTest {
           "23502")));
 
     assertThatExceptionOfType(DataIntegrityViolationException.class)
-      .isThrownBy(() -> registrationService.registerUser(request))
+      .isThrownBy(() -> registrationService.registerUser(request, "127.0.0.1"))
       .withMessage("Not null violation");
+  }
+
+  @Test
+  void shouldRejectBeforeLookingUpUserWhenRateLimitIsExceeded() {
+    var request = RegisterUserRequest.builder()
+      .email(EMAIL)
+      .displayName(DISPLAY_NAME)
+      .password(RAW_PASSWORD)
+      .build();
+    var exception = new RateLimitExceededException(java.time.Duration.ofSeconds(30));
+    doThrow(exception)
+      .when(rateLimitService)
+      .checkRegistration("127.0.0.1", EMAIL);
+
+    assertThatExceptionOfType(RateLimitExceededException.class)
+      .isThrownBy(() -> registrationService.registerUser(request, "127.0.0.1"))
+      .isSameAs(exception);
+
+    verify(rateLimitService).checkRegistration("127.0.0.1", EMAIL);
+    verifyNoInteractions(
+      userJpaRepository,
+      userMapper,
+      passwordEncoder,
+      emailVerificationService);
   }
 }

@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.andrii.vaultnote.app.api.auth.dto.LoginRequest;
+import com.andrii.vaultnote.app.api.auth.dto.RegisterUserRequest;
 import com.andrii.vaultnote.app.service.EmailVerificationService;
 import com.andrii.vaultnote.app.service.LoginService;
 import com.andrii.vaultnote.app.service.PasswordResetService;
@@ -56,5 +57,24 @@ class AuthControllerTest {
       .isSameAs(exception);
 
     verify(loginService).login(loginRequest, "127.0.0.1");
+  }
+
+  @Test
+  void shouldPassClientIpToRegistrationService() {
+    var servletRequest = new MockHttpServletRequest();
+    servletRequest.setRemoteAddr("127.0.0.1");
+    var registrationRequest = RegisterUserRequest.builder()
+      .email(EMAIL)
+      .displayName("User")
+      .password("Password1234")
+      .build();
+    var exception = new RuntimeException("registration result is not needed in this test");
+    when(registrationService.registerUser(registrationRequest, "127.0.0.1"))
+      .thenThrow(exception);
+
+    assertThatThrownBy(() -> authController.registerUser(servletRequest, registrationRequest))
+      .isSameAs(exception);
+
+    verify(registrationService).registerUser(registrationRequest, "127.0.0.1");
   }
 }

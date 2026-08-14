@@ -66,7 +66,8 @@ class InMemoryRateLimitStoreTest {
 
   private static InMemoryRateLimitStore store(int maxEntries) {
     var loginProperties = new RateLimitProperties.LoginProperties(10, 10, WINDOW);
-    var properties = new RateLimitProperties(true, loginProperties, maxEntries);
+    var registrationProperties = new RateLimitProperties.RegistrationProperties(10, 10, WINDOW);
+    var properties = new RateLimitProperties(true, loginProperties, registrationProperties, maxEntries);
     return new InMemoryRateLimitStore(properties);
   }
 
