@@ -33,7 +33,7 @@ app:
     token-ttl: ${VAULTNOTE_PASSWORD_RESET_TOKEN_TTL:PT1H}
   jwt:
     issuer: ${VAULTNOTE_JWT_ISSUER:vaultnote}
-    secret: ${VAULTNOTE_JWT_SECRET:local-development-only-secret-change-me-please}
+    secret: ${VAULTNOTE_JWT_SECRET}
     access-token-ttl: ${VAULTNOTE_JWT_ACCESS_TOKEN_TTL:PT15M}
   refresh-token:
     ttl: ${VAULTNOTE_REFRESH_TOKEN_TTL:P7D}

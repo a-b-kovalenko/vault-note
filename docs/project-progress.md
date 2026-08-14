@@ -38,6 +38,9 @@ has been implemented and verified. Branch integration is tracked separately.
   generic reset requests, hashed expiring one-time tokens, Mailpit links,
   password confirmation, email verification for unverified accounts, refresh
   session revocation, and stable invalid-token errors.
+- The first security-audit remediation is implemented: JWT signing secrets are
+  mandatory, known development placeholders are rejected, and local/test
+  configuration documents explicit secret generation.
 - The private Notes CRUD baseline is implemented: owner-only endpoints,
   pagination, DTO boundaries, `CurrentUserProvider` ownership checks,
   `NOTE_NOT_FOUND` handling, and PostgreSQL-backed integration coverage.

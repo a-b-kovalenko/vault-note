@@ -32,6 +32,7 @@ public abstract class AbstractBaseIntegrationTest {
   private static final String CSRF_ENDPOINT = "/csrf";
   private static final String CSRF_COOKIE_NAME = "XSRF-TOKEN";
   private static final String CSRF_HEADER_NAME = "X-XSRF-TOKEN";
+  private static final String TEST_JWT_SECRET = "integration-test-jwt-secret-that-is-long-enough";
 
   protected static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine")
     .withDatabaseName("vault_note")
@@ -51,6 +52,7 @@ public abstract class AbstractBaseIntegrationTest {
     registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
     registry.add("spring.datasource.username", POSTGRES::getUsername);
     registry.add("spring.datasource.password", POSTGRES::getPassword);
+    registry.add("app.jwt.secret", () -> TEST_JWT_SECRET);
   }
 
   protected RequestSpecification givenWithCsrf() {
