@@ -352,8 +352,21 @@ JWT and refresh-token settings are externalized through environment variables:
 * `VAULTNOTE_REFRESH_TOKEN_COOKIE_SAME_SITE`.
 * `VAULTNOTE_CORS_ALLOWED_ORIGINS`.
 
-The local defaults are suitable only for development. A deployed environment
-must provide its own JWT secret and enable the `Secure` cookie flag.
+There is no default JWT signing secret. Every runtime must provide a unique
+value; the application rejects missing, blank, short, and known development
+placeholder values. The `local` profile can load a stable value from the
+ignored `backend/src/main/resources/application-local-secrets.yaml` file:
+
+[source,shell]
+----
+cp backend/src/main/resources/application-local-secrets.yaml.example \
+  backend/src/main/resources/application-local-secrets.yaml
+openssl rand -base64 32
+----
+
+Copy the generated value into the local secrets file. `VAULTNOTE_JWT_SECRET`
+remains an environment override for CI, containers, and one-off runs. Deployed
+environments must also enable the `Secure` cookie flag.
 
 == Integration coverage
 

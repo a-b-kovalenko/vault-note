@@ -9,6 +9,7 @@
 ## Backend
 
 - [Liquibase і Hibernate validate](content/Liquibase-і-Hibernate-validate.md): ownership схеми бази даних і forward-only міграції.
+- [Spring Boot профілі та config import](content/Spring-Boot-профілі-та-config-import.md): автоматичне завантаження profile-конфігурації і явний імпорт локальних secrets.
 - [Контракт помилок валідації](content/Контракт-помилок-валідації.md): стабільні коди помилок і field-level violations.
 - [OpenAPI, DTO та межі REST](content/OpenAPI-DTO-та-межі-REST.md): публічний API-контракт і відокремлення persistence-моделі.
 

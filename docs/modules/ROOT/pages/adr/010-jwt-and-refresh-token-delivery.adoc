@@ -27,8 +27,11 @@ the user relation, expiry, revocation state, and a token-family identifier with
 the hash.
 
 Use `HttpOnly` and `SameSite=Lax` for the cookie. The local HTTP profile may
-leave `Secure` disabled; deployed environments must provide a unique JWT
-secret and enable `Secure`.
+leave `Secure` disabled. Every runtime must provide a unique JWT secret; the
+application has no known fallback secret and rejects the old development
+placeholder. The local profile loads a stable secret from the ignored
+`application-local-secrets.yaml` classpath file, while deployed environments
+use an environment or secret-manager value and must also enable `Secure`.
 
 The current implementation covers login, refresh-token persistence and
 rotation, reuse detection, current-session logout, cookie delivery, JWT request

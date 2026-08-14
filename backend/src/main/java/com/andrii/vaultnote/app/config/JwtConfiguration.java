@@ -1,5 +1,7 @@
 package com.andrii.vaultnote.app.config;
 
+import static java.util.Objects.isNull;
+
 import com.andrii.vaultnote.app.security.JwtRolesValidator;
 import java.nio.charset.StandardCharsets;
 import javax.crypto.SecretKey;
@@ -18,10 +20,18 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 class JwtConfiguration {
 
   private static final int MIN_SECRET_LENGTH = 32;
+  private static final String KNOWN_DEVELOPMENT_SECRET = "local-development-only-secret-change-me-please";
 
   @Bean
   SecretKey jwtSecretKey(JwtProperties properties) {
     var secret = properties.secret();
+
+    if (isNull(secret) || secret.isBlank()) {
+      throw new IllegalStateException("JWT secret must be configured");
+    }
+    if (KNOWN_DEVELOPMENT_SECRET.equals(secret)) {
+      throw new IllegalStateException("JWT secret must not use the known development placeholder");
+    }
     if (secret.length() < MIN_SECRET_LENGTH) {
       throw new IllegalStateException("JWT secret must contain at least 32 characters");
     }

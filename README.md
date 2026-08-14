@@ -123,6 +123,21 @@ The backend sends SMTP traffic to `localhost:1025`; inspect captured messages at
 [http://localhost:8025](http://localhost:8025). Override the Mailpit ports or
 SMTP settings through `.env` when the defaults are already in use.
 
+The backend has no default JWT signing secret. The `local` profile loads a
+one-time secret from the ignored
+`backend/src/main/resources/application-local-secrets.yaml` file. Set it up
+once:
+
+```shell
+cp backend/src/main/resources/application-local-secrets.yaml.example \
+  backend/src/main/resources/application-local-secrets.yaml
+openssl rand -base64 32
+```
+
+Copy the generated value into `application-local-secrets.yaml`. The environment
+variable `VAULTNOTE_JWT_SECRET` remains available as an override for CI,
+containers, or one-off runs.
+
 Start the backend with the `local` profile after the shared PostgreSQL instance
 is available:
 
@@ -130,6 +145,10 @@ is available:
 cd backend
 SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
 ```
+
+In IntelliJ IDEA, set the active profile to `local` in the backend run
+configuration. No JWT secret needs to be copied into the run configuration; the
+same ignored classpath file is loaded automatically.
 
 Once the backend is running, open the [Swagger UI](http://localhost:8080/swagger-ui/index.html)
 to browse and try the REST API. The raw OpenAPI document is available at
