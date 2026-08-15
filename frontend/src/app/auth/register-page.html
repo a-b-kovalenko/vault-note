@@ -61,6 +61,9 @@
         @if (registrationError(); as errorMessage) {
           <p class="form-error" id="registration-error" role="alert">{{ errorMessage }}</p>
         }
+        @if (rateLimit.isActive()) {
+          <app-rate-limit-notice [remainingSeconds]="rateLimit.remainingSeconds()" />
+        }
 
         <form class="register-form" [formGroup]="registerForm" novalidate (ngSubmit)="onSubmit()">
           <div class="field" [class.field-invalid]="isInvalid(registerForm.controls.displayName)">
@@ -217,7 +220,7 @@
           <button
             class="submit-button"
             type="submit"
-            [disabled]="registerForm.invalid || isSubmitting()"
+            [disabled]="registerForm.invalid || isSubmitting() || rateLimit.isActive()"
           >
             <span>{{ isSubmitting() ? 'Creating account…' : 'Create account' }}</span>
             <span aria-hidden="true">→</span>

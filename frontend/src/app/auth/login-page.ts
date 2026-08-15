@@ -11,6 +11,8 @@ import { Router } from '@angular/router';
 import { AuthApiService } from './auth-api.service';
 import { AuthStateService } from './auth-state.service';
 import { ApiErrorResponse, LoginRequest, ValidationViolation } from './auth.models';
+import { RateLimitNotice } from './rate-limit-notice';
+import { RateLimitState } from './rate-limit-state';
 
 type LoginField = keyof LoginRequest;
 
@@ -21,7 +23,8 @@ const LOGIN_VERIFICATION_HINT =
 @Component({
   selector: 'app-login-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RateLimitNotice],
+  providers: [RateLimitState],
   templateUrl: './login-page.html',
   styleUrl: './login-page.scss',
 })
@@ -29,6 +32,8 @@ export class LoginPage {
   private readonly authApiService = inject(AuthApiService);
   private readonly authState = inject(AuthStateService);
   private readonly router = inject(Router);
+
+  readonly rateLimit = inject(RateLimitState);
 
   readonly loginForm = inject(NonNullableFormBuilder).group({
     email: ['', [Validators.required, Validators.email, Validators.maxLength(320)]],
@@ -60,7 +65,7 @@ export class LoginPage {
     this.loginError.set(null);
     this.clearServerErrors();
 
-    if (this.loginForm.invalid || this.isSubmitting()) {
+    if (this.loginForm.invalid || this.isSubmitting() || this.rateLimit.isActive()) {
       return;
     }
 
@@ -79,6 +84,11 @@ export class LoginPage {
   }
 
   private handleLoginError(error: unknown): void {
+    if (this.rateLimit.start(error)) {
+      this.loginError.set(null);
+      return;
+    }
+
     const httpError = error instanceof HttpErrorResponse ? error : null;
     const apiError = this.toApiErrorResponse(httpError);
 

@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
@@ -90,5 +90,33 @@ describe('ForgotPasswordPage', () => {
     signInButton.click();
 
     expect(navigate).toHaveBeenCalledWith(['/login']);
+  });
+
+  it('should show a countdown and preserve the form after a rate-limit response', () => {
+    resetResponse = throwError(
+      () =>
+        new HttpErrorResponse({
+          status: 429,
+          headers: new HttpHeaders({ 'Retry-After': '5' }),
+          error: {
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: 'Too many requests. Please try again later.',
+            violations: [],
+          },
+        }),
+    );
+    page.requestForm.controls.email.setValue('user@example.com');
+
+    const form = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+
+    expect(page.rateLimit.remainingSeconds()).toBe(5);
+    expect(page.requestError()).toBe(null);
+    expect(page.requestForm.getRawValue()).toEqual({ email: 'user@example.com' });
+    expect((fixture.nativeElement.querySelector('.submit-button') as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+    expect(fixture.nativeElement.textContent).toContain('5 seconds');
   });
 });

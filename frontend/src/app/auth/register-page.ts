@@ -11,6 +11,8 @@ import { Router } from '@angular/router';
 
 import { AuthApiService } from './auth-api.service';
 import { ApiErrorResponse, RegisterUserRequest, ValidationViolation } from './auth.models';
+import { RateLimitNotice } from './rate-limit-notice';
+import { RateLimitState } from './rate-limit-state';
 
 type RegisterUserField = keyof RegisterUserRequest | 'confirmPassword';
 
@@ -20,7 +22,8 @@ const PASSWORD_POLICY_MESSAGE = 'Use at least 12 characters, two digits, and one
 @Component({
   selector: 'app-register-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RateLimitNotice],
+  providers: [RateLimitState],
   templateUrl: './register-page.html',
   styleUrl: './register-page.scss',
 })
@@ -28,6 +31,8 @@ export class RegisterPage {
   private readonly authApiService = inject(AuthApiService);
   private readonly formBuilder = inject(NonNullableFormBuilder);
   private readonly router = inject(Router);
+
+  readonly rateLimit = inject(RateLimitState);
 
   readonly registerForm = this.formBuilder.group(
     {
@@ -83,7 +88,7 @@ export class RegisterPage {
     this.registrationError.set(null);
     this.clearServerErrors();
 
-    if (this.registerForm.invalid || this.isSubmitting()) {
+    if (this.registerForm.invalid || this.isSubmitting() || this.rateLimit.isActive()) {
       return;
     }
 
@@ -104,6 +109,11 @@ export class RegisterPage {
   }
 
   private handleRegistrationError(error: unknown): void {
+    if (this.rateLimit.start(error)) {
+      this.registrationError.set(null);
+      return;
+    }
+
     const httpError = error instanceof HttpErrorResponse ? error : null;
     const apiError = this.toApiErrorResponse(httpError);
 
