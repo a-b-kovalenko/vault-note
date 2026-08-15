@@ -103,6 +103,10 @@
   height: 2.75rem;
 }
 
+.account-avatar-image {
+  object-fit: cover;
+}
+
 .account-summary,
 .account-dropdown-header > span:last-child {
   display: grid;

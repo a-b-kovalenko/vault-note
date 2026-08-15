@@ -78,7 +78,7 @@ Create Liquibase migrations in schema `vaultnote` for:
   verification state, and timestamps. Phase 7 makes `password_hash` nullable
   for accounts that initially use only an external provider.
 - `user_avatars` (Phase 6): one optional avatar per user, stored separately from
-  the user row with normalized image bytes, content type, size, and timestamps.
+  the user row with normalized 256×256 JPEG bytes, byte size, and timestamps.
   Keep the storage behind an application interface so the PostgreSQL-backed MVP
   can later move to shared object storage without changing the profile API.
 - `user_roles`: many-to-many user assignments with stable numeric role codes;
@@ -327,12 +327,12 @@ network.
 - [x] Implement the profile resource. The API displays the email and
   verification state, permits only `display_name` updates, and uses `GET` and
   `PATCH /api/v1/users/me`; email changes and global logout remain deferred.
-- [ ] Add optional profile avatar upload and removal. Use
-  `PUT /api/v1/users/me/avatar`, `GET /api/v1/users/me/avatar`, and
-  `DELETE /api/v1/users/me/avatar`; keep the image endpoint authenticated and
-  user-scoped. Accept only decoded JPEG, PNG, or WebP images, enforce a small
-  upload and dimension limit, strip metadata, and normalize the stored image on
-  the server. Never trust the filename or client-provided content type.
+- [x] Add authenticated profile avatar upload, replacement, retrieval, and
+  removal through `PUT /api/v1/users/me/avatar`,
+  `GET /api/v1/users/me/avatar`, and `DELETE /api/v1/users/me/avatar`.
+  The server accepts decoded JPEG, PNG, or WebP images, enforces upload and
+  dimension limits, strips metadata, normalizes the stored image to 256×256
+  JPEG, and keeps avatar bytes separate from the user row.
 - [x] Implement the backend current-session logout endpoint.
 - [x] Add the paginated administrator user list API.
 
@@ -343,7 +343,11 @@ network.
   a conditional Admin users link for `ADMIN`, and a separated Log out action.
 - [x] Implement the Profile screen with read-only email and verification state,
   editable `displayName`, and explicit save/cancel states.
-- [ ] Add avatar preview, upload, replacement, removal, and initials fallback.
+- [x] Add avatar preview, upload, replacement, removal, and initials fallback.
+  The authenticated shell and Profile screen share the avatar state. Profile
+  avatar actions are visible only in `Edit profile` mode; the operations are
+  applied immediately, while `Cancel` applies only to the display-name draft.
+  Regenerate the Angular OpenAPI client after backend contract changes.
 - [ ] Add the read-only Admin users screen using the existing paginated API.
 
 Backend service-level role checks are mandatory. Angular guards and hidden UI
@@ -544,7 +548,8 @@ upcoming decision before implementation and become accepted after verification:
 2. Run Angular unit tests and production build.
 3. Start Mailpit, backend, and frontend locally.
 4. Manually verify registration, email confirmation, login, refresh, logout,
-   session reuse detection, notes ownership, admin read-only access, CSRF, CORS,
+   session reuse detection, avatar upload/replacement/retrieval/removal,
+   initials fallback, notes ownership, admin read-only access, CSRF, CORS,
    pagination, and optimistic-lock conflicts.
 
 ## Deferred ideas

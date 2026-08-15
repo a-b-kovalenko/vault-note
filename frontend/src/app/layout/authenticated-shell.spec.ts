@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
@@ -6,6 +7,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { AuthApiService } from '../auth/auth-api.service';
 import { AuthStateService } from '../auth/auth-state.service';
 import { UserProfile } from '../auth/auth.models';
+import { AvatarStateService } from '../avatar/avatar-state.service';
 import { AuthenticatedShell } from './authenticated-shell';
 
 describe('AuthenticatedShell', () => {
@@ -15,6 +17,11 @@ describe('AuthenticatedShell', () => {
   let authApiService: {
     profile: ReturnType<typeof vi.fn>;
     logout: ReturnType<typeof vi.fn>;
+  };
+  let avatarState: {
+    avatarUrl: ReturnType<typeof signal<string | null>>;
+    load: ReturnType<typeof vi.fn>;
+    clear: ReturnType<typeof vi.fn>;
   };
   let router: Router;
   let navigate: ReturnType<typeof vi.spyOn>;
@@ -32,10 +39,19 @@ describe('AuthenticatedShell', () => {
       profile: vi.fn(() => profileResponse),
       logout: vi.fn(() => logoutResponse),
     };
+    avatarState = {
+      avatarUrl: signal<string | null>(null),
+      load: vi.fn(() => of(void 0)),
+      clear: vi.fn(),
+    };
 
     await TestBed.configureTestingModule({
       imports: [AuthenticatedShell],
-      providers: [{ provide: AuthApiService, useValue: authApiService }, provideRouter([])],
+      providers: [
+        { provide: AuthApiService, useValue: authApiService },
+        { provide: AvatarStateService, useValue: avatarState },
+        provideRouter([]),
+      ],
     }).compileComponents();
 
     router = TestBed.inject(Router);
@@ -57,6 +73,17 @@ describe('AuthenticatedShell', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Admin users');
     expect(fixture.nativeElement.querySelector('.account-menu-separator')).not.toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Log out');
+  });
+
+  it('shows the avatar preview when the user has an avatar', () => {
+    avatarState.avatarUrl.set('blob:avatar');
+
+    fixture.detectChanges();
+
+    const image = fixture.nativeElement.querySelector('.account-trigger img') as HTMLImageElement;
+    expect(image).not.toBeNull();
+    expect(image.src).toContain('blob:avatar');
+    expect(fixture.nativeElement.querySelector('.account-trigger .account-avatar span')).toBeNull();
   });
 
   it('shows the Admin users link only for an administrator', () => {

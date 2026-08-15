@@ -14,7 +14,11 @@
         [disabled]="isProfileLoading() || isLoggingOut()"
         (click)="toggleAccountMenu()"
       >
-        <span class="account-avatar" aria-hidden="true">{{ initials() }}</span>
+        @if (avatarUrl(); as avatarUrl) {
+          <img class="account-avatar account-avatar-image" [src]="avatarUrl" alt="" />
+        } @else {
+          <span class="account-avatar" aria-hidden="true">{{ initials() }}</span>
+        }
         <span class="account-summary">
           <strong>{{ profile()?.displayName ?? 'Your account' }}</strong>
           <small>{{ profile()?.email ?? 'Loading profile…' }}</small>
@@ -25,9 +29,17 @@
       @if (isAccountMenuOpen()) {
         <div class="account-dropdown" role="menu" aria-label="Account menu">
           <div class="account-dropdown-header">
-            <span class="account-avatar account-avatar-large" aria-hidden="true">{{
-              initials()
-            }}</span>
+            @if (avatarUrl(); as avatarUrl) {
+              <img
+                class="account-avatar account-avatar-large account-avatar-image"
+                [src]="avatarUrl"
+                alt=""
+              />
+            } @else {
+              <span class="account-avatar account-avatar-large" aria-hidden="true">{{
+                initials()
+              }}</span>
+            }
             <span>
               <strong>{{ profile()?.displayName }}</strong>
               <small>{{ profile()?.email }}</small>

@@ -1,8 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 
+import { AvatarStateService } from '../avatar/avatar-state.service';
 import { AuthApiService } from './auth-api.service';
 import { UserProfile } from './auth.models';
 import { MePage } from './me-page';
@@ -14,6 +16,16 @@ describe('MePage', () => {
   let updateResponse: Observable<UserProfile>;
   let updateProfile: ReturnType<typeof vi.fn>;
   let navigate: ReturnType<typeof vi.fn>;
+  let avatarState: {
+    avatarUrl: ReturnType<typeof signal<string | null>>;
+    isLoading: ReturnType<typeof signal<boolean>>;
+    isUploading: ReturnType<typeof signal<boolean>>;
+    isRemoving: ReturnType<typeof signal<boolean>>;
+    error: ReturnType<typeof signal<string | null>>;
+    load: ReturnType<typeof vi.fn>;
+    upload: ReturnType<typeof vi.fn>;
+    remove: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     profileResponse = of({
@@ -32,6 +44,16 @@ describe('MePage', () => {
     });
     updateProfile = vi.fn(() => updateResponse);
     navigate = vi.fn().mockResolvedValue(true);
+    avatarState = {
+      avatarUrl: signal<string | null>(null),
+      isLoading: signal(false),
+      isUploading: signal(false),
+      isRemoving: signal(false),
+      error: signal<string | null>(null),
+      load: vi.fn(() => of(void 0)),
+      upload: vi.fn(() => of(void 0)),
+      remove: vi.fn(() => of(void 0)),
+    };
 
     const authApiService = {
       profile(): Observable<UserProfile> {
@@ -44,6 +66,7 @@ describe('MePage', () => {
       imports: [MePage],
       providers: [
         { provide: AuthApiService, useValue: authApiService },
+        { provide: AvatarStateService, useValue: avatarState },
         { provide: Router, useValue: { navigate } },
       ],
     }).compileComponents();
@@ -74,6 +97,59 @@ describe('MePage', () => {
     expect(fixture.nativeElement.textContent).toContain('USER');
     expect(fixture.nativeElement.querySelector('.edit-profile-button')).not.toBeNull();
     expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('uploads a supported avatar file from the profile screen', () => {
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.edit-profile-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const file = new File(['avatar'], 'avatar.png', { type: 'image/png' });
+    const input = fixture.nativeElement.querySelector(
+      '.avatar-upload-button input',
+    ) as HTMLInputElement;
+    Object.defineProperty(input, 'files', { value: [file] });
+    input.dispatchEvent(new Event('change'));
+
+    expect(avatarState.upload).toHaveBeenCalledWith(file);
+    expect(fixture.nativeElement.textContent).not.toContain('must be');
+  });
+
+  it('rejects an unsupported avatar file before uploading', () => {
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.edit-profile-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    const file = new File(['avatar'], 'avatar.gif', { type: 'image/gif' });
+    const input = fixture.nativeElement.querySelector(
+      '.avatar-upload-button input',
+    ) as HTMLInputElement;
+    Object.defineProperty(input, 'files', { value: [file] });
+    input.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(avatarState.upload).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain(
+      'Avatar must be a JPEG, PNG, or WebP image.',
+    );
+  });
+
+  it('removes the current avatar', () => {
+    avatarState.avatarUrl.set('blob:avatar');
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.edit-profile-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.avatar-remove-button') as HTMLButtonElement).click();
+
+    expect(avatarState.remove).toHaveBeenCalledOnce();
+  });
+
+  it('hides avatar actions outside profile edit mode', () => {
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.avatar-upload-button')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.avatar-remove-button')).toBeNull();
   });
 
   it('enters edit mode and restores the saved value on cancel', () => {

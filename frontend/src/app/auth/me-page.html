@@ -25,6 +25,69 @@
         <p class="form-message form-message-success" role="status">{{ successMessage }}</p>
       }
 
+      <section class="avatar-section" aria-labelledby="avatar-title">
+        <div>
+          <h2 id="avatar-title">Profile avatar</h2>
+          <p class="section-description">Use a square image that represents you.</p>
+        </div>
+
+        <div class="avatar-layout">
+          <div class="avatar-preview">
+            @if (avatarUrl(); as avatarUrl) {
+              <img [src]="avatarUrl" alt="Your profile avatar" />
+            } @else {
+              <span aria-hidden="true">{{ initials() }}</span>
+            }
+          </div>
+
+          @if (isEditing()) {
+            <div class="avatar-controls">
+              <div class="avatar-action-row">
+                <label
+                  class="secondary-button avatar-upload-button"
+                  [class.avatar-upload-button-disabled]="isAvatarBusy()"
+                >
+                  <span>{{
+                    isAvatarLoading()
+                      ? 'Loading…'
+                      : isAvatarUploading()
+                        ? 'Uploading…'
+                        : avatarUrl()
+                          ? 'Replace avatar'
+                          : 'Upload avatar'
+                  }}</span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    [disabled]="isAvatarBusy()"
+                    (change)="onAvatarSelected($event)"
+                  />
+                </label>
+
+                @if (avatarUrl()) {
+                  <button
+                    class="secondary-button avatar-remove-button"
+                    type="button"
+                    [disabled]="isAvatarBusy()"
+                    (click)="onRemoveAvatar()"
+                  >
+                    {{ isAvatarRemoving() ? 'Removing…' : 'Remove' }}
+                  </button>
+                }
+              </div>
+
+              <p class="avatar-hint">JPEG, PNG, or WebP · up to 2 MB · at least 64×64 px</p>
+            </div>
+          }
+        </div>
+
+        @if (isEditing() && avatarError(); as errorMessage) {
+          <p class="form-message form-message-error avatar-error" role="alert">
+            {{ errorMessage }}
+          </p>
+        }
+      </section>
+
       <form class="profile-form" [formGroup]="profileForm" novalidate (ngSubmit)="onSubmit()">
         <div class="display-name-section">
           <div class="field-heading">

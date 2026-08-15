@@ -1,5 +1,12 @@
 import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import {
   AbstractControl,
   NonNullableFormBuilder,
@@ -11,6 +18,8 @@ import {
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 
+import { AvatarStateService } from '../avatar/avatar-state.service';
+import { getInitials } from '../avatar/avatar-utils';
 import { AuthApiService } from './auth-api.service';
 import { AuthStateService } from './auth-state.service';
 import { UserProfile } from './auth.models';
@@ -18,6 +27,8 @@ import { UserProfile } from './auth.models';
 const GENERIC_USER_ERROR = 'Unable to load your profile right now. Please try again.';
 const GENERIC_PROFILE_UPDATE_ERROR = 'Unable to save your profile right now. Please try again.';
 const DISPLAY_NAME_MAX_LENGTH = 100;
+const MAX_AVATAR_SIZE_BYTES = 2 * 1024 * 1024;
+const SUPPORTED_AVATAR_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 @Component({
   selector: 'app-me-page',
@@ -29,6 +40,7 @@ const DISPLAY_NAME_MAX_LENGTH = 100;
 export class MePage implements OnInit {
   private readonly authApiService = inject(AuthApiService);
   private readonly authState = inject(AuthStateService);
+  private readonly avatarState = inject(AvatarStateService);
   private readonly router = inject(Router);
 
   readonly profile = signal<UserProfile | null>(null);
@@ -38,6 +50,16 @@ export class MePage implements OnInit {
   readonly isSaving = signal(false);
   readonly saveError = signal<string | null>(null);
   readonly saveSuccess = signal<string | null>(null);
+  readonly avatarUrl = this.avatarState.avatarUrl;
+  readonly isAvatarLoading = this.avatarState.isLoading;
+  readonly isAvatarUploading = this.avatarState.isUploading;
+  readonly isAvatarRemoving = this.avatarState.isRemoving;
+  readonly initials = computed(() => getInitials(this.profile()));
+  readonly isAvatarBusy = computed(
+    () => this.isAvatarLoading() || this.isAvatarUploading() || this.isAvatarRemoving(),
+  );
+  private readonly avatarInputError = signal<string | null>(null);
+  readonly avatarError = computed(() => this.avatarInputError() ?? this.avatarState.error());
 
   readonly profileForm = inject(NonNullableFormBuilder).group({
     displayName: [
@@ -47,6 +69,8 @@ export class MePage implements OnInit {
   });
 
   ngOnInit(): void {
+    this.avatarState.load().subscribe({ error: () => undefined });
+
     this.authState
       .loadProfile(() => this.authApiService.profile())
       .subscribe({
@@ -57,6 +81,37 @@ export class MePage implements OnInit {
         },
         error: (error: unknown) => this.handleLoadError(error),
       });
+  }
+
+  protected onAvatarSelected(event: Event): void {
+    if (!this.isEditing() || this.isAvatarBusy()) {
+      return;
+    }
+
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    const validationError = this.validateAvatarFile(file);
+    this.avatarInputError.set(validationError);
+    if (validationError) {
+      return;
+    }
+
+    this.avatarState.upload(file).subscribe({ error: () => undefined });
+  }
+
+  protected onRemoveAvatar(): void {
+    if (!this.isEditing() || this.isAvatarBusy()) {
+      return;
+    }
+
+    this.avatarInputError.set(null);
+    this.avatarState.remove().subscribe({ error: () => undefined });
   }
 
   protected isInvalid(control: AbstractControl): boolean {
@@ -143,6 +198,18 @@ export class MePage implements OnInit {
     }
 
     return GENERIC_PROFILE_UPDATE_ERROR;
+  }
+
+  private validateAvatarFile(file: File): string | null {
+    if (file.size > MAX_AVATAR_SIZE_BYTES) {
+      return 'Avatar must be 2 MB or smaller.';
+    }
+
+    if (file.type && !SUPPORTED_AVATAR_TYPES.has(file.type)) {
+      return 'Avatar must be a JPEG, PNG, or WebP image.';
+    }
+
+    return null;
   }
 }
 
