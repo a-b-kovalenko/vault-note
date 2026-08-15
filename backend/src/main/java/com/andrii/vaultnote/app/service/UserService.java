@@ -1,6 +1,7 @@
 package com.andrii.vaultnote.app.service;
 
 import com.andrii.vaultnote.app.api.users.dto.UserInfoDto;
+import com.andrii.vaultnote.app.api.users.dto.UserAvatarDto;
 import com.andrii.vaultnote.app.api.users.dto.UserProfileDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,5 +17,8 @@ public interface UserService {
 
   @PreAuthorize("isAuthenticated()")
   UserProfileDto updateCurrentProfile(String displayName);
+
+  @PreAuthorize("isAuthenticated()")
+  UserAvatarDto uploadCurrentAvatar(byte[] content);
 
 }

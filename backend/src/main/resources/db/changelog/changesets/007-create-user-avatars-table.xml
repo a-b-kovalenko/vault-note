@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="007-create-user-avatars-table" author="andrii" dbms="postgresql">
+        <sql>
+            CREATE TABLE vaultnote.user_avatars (
+                user_id BIGINT NOT NULL,
+                content BYTEA NOT NULL,
+                byte_size INTEGER NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT pk_user_avatars PRIMARY KEY (user_id),
+                CONSTRAINT fk_user_avatars_user
+                    FOREIGN KEY (user_id)
+                    REFERENCES vaultnote.users (id)
+                    ON DELETE CASCADE,
+                CONSTRAINT ck_user_avatars_byte_size
+                    CHECK (byte_size &gt; 0)
+            );
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

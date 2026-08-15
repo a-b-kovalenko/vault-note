@@ -1,13 +1,16 @@
 package com.andrii.vaultnote.app.service.impl;
 
 import com.andrii.vaultnote.app.api.users.dto.UserInfoDto;
+import com.andrii.vaultnote.app.api.users.dto.UserAvatarDto;
 import com.andrii.vaultnote.app.api.users.dto.UserProfileDto;
 import com.andrii.vaultnote.app.exception.UserNotFoundException;
 import com.andrii.vaultnote.app.mapper.UserMapper;
 import com.andrii.vaultnote.app.security.CurrentUserProvider;
 import com.andrii.vaultnote.app.service.UserService;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
+import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserAvatarEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
+import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserAvatarJpaRepository;
 import com.andrii.vaultnote.users.domain.DisplayNameRules;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
 
   UserJpaRepository userRepository;
+  UserAvatarJpaRepository avatarRepository;
   UserMapper userMapper;
   CurrentUserProvider currentUserProvider;
+  AvatarImageNormalizer avatarImageNormalizer;
 
   @Override
   @Transactional(readOnly = true)
@@ -56,9 +61,40 @@ public class UserServiceImpl implements UserService {
     return userMapper.toUserProfileDto(userRepository.saveAndFlush(user));
   }
 
+  @Override
+  @Transactional
+  public UserAvatarDto uploadCurrentAvatar(byte[] content) {
+    var userId = currentUserProvider.currentUserId();
+    if (!userRepository.existsById(userId)) {
+      throw new UserNotFoundException(userId);
+    }
+
+    log.info("Uploading current user avatar: userId={}", userId);
+    var normalized = avatarImageNormalizer.normalize(content);
+    var avatar = avatarRepository.findByUserId(userId)
+      .map(existing -> replaceAvatar(existing, normalized))
+      .orElseGet(() -> UserAvatarEntity.builder()
+        .userId(userId)
+        .content(normalized.content())
+        .byteSize(normalized.byteSize())
+        .build());
+    var savedAvatar = avatarRepository.saveAndFlush(avatar);
+
+    return UserAvatarDto.builder()
+      .byteSize(savedAvatar.getByteSize())
+      .build();
+  }
+
   private UserEntity findCurrentUser(long userId) {
     return userRepository.findUserWithRolesById(userId)
       .orElseThrow(() -> new UserNotFoundException(userId));
+  }
+
+  private static UserAvatarEntity replaceAvatar(
+    UserAvatarEntity existing,
+    AvatarImageNormalizer.NormalizedAvatar normalized) {
+    existing.replace(normalized.content(), normalized.byteSize());
+    return existing;
   }
 
 }

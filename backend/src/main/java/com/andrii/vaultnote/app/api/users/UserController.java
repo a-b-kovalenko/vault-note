@@ -1,11 +1,14 @@
 package com.andrii.vaultnote.app.api.users;
 
 import com.andrii.vaultnote.app.api.users.dto.UpdateUserProfileRequest;
+import com.andrii.vaultnote.app.api.users.dto.UserAvatarDto;
 import com.andrii.vaultnote.app.api.users.dto.UserInfoDto;
 import com.andrii.vaultnote.app.api.users.dto.UserProfileDto;
+import com.andrii.vaultnote.app.api.error.ApiErrorResponse;
 import com.andrii.vaultnote.app.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.AccessLevel;
@@ -17,12 +20,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
+import org.springframework.http.MediaType;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -31,6 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
   UserService userService;
+  MultipartAvatarUploadReader avatarUploadReader;
 
   @Operation(summary = "Get current user profile")
   @ApiResponse(responseCode = "200", description = "Get current user profile")
@@ -52,6 +60,29 @@ public class UserController {
   public UserProfileDto updateCurrentProfile(
     @RequestBody @Valid UpdateUserProfileRequest request) {
     return userService.updateCurrentProfile(request.displayName());
+  }
+
+  @Operation(summary = "Upload or replace current user avatar")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Avatar uploaded",
+    content = {
+      @Content(
+        mediaType = MediaType.APPLICATION_JSON_VALUE,
+        schema = @Schema(implementation = UserAvatarDto.class))})
+  @ApiResponse(
+    responseCode = "400",
+    description = "Invalid avatar",
+    content = {
+      @Content(
+        mediaType = MediaType.APPLICATION_JSON_VALUE,
+        schema = @Schema(implementation = ApiErrorResponse.class))})
+  @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
+  @ApiResponse(responseCode = "413", description = "Avatar is too large", content = {@Content})
+  @SecurityRequirement(name = "bearerAuth")
+  @PutMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public UserAvatarDto uploadCurrentAvatar(@RequestPart("file") MultipartFile file) {
+    return userService.uploadCurrentAvatar(avatarUploadReader.read(file));
   }
 
   @Operation(summary = "Get users")
