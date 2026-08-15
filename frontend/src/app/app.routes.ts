@@ -25,13 +25,20 @@ export const routes: Routes = [
       import('./auth/verify-email-page').then(({ VerifyEmailPage }) => VerifyEmailPage),
   },
   {
-    path: 'me',
-    loadComponent: () => import('./auth/me-page').then(({ MePage }) => MePage),
-  },
-  {
     path: '',
     pathMatch: 'full',
     redirectTo: 'login',
+  },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./layout/authenticated-shell').then(({ AuthenticatedShell }) => AuthenticatedShell),
+    children: [
+      {
+        path: 'me',
+        loadComponent: () => import('./auth/me-page').then(({ MePage }) => MePage),
+      },
+    ],
   },
   {
     path: '**',

@@ -1,12 +1,8 @@
 .me-page {
-  min-height: 100vh;
   display: grid;
+  min-height: calc(100dvh - 4.5rem);
+  padding: clamp(2rem, 7vw, 4rem) 1.5rem;
   place-items: center;
-  padding: 2rem;
-  background:
-    radial-gradient(circle at 15% 15%, rgba(47, 107, 79, 0.18), transparent 32%),
-    radial-gradient(circle at 85% 85%, rgba(145, 181, 139, 0.22), transparent 30%),
-    #f4f8f4;
 }
 
 .me-card {
@@ -39,40 +35,6 @@ h1 {
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 2rem;
-}
-
-.logout-button {
-  min-height: 2.75rem;
-  padding: 0.65rem 1rem;
-  border: 1px solid #b7d0bd;
-  border-radius: 0.7rem;
-  color: #2f6b4f;
-  background: #ffffff;
-  cursor: pointer;
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 700;
-  transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    box-shadow 160ms ease;
-}
-
-.logout-button:hover:not(:disabled) {
-  border-color: #2f6b4f;
-  background: #edf6ef;
-  box-shadow: 0 0.35rem 0.8rem rgba(47, 107, 79, 0.12);
-}
-
-.logout-button:focus-visible {
-  outline: 3px solid rgba(47, 107, 79, 0.2);
-  outline-offset: 2px;
-}
-
-.logout-button:disabled {
-  color: #9aa7bb;
-  background: #f5faf5;
-  cursor: wait;
 }
 
 .status-message {

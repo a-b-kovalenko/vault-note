@@ -65,8 +65,12 @@ has been implemented and verified. Branch integration is tracked separately.
   After that continue with OAuth, then the dedicated Notes phase, and finally
   the remaining cross-cutting Angular work such as route guards and standard
   frontend API-error presentation.
-- The technical `/me` access-check screen is implemented and verified locally;
-  the full profile experience is planned for Phase 6.
+- The authenticated Angular application shell is implemented and verified: `/me`
+  is rendered inside the shell, the account menu shows initials, display name,
+  and email, the `ADMIN` link is conditional, and logout is a separated action.
+  Profile state is shared between the shell and child pages to avoid duplicate
+  profile requests. Editable profile fields, avatar handling, and the Admin users
+  screen remain as separate Phase 6 tasks.
 
 ## Phase 0 — Foundation
 
@@ -244,7 +248,7 @@ has been implemented and verified. Branch integration is tracked separately.
 - [x] Migrate Angular `/me` to `GET /api/v1/users/me`, rename the API method
   from `currentUser()` to `profile()`, regenerate the OpenAPI client, and
   prepare `updateProfile()` for the future editable profile screen.
-- [ ] Add the authenticated application shell and account menu with Profile,
+- [x] Add the authenticated application shell and account menu with Profile,
   conditional Admin users, and a separated Log out action.
 - [ ] Implement the Profile screen with read-only email and verification state,
   editable `displayName`, and save/cancel states.
