@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: ${VAULTNOTE_AVATAR_MAX_UPLOAD_SIZE:2MB}
+      max-request-size: ${VAULTNOTE_AVATAR_MAX_REQUEST_SIZE:3MB}
   mail:
     host: ${VAULTNOTE_MAIL_HOST:localhost}
     port: ${VAULTNOTE_MAIL_PORT:1025}
@@ -21,6 +25,14 @@ spring:
     default-schema: vaultnote
 
 app:
+  avatar:
+    max-upload-size: ${VAULTNOTE_AVATAR_MAX_UPLOAD_SIZE:2MB}
+    min-input-dimension: ${VAULTNOTE_AVATAR_MIN_INPUT_DIMENSION:64}
+    max-input-width: ${VAULTNOTE_AVATAR_MAX_INPUT_WIDTH:2048}
+    max-input-height: ${VAULTNOTE_AVATAR_MAX_INPUT_HEIGHT:2048}
+    max-input-pixels: ${VAULTNOTE_AVATAR_MAX_INPUT_PIXELS:4194304}
+    output-size: ${VAULTNOTE_AVATAR_OUTPUT_SIZE:256}
+    jpeg-quality: ${VAULTNOTE_AVATAR_JPEG_QUALITY:0.85}
   cors:
     allowed-origins: ${VAULTNOTE_CORS_ALLOWED_ORIGINS:http://localhost:4200}
   security:

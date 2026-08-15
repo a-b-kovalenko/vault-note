@@ -1,0 +1,74 @@
+= ADR 016: Avatar storage and normalization
+:status: accepted
+:date: 2026-08-15
+
+== Context
+
+VaultNote needs an optional profile avatar that can be uploaded, replaced,
+retrieved, and removed by the authenticated user. Avatar bytes should not be
+loaded with the user profile or placed in the `users` row. The upload is also
+untrusted image input: a filename or client-provided MIME type does not prove
+that a file is a valid, safe image.
+
+The current local environment already provides PostgreSQL and Liquibase. Adding
+an object-storage service only for profile avatars would increase local and IDE
+setup complexity before the application needs it. At the same time, keeping
+the storage behind a separate persistence boundary leaves room for a later
+migration to S3-compatible object storage.
+
+== Decision
+
+Expose the avatar as an authenticated, user-scoped resource without a user ID
+in the URL:
+
+* `PUT /api/v1/users/me/avatar` uploads or replaces the current user's avatar;
+* `GET /api/v1/users/me/avatar` retrieves the normalized image;
+* `DELETE /api/v1/users/me/avatar` removes the avatar and returns `204 No
+  Content`.
+
+Keep avatar persistence separate from user persistence. Create one row per user
+in `vaultnote.user_avatars`, using `user_id` as both the primary key and a
+foreign key to `vaultnote.users` with `ON DELETE CASCADE`. Store the normalized
+image as PostgreSQL `BYTEA` together with its byte size and creation/update
+timestamps. Do not add avatar bytes or an avatar association to `UserEntity`.
+Use a dedicated `UserAvatarEntity` and `UserAvatarJpaRepository`.
+
+Accept only decoded JPEG, PNG, and WebP input. Enforce a bounded upload size,
+decoded dimension and pixel limits, and reject malformed files, SVG, GIF, and
+unsupported formats. Reject input smaller than `64x64`. Apply image
+orientation, resize or crop to an exact `256x256` output, and upscale accepted
+smaller images with high-quality resampling.
+
+Always encode the stored result as JPEG with controlled quality and without
+input metadata. Because the stored representation has one fixed format,
+`content_type`, `width`, and `height` are not persisted. The retrieval endpoint
+sets the invariant response header `Content-Type: image/jpeg`.
+
+The final validation and normalization remain server-side responsibilities.
+Frontend `accept` attributes and early size checks are convenience hints only.
+State-changing upload and removal use the existing CSRF flow; retrieval
+requires the authenticated Bearer token.
+
+== Consequences
+
+* The `users` row and profile queries remain small and do not load image bytes.
+* The schema and HTTP contract are simpler because the normalized format and
+  dimensions are invariants rather than per-row data.
+* Every upload loses the original format and metadata, and very small images
+  may be visibly blurred after upscaling.
+* A fixed JPEG output does not preserve transparency. The image normalizer must
+  apply the chosen background policy before encoding.
+* PostgreSQL backups include avatar bytes, and a large number of avatars will
+  increase database storage. The separate repository/service boundary allows a
+  later move to object storage without changing the user model or endpoint
+  contract.
+* An authenticated browser cannot use a plain `<img src>` request when the
+  access token is held in memory. Angular retrieves the image as a `Blob` via
+  `HttpClient`, creates an object URL, and revokes it after replacement or
+  removal. The UI falls back to user initials when no avatar exists.
+
+== Status
+
+Accepted for the current PostgreSQL-backed implementation and local/IDE
+workflow. Image decoding/normalization, the avatar service, controller
+endpoints, and frontend upload states remain implementation work under Phase 6.

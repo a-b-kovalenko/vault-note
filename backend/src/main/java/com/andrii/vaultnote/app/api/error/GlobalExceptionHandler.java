@@ -1,6 +1,7 @@
 package com.andrii.vaultnote.app.api.error;
 
 import com.andrii.vaultnote.app.exception.AuthenticationFailedException;
+import com.andrii.vaultnote.app.exception.AvatarValidationException;
 import com.andrii.vaultnote.app.exception.EmailVerificationFailedException;
 import com.andrii.vaultnote.app.exception.EntityExistsException;
 import com.andrii.vaultnote.app.exception.NoteNotFoundException;
@@ -18,6 +19,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.Objects;
 
@@ -76,6 +78,32 @@ public class GlobalExceptionHandler {
 
     return ResponseEntity
       .status(HttpStatus.UNAUTHORIZED)
+      .body(response);
+  }
+
+  @ExceptionHandler(AvatarValidationException.class)
+  public ResponseEntity<ApiErrorResponse> handleAvatarValidationException(
+    AvatarValidationException exception) {
+
+    log.warn("Avatar validation failed: {}", exception.getMessage());
+
+    var response = new ApiErrorResponse(AvatarValidationException.CODE, exception.getMessage());
+
+    return ResponseEntity
+      .status(HttpStatus.BAD_REQUEST)
+      .body(response);
+  }
+
+  @ExceptionHandler(MaxUploadSizeExceededException.class)
+  public ResponseEntity<ApiErrorResponse> handleMaxUploadSizeExceededException(
+    MaxUploadSizeExceededException exception) {
+
+    log.warn("Avatar upload exceeded the configured size limit");
+
+    var response = new ApiErrorResponse("AVATAR_TOO_LARGE", "Avatar file is too large.");
+
+    return ResponseEntity
+      .status(HttpStatus.PAYLOAD_TOO_LARGE)
       .body(response);
   }
 

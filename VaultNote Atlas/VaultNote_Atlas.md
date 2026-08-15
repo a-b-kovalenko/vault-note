@@ -58,6 +58,7 @@
 - [Bootstrap, routing та application shell](content/Angular-bootstrap-routing-та-application-shell.md): запуск Angular, providers, маршрути і root shell.
 - [Providers, browser routing та root shell](content/Angular-application-providers-routing-root-shell.md): пояснення базових Angular application-концепцій і їхнього lifecycle.
 - [Auth feature Angular frontend](content/Angular-auth-feature.md): auth-сторінки, password recovery, API boundary, CSRF та refresh flow.
+- [План реалізації аватара профілю](content/План-реалізації-аватара-профілю.md): authenticated upload, replacement, retrieval, removal і server-side normalization.
 
 ## Workflows
 

@@ -9,9 +9,16 @@ import com.andrii.vaultnote.app.security.AccessTokenGenerator;
 import com.andrii.vaultnote.support.AbstractBaseIntegrationTest;
 import com.andrii.vaultnote.users.domain.UserRole;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
+import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserAvatarJpaRepository;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
 import com.github.database.rider.core.api.dataset.DataSet;
 import io.restassured.http.ContentType;
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 import java.util.EnumSet;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -30,14 +37,18 @@ class UserIntegrationTest extends AbstractBaseIntegrationTest {
 
   private static final String USERS_ENDPOINT = "/api/v1/users";
   private static final String CURRENT_USER_ENDPOINT = USERS_ENDPOINT + "/me";
+  private static final String CURRENT_AVATAR_ENDPOINT = CURRENT_USER_ENDPOINT + "/avatar";
 
+  UserAvatarJpaRepository avatarRepository;
   UserJpaRepository userRepository;
   AccessTokenGenerator accessTokenGenerator;
 
   @Autowired
   UserIntegrationTest(
+    UserAvatarJpaRepository avatarRepository,
     UserJpaRepository userRepository,
     AccessTokenGenerator accessTokenGenerator) {
+    this.avatarRepository = avatarRepository;
     this.userRepository = userRepository;
     this.accessTokenGenerator = accessTokenGenerator;
   }
@@ -94,6 +105,78 @@ class UserIntegrationTest extends AbstractBaseIntegrationTest {
     assertThat(savedUser.getDisplayName()).isEqualTo("Updated Profile");
     assertThat(savedUser.getEmail()).isEqualTo(user.getEmail());
     assertThat(savedUser.isEmailVerified()).isTrue();
+  }
+
+  @Test
+  void shouldUploadAndReplaceCurrentUserAvatar() throws IOException {
+    var user = saveUser("profile-avatar@example.com", "Profile User", UserRole.USER);
+    var accessToken = accessTokenGenerator.generate(user).rawValue();
+
+    var uploadResponse = givenWithCsrf()
+      .auth()
+      .oauth2(accessToken)
+      .multiPart("file", "avatar.png", imageBytes("png", 80, 120), "image/png")
+      .when()
+      .put(CURRENT_AVATAR_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.OK.value())
+      .extract()
+      .response();
+
+    assertThat(uploadResponse.jsonPath().getInt("byte_size")).isPositive();
+
+    var firstAvatar = avatarRepository.findByUserId(user.getId()).orElseThrow();
+    var firstContent = firstAvatar.getContent().clone();
+    assertThat(firstAvatar.getByteSize()).isEqualTo(firstAvatar.getContent().length);
+    assertThat(ImageIO.read(new ByteArrayInputStream(firstAvatar.getContent())))
+      .extracting(BufferedImage::getWidth, BufferedImage::getHeight)
+      .containsExactly(256, 256);
+
+    givenWithCsrf()
+      .auth()
+      .oauth2(accessToken)
+      .multiPart("file", "avatar.jpg", imageBytes("jpeg", 180, 180, Color.GREEN), "image/jpeg")
+      .when()
+      .put(CURRENT_AVATAR_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.OK.value());
+
+    var replacedAvatar = avatarRepository.findByUserId(user.getId()).orElseThrow();
+    assertThat(replacedAvatar.getContent()).isNotEqualTo(firstContent);
+    assertThat(ImageIO.read(new ByteArrayInputStream(replacedAvatar.getContent())))
+      .extracting(BufferedImage::getWidth, BufferedImage::getHeight)
+      .containsExactly(256, 256);
+    assertThat(avatarRepository.count()).isEqualTo(1);
+  }
+
+  @Test
+  void shouldRejectInvalidCurrentUserAvatar() throws IOException {
+    var user = saveUser("profile-invalid-avatar@example.com", "Profile User", UserRole.USER);
+    var accessToken = accessTokenGenerator.generate(user).rawValue();
+
+    var response = givenWithCsrf()
+      .auth()
+      .oauth2(accessToken)
+      .multiPart("file", "avatar.txt", "not-an-image".getBytes(), "text/plain")
+      .when()
+      .put(CURRENT_AVATAR_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.BAD_REQUEST.value())
+      .extract()
+      .as(ApiErrorResponse.class);
+
+    assertThat(response.code()).isEqualTo("INVALID_AVATAR");
+    assertThat(avatarRepository.findByUserId(user.getId())).isEmpty();
+  }
+
+  @Test
+  void shouldRejectAvatarUploadWithoutAccessToken() {
+    givenWithCsrf()
+      .multiPart("file", "avatar.png", new byte[]{1, 2, 3}, "image/png")
+      .when()
+      .put(CURRENT_AVATAR_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.UNAUTHORIZED.value());
   }
 
   @ParameterizedTest(name = "{0}")
@@ -234,5 +317,24 @@ class UserIntegrationTest extends AbstractBaseIntegrationTest {
       .emailVerified(true)
       .roles(EnumSet.of(role))
       .build());
+  }
+
+  private static byte[] imageBytes(String format, int width, int height) throws IOException {
+    return imageBytes(format, width, height, Color.BLUE);
+  }
+
+  private static byte[] imageBytes(String format, int width, int height, Color color) throws IOException {
+    var image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+    var graphics = image.createGraphics();
+    try {
+      graphics.setColor(color);
+      graphics.fillRect(0, 0, width, height);
+    } finally {
+      graphics.dispose();
+    }
+
+    var output = new ByteArrayOutputStream();
+    assertThat(ImageIO.write(image, format, output)).isTrue();
+    return output.toByteArray();
   }
 }
