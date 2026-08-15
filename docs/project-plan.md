@@ -341,7 +341,7 @@ network.
 - [x] Add an authenticated application shell with a compact account menu that
   shows the user's initials or avatar, display name, and email. Include Profile,
   a conditional Admin users link for `ADMIN`, and a separated Log out action.
-- [ ] Implement the Profile screen with read-only email and verification state,
+- [x] Implement the Profile screen with read-only email and verification state,
   editable `displayName`, and explicit save/cancel states.
 - [ ] Add avatar preview, upload, replacement, removal, and initials fallback.
 - [ ] Add the read-only Admin users screen using the existing paginated API.
