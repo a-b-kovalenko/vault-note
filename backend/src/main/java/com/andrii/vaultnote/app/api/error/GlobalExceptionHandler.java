@@ -1,6 +1,7 @@
 package com.andrii.vaultnote.app.api.error;
 
 import com.andrii.vaultnote.app.exception.AuthenticationFailedException;
+import com.andrii.vaultnote.app.exception.AvatarNotFoundException;
 import com.andrii.vaultnote.app.exception.AvatarValidationException;
 import com.andrii.vaultnote.app.exception.EmailVerificationFailedException;
 import com.andrii.vaultnote.app.exception.EntityExistsException;
@@ -91,6 +92,19 @@ public class GlobalExceptionHandler {
 
     return ResponseEntity
       .status(HttpStatus.BAD_REQUEST)
+      .body(response);
+  }
+
+  @ExceptionHandler(AvatarNotFoundException.class)
+  public ResponseEntity<ApiErrorResponse> handleAvatarNotFoundException(
+    AvatarNotFoundException exception) {
+
+    log.warn("Avatar not found: {}", exception.getMessage());
+
+    var response = new ApiErrorResponse(AvatarNotFoundException.CODE, exception.getMessage());
+
+    return ResponseEntity
+      .status(HttpStatus.NOT_FOUND)
       .body(response);
   }
 

@@ -8,13 +8,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.andrii.vaultnote.app.api.users.dto.UserProfileDto;
+import com.andrii.vaultnote.app.exception.AvatarNotFoundException;
 import com.andrii.vaultnote.app.exception.UserNotFoundException;
 import com.andrii.vaultnote.app.api.users.dto.UserInfoDto;
 import com.andrii.vaultnote.app.mapper.UserMapper;
 import com.andrii.vaultnote.app.security.CurrentUserProvider;
 import com.andrii.vaultnote.users.domain.UserRole;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
+import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserAvatarEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
+import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserAvatarJpaRepository;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;
@@ -38,6 +41,9 @@ class UserServiceImplTest {
 
   @Mock
   UserJpaRepository userRepository;
+
+  @Mock
+  UserAvatarJpaRepository avatarRepository;
 
   @Mock
   CurrentUserProvider currentUserProvider;
@@ -120,6 +126,56 @@ class UserServiceImplTest {
     assertThat(result.email()).isEqualTo("user@example.com");
     assertThat(result.emailVerified()).isTrue();
     verify(userRepository).saveAndFlush(user);
+  }
+
+  @Test
+  void shouldReturnCurrentUserAvatar() {
+    var content = new byte[]{1, 2, 3};
+    var avatar = UserAvatarEntity.builder()
+      .userId(1L)
+      .content(content)
+      .byteSize(content.length)
+      .build();
+    when(currentUserProvider.currentUserId()).thenReturn(1L);
+    when(avatarRepository.findByUserId(1L)).thenReturn(Optional.of(avatar));
+
+    assertThat(userService.getCurrentAvatar()).isSameAs(content);
+    verify(avatarRepository).findByUserId(1L);
+  }
+
+  @Test
+  void shouldFailWhenCurrentUserHasNoAvatar() {
+    when(currentUserProvider.currentUserId()).thenReturn(1L);
+    when(avatarRepository.findByUserId(1L)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(userService::getCurrentAvatar)
+      .isInstanceOf(AvatarNotFoundException.class)
+      .hasMessage("Avatar for user with id '1' was not found.");
+  }
+
+  @Test
+  void shouldDeleteCurrentUserAvatar() {
+    var avatar = UserAvatarEntity.builder()
+      .userId(1L)
+      .content(new byte[]{1, 2, 3})
+      .byteSize(3)
+      .build();
+    when(currentUserProvider.currentUserId()).thenReturn(1L);
+    when(avatarRepository.findByUserId(1L)).thenReturn(Optional.of(avatar));
+
+    userService.deleteCurrentAvatar();
+
+    verify(avatarRepository).delete(avatar);
+  }
+
+  @Test
+  void shouldIgnoreDeletingMissingCurrentUserAvatar() {
+    when(currentUserProvider.currentUserId()).thenReturn(1L);
+    when(avatarRepository.findByUserId(1L)).thenReturn(Optional.empty());
+
+    userService.deleteCurrentAvatar();
+
+    verify(avatarRepository, org.mockito.Mockito.never()).delete(org.mockito.ArgumentMatchers.any());
   }
 
   @Test

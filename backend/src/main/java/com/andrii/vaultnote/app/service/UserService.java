@@ -21,4 +21,10 @@ public interface UserService {
   @PreAuthorize("isAuthenticated()")
   UserAvatarDto uploadCurrentAvatar(byte[] content);
 
+  @PreAuthorize("isAuthenticated()")
+  byte[] getCurrentAvatar();
+
+  @PreAuthorize("isAuthenticated()")
+  void deleteCurrentAvatar();
+
 }

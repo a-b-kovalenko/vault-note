@@ -21,13 +21,17 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,6 +40,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserController {
+
+  private static final String X_CONTENT_TYPE_OPTIONS = "X-Content-Type-Options";
 
   UserService userService;
   MultipartAvatarUploadReader avatarUploadReader;
@@ -83,6 +89,34 @@ public class UserController {
   @PutMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public UserAvatarDto uploadCurrentAvatar(@RequestPart("file") MultipartFile file) {
     return userService.uploadCurrentAvatar(avatarUploadReader.read(file));
+  }
+
+  @Operation(summary = "Get current user avatar")
+  @ApiResponse(
+    responseCode = "200",
+    description = "Current user avatar",
+    content = {@Content(mediaType = MediaType.IMAGE_JPEG_VALUE)})
+  @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
+  @ApiResponse(responseCode = "404", description = "Avatar not found", content = {@Content})
+  @SecurityRequirement(name = "bearerAuth")
+  @GetMapping(value = "/me/avatar", produces = MediaType.IMAGE_JPEG_VALUE)
+  public ResponseEntity<byte[]> getCurrentAvatar() {
+    var content = userService.getCurrentAvatar();
+    return ResponseEntity.ok()
+      .contentType(MediaType.IMAGE_JPEG)
+      .contentLength(content.length)
+      .header(X_CONTENT_TYPE_OPTIONS, "nosniff")
+      .body(content);
+  }
+
+  @Operation(summary = "Delete current user avatar")
+  @ApiResponse(responseCode = "204", description = "Avatar deleted")
+  @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
+  @SecurityRequirement(name = "bearerAuth")
+  @DeleteMapping("/me/avatar")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deleteCurrentAvatar() {
+    userService.deleteCurrentAvatar();
   }
 
   @Operation(summary = "Get users")
