@@ -21,6 +21,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -42,6 +43,7 @@ public class UserEntity {
   String email;
 
   @Column(name = "display_name", nullable = false, length = 100)
+  @Setter
   String displayName;
 
   @Column(name = "password_hash", nullable = false)
@@ -64,4 +66,5 @@ public class UserEntity {
   @Column(name = "updated_at", nullable = false)
   @UpdateTimestamp
   Instant updatedAt;
+
 }

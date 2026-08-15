@@ -229,8 +229,10 @@ has been implemented and verified. Branch integration is tracked separately.
 
 ### Profile backend
 
-- [ ] Implement the profile resource with read-only email and verification state
-  plus editable `display_name`.
+- [x] Implement the profile resource with read-only email and verification state
+  plus editable `display_name` through `GET` and `PATCH /api/v1/users/me`.
+  Share the display-name length rule between DTOs and the service, and cover
+  the profile behavior with unit and PostgreSQL integration tests.
 - [ ] Add authenticated avatar upload, replacement, retrieval, and removal.
   Validate and normalize image content on the server and keep avatar storage
   separate from the user row.
