@@ -30,6 +30,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 
 @DataSet(value = "auth-baseline.yml", skipCleaningFor = {"databasechangelog", "databasechangeloglock"})
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -147,6 +148,117 @@ class UserIntegrationTest extends AbstractBaseIntegrationTest {
       .extracting(BufferedImage::getWidth, BufferedImage::getHeight)
       .containsExactly(256, 256);
     assertThat(avatarRepository.count()).isEqualTo(1);
+  }
+
+  @Test
+  void shouldRetrieveCurrentUserAvatar() throws IOException {
+    var user = saveUser("profile-avatar-retrieval@example.com", "Profile User", UserRole.USER);
+    var accessToken = accessTokenGenerator.generate(user).rawValue();
+
+    givenWithCsrf()
+      .auth()
+      .oauth2(accessToken)
+      .multiPart("file", "avatar.png", imageBytes("png", 120, 80), "image/png")
+      .when()
+      .put(CURRENT_AVATAR_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.OK.value());
+
+    var response = given()
+      .port(port)
+      .auth()
+      .oauth2(accessToken)
+      .when()
+      .get(CURRENT_AVATAR_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.OK.value())
+      .extract()
+      .response();
+
+    assertThat(response.getContentType()).isEqualTo(MediaType.IMAGE_JPEG_VALUE);
+    assertThat(response.getHeader("Content-Length"))
+      .isEqualTo(Integer.toString(response.asByteArray().length));
+    assertThat(response.getHeader("X-Content-Type-Options")).isEqualTo("nosniff");
+    assertThat(ImageIO.read(new ByteArrayInputStream(response.asByteArray())))
+      .extracting(BufferedImage::getWidth, BufferedImage::getHeight)
+      .containsExactly(256, 256);
+  }
+
+  @Test
+  void shouldReturnNotFoundWhenCurrentUserHasNoAvatar() {
+    var user = saveUser("profile-avatar-missing@example.com", "Profile User", UserRole.USER);
+    var accessToken = accessTokenGenerator.generate(user).rawValue();
+
+    var response = given()
+      .port(port)
+      .auth()
+      .oauth2(accessToken)
+      .when()
+      .get(CURRENT_AVATAR_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.NOT_FOUND.value())
+      .extract()
+      .as(ApiErrorResponse.class);
+
+    assertThat(response.code()).isEqualTo("AVATAR_NOT_FOUND");
+  }
+
+  @Test
+  void shouldDeleteCurrentUserAvatar() throws IOException {
+    var user = saveUser("profile-avatar-deletion@example.com", "Profile User", UserRole.USER);
+    var accessToken = accessTokenGenerator.generate(user).rawValue();
+
+    givenWithCsrf()
+      .auth()
+      .oauth2(accessToken)
+      .multiPart("file", "avatar.png", imageBytes("png", 80, 80), "image/png")
+      .when()
+      .put(CURRENT_AVATAR_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.OK.value());
+
+    givenWithCsrf()
+      .auth()
+      .oauth2(accessToken)
+      .when()
+      .delete(CURRENT_AVATAR_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.NO_CONTENT.value());
+
+    assertThat(avatarRepository.findByUserId(user.getId())).isEmpty();
+  }
+
+  @Test
+  void shouldDeleteMissingCurrentUserAvatarIdempotently() {
+    var user = saveUser("profile-avatar-idempotent@example.com", "Profile User", UserRole.USER);
+    var accessToken = accessTokenGenerator.generate(user).rawValue();
+
+    givenWithCsrf()
+      .auth()
+      .oauth2(accessToken)
+      .when()
+      .delete(CURRENT_AVATAR_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.NO_CONTENT.value());
+  }
+
+  @Test
+  void shouldRejectAvatarDeletionWithoutAccessToken() {
+    givenWithCsrf()
+      .when()
+      .delete(CURRENT_AVATAR_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.UNAUTHORIZED.value());
+  }
+
+  @Test
+  void shouldRejectAvatarRetrievalWithoutAccessToken() {
+    given()
+      .port(port)
+      .when()
+      .get(CURRENT_AVATAR_ENDPOINT)
+      .then()
+      .statusCode(HttpStatus.UNAUTHORIZED.value());
   }
 
   @Test

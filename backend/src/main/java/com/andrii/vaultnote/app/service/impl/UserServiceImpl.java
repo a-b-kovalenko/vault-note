@@ -3,6 +3,7 @@ package com.andrii.vaultnote.app.service.impl;
 import com.andrii.vaultnote.app.api.users.dto.UserInfoDto;
 import com.andrii.vaultnote.app.api.users.dto.UserAvatarDto;
 import com.andrii.vaultnote.app.api.users.dto.UserProfileDto;
+import com.andrii.vaultnote.app.exception.AvatarNotFoundException;
 import com.andrii.vaultnote.app.exception.UserNotFoundException;
 import com.andrii.vaultnote.app.mapper.UserMapper;
 import com.andrii.vaultnote.app.security.CurrentUserProvider;
@@ -83,6 +84,24 @@ public class UserServiceImpl implements UserService {
     return UserAvatarDto.builder()
       .byteSize(savedAvatar.getByteSize())
       .build();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public byte[] getCurrentAvatar() {
+    var userId = currentUserProvider.currentUserId();
+    log.info("Getting current user avatar: userId={}", userId);
+    return avatarRepository.findByUserId(userId)
+      .map(UserAvatarEntity::getContent)
+      .orElseThrow(() -> new AvatarNotFoundException(userId));
+  }
+
+  @Override
+  @Transactional
+  public void deleteCurrentAvatar() {
+    var userId = currentUserProvider.currentUserId();
+    log.info("Deleting current user avatar: userId={}", userId);
+    avatarRepository.findByUserId(userId).ifPresent(avatarRepository::delete);
   }
 
   private UserEntity findCurrentUser(long userId) {

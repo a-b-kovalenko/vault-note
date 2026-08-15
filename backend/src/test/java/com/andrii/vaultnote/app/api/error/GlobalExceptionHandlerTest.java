@@ -2,6 +2,7 @@ package com.andrii.vaultnote.app.api.error;
 
 import com.andrii.vaultnote.app.exception.EntityExistsException;
 import com.andrii.vaultnote.app.exception.EmailVerificationFailedException;
+import com.andrii.vaultnote.app.exception.AvatarNotFoundException;
 import com.andrii.vaultnote.app.exception.NoteNotFoundException;
 import com.andrii.vaultnote.app.exception.RateLimitExceededException;
 import com.andrii.vaultnote.app.exception.UserNotFoundException;
@@ -52,6 +53,21 @@ class GlobalExceptionHandlerTest {
       .containsExactly(
         "EMAIL_VERIFICATION_FAILED",
         "Email verification link is invalid or has expired.");
+  }
+
+  @Test
+  void shouldHandleAvatarNotFoundException() {
+    var exception = new AvatarNotFoundException(11L);
+
+    var response = handler.handleAvatarNotFoundException(exception);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    assertThat(response.getBody())
+      .isNotNull()
+      .extracting(ApiErrorResponse::code, ApiErrorResponse::message)
+      .containsExactly(
+        "AVATAR_NOT_FOUND",
+        "Avatar for user with id '11' was not found.");
   }
 
   @Test
