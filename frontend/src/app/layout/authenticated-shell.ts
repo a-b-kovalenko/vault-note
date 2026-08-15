@@ -14,7 +14,8 @@ import { finalize } from 'rxjs';
 
 import { AuthApiService } from '../auth/auth-api.service';
 import { AuthStateService } from '../auth/auth-state.service';
-import { UserProfile } from '../auth/auth.models';
+import { AvatarStateService } from '../avatar/avatar-state.service';
+import { getInitials } from '../avatar/avatar-utils';
 
 const GENERIC_PROFILE_ERROR = 'Unable to load your profile right now. Please try again.';
 
@@ -28,6 +29,7 @@ const GENERIC_PROFILE_ERROR = 'Unable to load your profile right now. Please try
 export class AuthenticatedShell implements OnInit {
   private readonly authApiService = inject(AuthApiService);
   private readonly authState = inject(AuthStateService);
+  private readonly avatarState = inject(AvatarStateService);
   private readonly router = inject(Router);
   private readonly elementRef = inject(ElementRef<HTMLElement>);
 
@@ -36,10 +38,13 @@ export class AuthenticatedShell implements OnInit {
   readonly profileError = signal<string | null>(null);
   readonly isAccountMenuOpen = signal(false);
   readonly isLoggingOut = signal(false);
+  readonly avatarUrl = this.avatarState.avatarUrl;
   readonly isAdmin = computed(() => this.profile()?.roles.includes('ADMIN') ?? false);
   readonly initials = computed(() => getInitials(this.profile()));
 
   ngOnInit(): void {
+    this.avatarState.load().subscribe({ error: () => undefined });
+
     this.authState
       .loadProfile(() => this.authApiService.profile())
       .subscribe({
@@ -71,6 +76,7 @@ export class AuthenticatedShell implements OnInit {
       .logout()
       .pipe(
         finalize(() => {
+          this.avatarState.clear();
           this.authState.clearSession();
           void this.router.navigate(['/login']);
         }),
@@ -94,6 +100,7 @@ export class AuthenticatedShell implements OnInit {
     this.isProfileLoading.set(false);
 
     if (error instanceof HttpErrorResponse && error.status === HttpStatusCode.Unauthorized) {
+      this.avatarState.clear();
       this.authState.clearSession();
       void this.router.navigate(['/login']);
       return;
@@ -101,15 +108,4 @@ export class AuthenticatedShell implements OnInit {
 
     this.profileError.set(GENERIC_PROFILE_ERROR);
   }
-}
-
-function getInitials(profile: UserProfile | null): string {
-  const value = profile?.displayName.trim() || profile?.email.split('@')[0] || '?';
-  const words = value.split(/\s+/).filter(Boolean);
-
-  if (words.length > 1) {
-    return `${words[0][0]}${words.at(-1)?.[0] ?? ''}`.toUpperCase();
-  }
-
-  return value.slice(0, 2).toUpperCase();
 }

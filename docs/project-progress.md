@@ -70,8 +70,11 @@ has been implemented and verified. Branch integration is tracked separately.
   and email, the `ADMIN` link is conditional, and logout is a separated action.
   Profile state is shared between the shell and child pages to avoid duplicate
   profile requests. The Profile screen now supports display-name save/cancel
-  states while email and verification state remain read-only. Avatar handling and
-  the Admin users screen remain as separate Phase 6 tasks.
+  states while email and verification state remain read-only. Avatar upload,
+  replacement, retrieval, removal, initials fallback, and generated OpenAPI
+  client updates are implemented and verified. Avatar actions are available
+  only in `Edit profile` mode; the Admin users screen remains as the next
+  Phase 6 task.
 
 ## Phase 0 — Foundation
 
@@ -238,9 +241,9 @@ has been implemented and verified. Branch integration is tracked separately.
   plus editable `display_name` through `GET` and `PATCH /api/v1/users/me`.
   Share the display-name length rule between DTOs and the service, and cover
   the profile behavior with unit and PostgreSQL integration tests.
-- [ ] Add authenticated avatar upload, replacement, retrieval, and removal.
-  Validate and normalize image content on the server and keep avatar storage
-  separate from the user row.
+- [x] Add authenticated avatar upload, replacement, retrieval, and removal.
+  Validate and normalize image content on the server and keep normalized
+  256×256 JPEG bytes in separate avatar storage.
 - [x] Implement the backend current-session logout endpoint.
 - [x] Add the paginated administrator user list API.
 
@@ -253,7 +256,10 @@ has been implemented and verified. Branch integration is tracked separately.
   conditional Admin users, and a separated Log out action.
 - [x] Implement the Profile screen with read-only email and verification state,
   editable `displayName`, and save/cancel states.
-- [ ] Add avatar preview, upload, replacement, removal, and initials fallback.
+- [x] Add avatar preview, upload, replacement, removal, and initials fallback.
+  Share avatar state between the authenticated shell and Profile, show avatar
+  actions only in `Edit profile` mode, and regenerate the OpenAPI client after
+  the backend contract became available.
 - [ ] Add the read-only Admin users screen using the existing paginated API.
 
 ## Phase 7 — OAuth2/OIDC sign-in
