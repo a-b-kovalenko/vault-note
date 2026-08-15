@@ -2,7 +2,15 @@
   <section class="me-card" aria-labelledby="me-title">
     <p class="eyebrow">Your profile</p>
     <div class="me-heading">
-      <h1 id="me-title">Profile</h1>
+      <div>
+        <h1 id="me-title">Profile</h1>
+        <p class="subtitle">Keep your account details up to date.</p>
+      </div>
+      @if (profile() && !isEditing()) {
+        <button class="secondary-button edit-profile-button" type="button" (click)="onEdit()">
+          Edit profile
+        </button>
+      }
     </div>
 
     @if (isLoading()) {
@@ -10,18 +18,95 @@
     } @else if (loadError(); as errorMessage) {
       <p class="status-message status-message-error" role="alert">{{ errorMessage }}</p>
     } @else if (profile(); as user) {
+      @if (saveError(); as errorMessage) {
+        <p class="form-message form-message-error" role="alert">{{ errorMessage }}</p>
+      }
+      @if (saveSuccess(); as successMessage) {
+        <p class="form-message form-message-success" role="status">{{ successMessage }}</p>
+      }
+
+      <form class="profile-form" [formGroup]="profileForm" novalidate (ngSubmit)="onSubmit()">
+        <div class="display-name-section">
+          <div class="field-heading">
+            <label class="field-label" for="display-name">Display name</label>
+            @if (!isEditing()) {
+              <span class="read-only-label">Editable</span>
+            }
+          </div>
+
+          @if (isEditing()) {
+            <input
+              class="field-input"
+              [class.field-input-invalid]="isInvalid(profileForm.controls.displayName)"
+              id="display-name"
+              type="text"
+              formControlName="displayName"
+              autocomplete="name"
+              maxlength="100"
+              required
+              [attr.aria-describedby]="
+                isInvalid(profileForm.controls.displayName) ? 'display-name-error' : null
+              "
+              [attr.aria-invalid]="isInvalid(profileForm.controls.displayName)"
+            />
+            @if (isInvalid(profileForm.controls.displayName)) {
+              <span class="field-error" id="display-name-error" role="alert">
+                @if (profileForm.controls.displayName.hasError('required')) {
+                  Display name is required.
+                } @else if (profileForm.controls.displayName.hasError('blank')) {
+                  Display name cannot be blank.
+                } @else if (profileForm.controls.displayName.hasError('maxlength')) {
+                  Display name must be 100 characters or fewer.
+                }
+              </span>
+            }
+          } @else {
+            <p class="display-name-value">{{ user.displayName }}</p>
+          }
+
+          @if (isEditing()) {
+            <div class="profile-actions">
+              <button
+                class="secondary-button cancel-button"
+                type="button"
+                [disabled]="isSaving()"
+                (click)="onCancel()"
+              >
+                Cancel
+              </button>
+              <button
+                class="primary-button save-button"
+                type="submit"
+                [disabled]="profileForm.invalid || profileForm.pristine || isSaving()"
+              >
+                {{ isSaving() ? 'Saving…' : 'Save changes' }}
+              </button>
+            </div>
+          }
+        </div>
+      </form>
+
       <dl class="user-details">
         <div>
           <dt>User ID</dt>
           <dd>{{ user.id }}</dd>
         </div>
         <div>
-          <dt>Display name</dt>
-          <dd>{{ user.displayName }}</dd>
+          <dt>Email</dt>
+          <dd>
+            <input id="email" class="read-only-input" type="email" [value]="user.email" readonly />
+          </dd>
         </div>
         <div>
-          <dt>Email</dt>
-          <dd>{{ user.email }}</dd>
+          <dt>Email verification</dt>
+          <dd>
+            <span
+              class="verification-badge"
+              [class.verification-badge-unverified]="!user.emailVerified"
+            >
+              {{ user.emailVerified ? 'Verified' : 'Not verified' }}
+            </span>
+          </dd>
         </div>
         <div>
           <dt>Roles</dt>

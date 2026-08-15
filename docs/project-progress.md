@@ -69,8 +69,9 @@ has been implemented and verified. Branch integration is tracked separately.
   is rendered inside the shell, the account menu shows initials, display name,
   and email, the `ADMIN` link is conditional, and logout is a separated action.
   Profile state is shared between the shell and child pages to avoid duplicate
-  profile requests. Editable profile fields, avatar handling, and the Admin users
-  screen remain as separate Phase 6 tasks.
+  profile requests. The Profile screen now supports display-name save/cancel
+  states while email and verification state remain read-only. Avatar handling and
+  the Admin users screen remain as separate Phase 6 tasks.
 
 ## Phase 0 — Foundation
 
@@ -250,7 +251,7 @@ has been implemented and verified. Branch integration is tracked separately.
   prepare `updateProfile()` for the future editable profile screen.
 - [x] Add the authenticated application shell and account menu with Profile,
   conditional Admin users, and a separated Log out action.
-- [ ] Implement the Profile screen with read-only email and verification state,
+- [x] Implement the Profile screen with read-only email and verification state,
   editable `displayName`, and save/cancel states.
 - [ ] Add avatar preview, upload, replacement, removal, and initials fallback.
 - [ ] Add the read-only Admin users screen using the existing paginated API.
