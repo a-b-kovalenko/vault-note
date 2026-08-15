@@ -3,9 +3,6 @@
     <p class="eyebrow">Your profile</p>
     <div class="me-heading">
       <h1 id="me-title">Profile</h1>
-      <button class="logout-button" type="button" [disabled]="isLoggingOut()" (click)="onLogout()">
-        {{ isLoggingOut() ? 'Logging out…' : 'Log out' }}
-      </button>
     </div>
 
     @if (isLoading()) {

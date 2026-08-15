@@ -338,7 +338,7 @@ network.
 
 ### Frontend
 
-- [ ] Add an authenticated application shell with a compact account menu that
+- [x] Add an authenticated application shell with a compact account menu that
   shows the user's initials or avatar, display name, and email. Include Profile,
   a conditional Admin users link for `ADMIN`, and a separated Log out action.
 - [ ] Implement the Profile screen with read-only email and verification state,

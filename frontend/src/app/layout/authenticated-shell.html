@@ -1,0 +1,83 @@
+<div class="authenticated-shell">
+  <header class="app-header">
+    <a class="app-brand" routerLink="/me" aria-label="VaultNote home">
+      <span class="brand-mark" aria-hidden="true">V</span>
+      <span>VaultNote</span>
+    </a>
+
+    <div class="account-menu">
+      <button
+        class="account-trigger"
+        type="button"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="isAccountMenuOpen()"
+        [disabled]="isProfileLoading() || isLoggingOut()"
+        (click)="toggleAccountMenu()"
+      >
+        <span class="account-avatar" aria-hidden="true">{{ initials() }}</span>
+        <span class="account-summary">
+          <strong>{{ profile()?.displayName ?? 'Your account' }}</strong>
+          <small>{{ profile()?.email ?? 'Loading profile…' }}</small>
+        </span>
+        <span class="account-chevron" aria-hidden="true">⌄</span>
+      </button>
+
+      @if (isAccountMenuOpen()) {
+        <div class="account-dropdown" role="menu" aria-label="Account menu">
+          <div class="account-dropdown-header">
+            <span class="account-avatar account-avatar-large" aria-hidden="true">{{
+              initials()
+            }}</span>
+            <span>
+              <strong>{{ profile()?.displayName }}</strong>
+              <small>{{ profile()?.email }}</small>
+            </span>
+          </div>
+
+          <a
+            class="account-menu-item"
+            routerLink="/me"
+            role="menuitem"
+            (click)="closeAccountMenu()"
+          >
+            <span aria-hidden="true">◎</span>
+            <span>Profile</span>
+          </a>
+
+          @if (isAdmin()) {
+            <a
+              class="account-menu-item"
+              routerLink="/admin/users"
+              role="menuitem"
+              (click)="closeAccountMenu()"
+            >
+              <span aria-hidden="true">♙</span>
+              <span>Admin users</span>
+            </a>
+          }
+
+          <div class="account-menu-separator" role="separator"></div>
+
+          <button
+            class="account-menu-item account-menu-item-logout"
+            type="button"
+            role="menuitem"
+            [disabled]="isLoggingOut()"
+            (click)="onLogout()"
+          >
+            <span aria-hidden="true">↪</span>
+            <span>{{ isLoggingOut() ? 'Logging out…' : 'Log out' }}</span>
+          </button>
+        </div>
+      }
+    </div>
+  </header>
+
+  @if (profileError(); as errorMessage) {
+    <p class="shell-status" role="alert">{{ errorMessage }}</p>
+  }
+
+  <div class="app-content">
+    <router-outlet />
+  </div>
+</div>
