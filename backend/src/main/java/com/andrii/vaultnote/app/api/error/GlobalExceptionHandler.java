@@ -8,6 +8,7 @@ import com.andrii.vaultnote.app.exception.NoteVersionConflictException;
 import com.andrii.vaultnote.app.exception.PasswordResetFailedException;
 import com.andrii.vaultnote.app.exception.RateLimitExceededException;
 import com.andrii.vaultnote.app.exception.RefreshTokenAuthenticationFailedException;
+import com.andrii.vaultnote.app.exception.UserNotFoundException;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -114,6 +115,19 @@ public class GlobalExceptionHandler {
     log.warn("Note not found: {}", exception.getMessage());
 
     var response = new ApiErrorResponse(NoteNotFoundException.CODE, exception.getMessage());
+
+    return ResponseEntity
+      .status(HttpStatus.NOT_FOUND)
+      .body(response);
+  }
+
+  @ExceptionHandler(UserNotFoundException.class)
+  public ResponseEntity<ApiErrorResponse> handleUserNotFoundException(
+    UserNotFoundException exception) {
+
+    log.warn("User not found: {}", exception.getMessage());
+
+    var response = new ApiErrorResponse(UserNotFoundException.CODE, exception.getMessage());
 
     return ResponseEntity
       .status(HttpStatus.NOT_FOUND)

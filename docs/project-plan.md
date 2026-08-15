@@ -324,7 +324,7 @@ network.
 
 ### Backend
 
-- [ ] Implement the profile resource. The API displays the email and
+- [x] Implement the profile resource. The API displays the email and
   verification state, permits only `display_name` updates, and uses `GET` and
   `PATCH /api/v1/users/me`; email changes and global logout remain deferred.
 - [ ] Add optional profile avatar upload and removal. Use

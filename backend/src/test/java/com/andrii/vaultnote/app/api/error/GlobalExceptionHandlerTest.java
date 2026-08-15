@@ -4,6 +4,7 @@ import com.andrii.vaultnote.app.exception.EntityExistsException;
 import com.andrii.vaultnote.app.exception.EmailVerificationFailedException;
 import com.andrii.vaultnote.app.exception.NoteNotFoundException;
 import com.andrii.vaultnote.app.exception.RateLimitExceededException;
+import com.andrii.vaultnote.app.exception.UserNotFoundException;
 import java.time.Duration;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -64,6 +65,19 @@ class GlobalExceptionHandlerTest {
       .isNotNull()
       .extracting(ApiErrorResponse::code, ApiErrorResponse::message)
       .containsExactly("NOTE_NOT_FOUND", "Note with id '11' was not found.");
+  }
+
+  @Test
+  void shouldHandleUserNotFoundException() {
+    var exception = new UserNotFoundException(11L);
+
+    var response = handler.handleUserNotFoundException(exception);
+
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    assertThat(response.getBody())
+      .isNotNull()
+      .extracting(ApiErrorResponse::code, ApiErrorResponse::message)
+      .containsExactly("USER_NOT_FOUND", "User with id '11' was not found.");
   }
 
   @Test
