@@ -51,9 +51,13 @@ has been implemented and verified. Branch integration is tracked separately.
   mode is introduced.
 - `MEDIUM-3` is in progress: login, registration, and password-reset requests
   now have bounded in-memory IP- and normalized-email-aware limits with
-  neutral `429` responses. The check is performed in the application services,
-  including before password-reset lookup, token creation, and email delivery.
-  Shared storage and edge/WAF hardening for multi-instance deployment remain.
+  neutral `429` responses. A shared Angular rate-limit notice/countdown is
+  integrated into the login, registration, and forgot-password screens; it
+  reads the exposed `Retry-After` header, preserves form values, and disables
+  submit while the limit is active. The check is performed in application
+  services, including before password-reset lookup, token creation, and email
+  delivery. Shared storage and edge/WAF hardening for multi-instance
+  deployment remain.
   After that continue with OAuth, the Notes administrator view, profile
   updates, authenticated route guards, and standard frontend API-error
   presentation.
@@ -215,6 +219,10 @@ has been implemented and verified. Branch integration is tracked separately.
   - [x] Add IP and normalized-email limits for password-reset requests with
     bounded local storage, generic responses, early rejection, and endpoint
     integration coverage.
+  - [x] Add one shared Angular rate-limit notice/countdown to login,
+    registration, and forgot-password screens; preserve form values, disable
+    submit during the countdown, expose `Retry-After` through CORS, and cover
+    the behavior with frontend tests.
   - [x] Select PostgreSQL as the target shared atomic storage and document the
     decision; it is not active in the current local in-memory mode.
   - [ ] Stabilize and activate shared storage, then add edge/WAF enforcement for
@@ -287,13 +295,17 @@ has been implemented and verified. Branch integration is tracked separately.
 - [ ] Revisit outbox delivery, retry, and SMTP-failure semantics when reliable
   asynchronous email delivery becomes necessary.
 
-## Final priority — Remaining rate limiting
+## Final priority — Remaining rate-limiting hardening
 
-- [ ] Complete rate limiting for the remaining public authentication flows.
+- [x] Complete the local rate-limit behavior for the current public
+  authentication flows.
   - [x] Protect login with IP- and email-aware limits without locking user
     accounts.
   - [x] Protect registration with IP- and email-aware limits.
   - [x] Protect password-reset requests with IP- and email-aware limits.
+  - [x] Show a shared frontend notice/countdown on login, registration, and
+    forgot-password screens.
+- [ ] Finish rate-limit hardening for multi-instance and public deployment.
   - [ ] Move counters from bounded in-memory storage to a stable shared store.
   - [ ] Prefer Cloudflare or another edge/WAF rule for public traffic.
   - [ ] Add application-level limits only for direct-origin or internal

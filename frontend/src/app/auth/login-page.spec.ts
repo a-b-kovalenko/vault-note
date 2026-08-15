@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 
@@ -220,5 +220,36 @@ describe('LoginPage', () => {
 
     expect(page.loginError()).toBe('Unable to sign in right now. Please try again.');
     expect(page.isSubmitting()).toBe(false);
+  });
+
+  it('should show a countdown and preserve the form after a rate-limit response', () => {
+    loginResponse = throwError(
+      () =>
+        new HttpErrorResponse({
+          status: 429,
+          headers: new HttpHeaders({ 'Retry-After': '5' }),
+          error: {
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: 'Too many requests. Please try again later.',
+            violations: [],
+          },
+        }),
+    );
+    page.loginForm.setValue({ email: 'user@example.com', password: 'password' });
+
+    const form = fixture.nativeElement.querySelector('form') as HTMLFormElement;
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+
+    expect(page.rateLimit.remainingSeconds()).toBe(5);
+    expect(page.loginError()).toBe(null);
+    expect(page.loginForm.getRawValue()).toEqual({
+      email: 'user@example.com',
+      password: 'password',
+    });
+    expect((fixture.nativeElement.querySelector('.submit-button') as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+    expect(fixture.nativeElement.textContent).toContain('5 seconds');
   });
 });

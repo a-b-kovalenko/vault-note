@@ -10,19 +10,24 @@ import { Router } from '@angular/router';
 
 import { AuthApiService } from './auth-api.service';
 import { ApiErrorResponse, PasswordResetRequest } from './auth.models';
+import { RateLimitNotice } from './rate-limit-notice';
+import { RateLimitState } from './rate-limit-state';
 
 const GENERIC_ERROR_MESSAGE = 'Unable to send a reset link right now. Please try again.';
 
 @Component({
   selector: 'app-forgot-password-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RateLimitNotice],
+  providers: [RateLimitState],
   templateUrl: './forgot-password-page.html',
   styleUrl: './password-recovery-page.scss',
 })
 export class ForgotPasswordPage {
   private readonly authApiService = inject(AuthApiService);
   private readonly router = inject(Router);
+
+  readonly rateLimit = inject(RateLimitState);
 
   readonly requestForm = inject(NonNullableFormBuilder).group({
     email: ['', [Validators.required, Validators.email, Validators.maxLength(320)]],
@@ -45,7 +50,7 @@ export class ForgotPasswordPage {
     this.requestForm.markAllAsTouched();
     this.requestError.set(null);
 
-    if (this.requestForm.invalid || this.isSubmitting()) {
+    if (this.requestForm.invalid || this.isSubmitting() || this.rateLimit.isActive()) {
       return;
     }
 
@@ -65,6 +70,11 @@ export class ForgotPasswordPage {
   }
 
   private handleRequestError(error: unknown): void {
+    if (this.rateLimit.start(error)) {
+      this.requestError.set(null);
+      return;
+    }
+
     const httpError = error instanceof HttpErrorResponse ? error : null;
     const apiError = this.toApiErrorResponse(httpError);
 

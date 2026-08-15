@@ -153,6 +153,66 @@ resend, invalidation of older verification tokens, cleanup of expired tokens,
 audit events, and an outbox when reliable delivery and retry semantics become
 necessary.
 
+### Future verification-email resend design
+
+The email-verification MVP intentionally sends one message during registration
+and does not expose a resend operation. When resend is added, keep it as an
+explicit user action rather than an automatic retry. A page refresh must not
+send another email, and the browser must not repeatedly call the endpoint on
+page load.
+
+The proposed endpoint is:
+
+```http
+POST /api/v1/auth/email-verification/resend
+Content-Type: application/json
+
+{ "email": "user@example.com" }
+```
+
+The endpoint should return `202 Accepted` with the same neutral response when
+the email is unknown, already verified, or belongs to an unverified local
+account. This prevents account enumeration. A syntactically invalid email may
+still return the normal request-validation error; the response must not reveal
+whether a valid address belongs to a user.
+
+Possible user-triggered entry points are:
+
+- the success state on the registration page, where the submitted email can be
+  pre-filled and the user can click `Resend verification email`;
+- the invalid or expired-link state on `/verify-email`, where the user can enter
+  an email and request a new link;
+- a future login hint for an unverified account, but only if the API exposes a
+  non-enumerating contract for that flow.
+
+The frontend should reuse one inline resend component or state model in these
+existing screens. It should show a neutral confirmation, preserve the email
+input, disable the button while the request is running, and use `Retry-After`
+from a `429` response to display a countdown. It should not create a separate
+resend page unless a later product decision requires a dedicated recovery
+flow.
+
+The controller should only bind the request and pass the client context to an
+application service. The service flow should be:
+
+1. Normalize the email and apply a dedicated rate-limit scope for verification
+   resend by IP and normalized email before looking up the user.
+2. For an unknown or already verified email, return the same generic result
+   without generating a token or sending a message.
+3. For an unverified local account, invalidate its active verification tokens,
+   generate a new cryptographically random token, persist only its hash with a
+   new expiry, and send the raw token only in the email link.
+4. Return the same neutral `202 Accepted` response for every accepted request.
+
+The rate-limit attempt should be consumed even when no user is found, and the
+failure response must not identify whether the IP or email limit was reached.
+The implementation can reuse the existing `email_verification_tokens` table
+and token-hashing rules; it should not introduce a second token format or log
+raw tokens and complete email addresses. Add unit and PostgreSQL integration
+coverage for token invalidation, generic responses, unknown and verified
+emails, email delivery for an unverified account, IP/email limits, `429`,
+`Retry-After`, and the guarantee that page refresh does not trigger a resend.
+
 Use production-like cookie settings where possible. The `local` profile may omit
 the `Secure` flag for HTTP localhost; document the required production setting.
 
@@ -244,11 +304,12 @@ the remaining confirmed security-audit findings are handled in Phase 4.75.
 ## Phase 4.75 — Security audit remediation
 
 The defensive audit found one HIGH finding and three MEDIUM findings. `HIGH-1`,
-`MEDIUM-1`, and `MEDIUM-2` are resolved. `MEDIUM-3` is in progress: login and
-registration are protected by bounded local IP- and normalized-email-aware
-limits, while password reset and multi-instance deployment policy remain. The
-remaining work is ordered by authentication/session correctness before adding
-another authentication provider:
+`MEDIUM-1`, and `MEDIUM-2` are resolved. `MEDIUM-3` is in progress: login,
+registration, and password reset are protected by bounded local IP- and
+normalized-email-aware limits, and the Angular auth screens show a shared
+rate-limit notice/countdown. Shared storage and multi-instance deployment
+policy remain. The remaining work is ordered by authentication/session
+correctness before adding another authentication provider:
 
 1. [x] (`HIGH-1`) Remove the known JWT fallback, require an explicit secret, and
    document the stable local profile secret.
@@ -266,7 +327,10 @@ another authentication provider:
    - [x] Protect login by IP and normalized email before database access and
      Argon2, with bounded local storage, `429`, and `Retry-After`.
    - [x] Protect registration by IP and normalized email/device quota.
-   - [ ] Protect password reset by IP and normalized email.
+   - [x] Protect password reset by IP and normalized email.
+   - [x] Add one shared Angular rate-limit notice/countdown to login,
+     registration, and forgot-password screens; preserve form values, disable
+     submit during the countdown, and expose `Retry-After` through CORS.
 5. [ ] Verify deployment-sensitive controls when a deployment target exists:
    TLS and secure cookies, SMTP encryption, Mailpit loopback binding, Swagger
    exposure, registration enumeration policy, and dependency supply-chain
@@ -410,15 +474,17 @@ upcoming decision before implementation and become accepted after verification:
 - A dedicated least-privilege DB user for production-like setups.
 - Browser e2e tests, application CI, production deployment, TLS, and real SMTP.
 
-## Final priority — Rate limiting
+## Final priority — Rate-limiting hardening
 
-The security audit classifies missing rate limiting as MEDIUM-3. Implement it
-before exposing the backend to public traffic, after the deployment model and
-shared-storage choice are known. Protect login, password-reset requests, and
-verification-email resend from abuse with IP- and email-aware limits, without
-locking user accounts. Prefer Cloudflare or another edge/WAF rule for public
-traffic; add application-level limits only for direct-origin or internal
-traffic, or for email-specific rules the edge cannot enforce.
+The local application-level part of MEDIUM-3 is implemented for login,
+registration, and password-reset requests. The Angular login, registration, and
+forgot-password screens share one rate-limit notice/countdown, preserve entered
+values, disable submit while blocked, and use the `Retry-After` response header.
+The finding remains open only for deployment hardening: before public
+multi-instance traffic, move counters to stable shared atomic storage and add
+an edge/WAF rule for coarse IP flood protection. Add application-level limits
+only for direct-origin or internal traffic, or for email-specific rules the
+edge cannot enforce.
 
 Add authentication audit events in the same final hardening phase. Cover
 successful and failed login, refresh-token reuse, logout, and email-verification
