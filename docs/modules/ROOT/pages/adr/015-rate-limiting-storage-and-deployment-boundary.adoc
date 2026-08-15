@@ -1,0 +1,76 @@
+= ADR 015: Rate-limiting storage and deployment boundary
+:status: accepted
+:date: 2026-08-15
+
+== Context
+
+Login, registration, and password-reset requests can be sent by CLI clients,
+bots, or direct HTTP callers. CSRF and CORS protect browser flows but do not
+limit these callers. The application therefore needs rate limiting that reduces
+credential stuffing, expensive password hashing, account creation abuse, SMTP
+abuse, and password-recovery abuse without permanently locking accounts or
+revealing whether an email belongs to a user.
+
+The storage requirements differ between a single local JVM and a public
+multi-instance deployment. A counter held in one JVM cannot be shared by other
+backend instances, while an edge service can reject coarse IP floods before
+they consume application resources.
+
+== Decision
+
+Use a two-layer rate-limiting policy:
+
+* The application limiter protects business-aware authentication flows. It
+  applies independent limits by client IP and normalized email before database
+  lookup, password hashing, token creation, or email delivery. Denials return
+  `429 Too Many Requests`, `Retry-After`, and a generic
+  `RATE_LIMIT_EXCEEDED` response.
+* The local `local` and IDE profile uses a bounded in-memory store with expiry
+  and cleanup. This mode is intentionally limited to one JVM; counters reset
+  after restart and are not shared between instances.
+* A multi-instance deployment needs a shared atomic counter store. The provider
+  is intentionally not selected yet: PostgreSQL and Redis remain candidates.
+  The selected provider must support an atomic counter update and an
+  independently committed rate-limit decision. A plain
+  read-then-increment-then-write sequence is not sufficient.
+* An edge/WAF layer such as Cloudflare, AWS WAF, or an equivalent reverse proxy
+  provides coarse IP flood protection before traffic reaches Spring Boot. The
+  application limiter remains responsible for email-specific and other
+  business-aware rules that the edge cannot enforce safely.
+* Unknown emails consume the relevant email quota and receive the same generic
+  response as known emails. No rule creates a permanent account lockout or
+  exposes which limit was exceeded.
+
+Neither candidate shared store nor edge/WAF enforcement is active in the current
+local mode. Provider evaluation, concurrency/CI validation, activation, and
+edge/WAF enforcement are the remaining `MEDIUM-3` work in Phase 11. They must
+be completed before exposing a multi-instance backend to untrusted public
+traffic.
+
+PostgreSQL was explored in the separate `feat/postgres-rate-limit-storage`
+branch, but its CI checks remained unstable and the branch was not merged. This
+history is a reason to keep the provider decision open, not a decision against
+PostgreSQL. Redis remains a valid alternative to evaluate under the same
+concurrency and failure-policy criteria.
+
+== Consequences
+
+* Local development needs no additional counter service and remains easy to run
+  from Gradle or IntelliJ IDEA.
+* Restarting a local JVM clears counters, and local in-memory protection does
+  not provide shared protection for multiple instances.
+* Choosing between PostgreSQL and Redis affects the operational model: PostgreSQL
+  adds schema and transaction work, while Redis adds a separate runtime service
+  and operational dependency. Either choice needs concurrency and failure-policy
+  validation before activation.
+* Edge/WAF configuration becomes part of the deployment responsibility and
+  protects resources more efficiently than an application-only limiter.
+* Rate-limit responses remain neutral, so the protection must be evaluated with
+  security metrics and tests rather than account-specific public messages.
+
+== Status
+
+Accepted for the local application policy and two-layer deployment boundary. The
+shared-store provider remains undecided; PostgreSQL and Redis, failure policy,
+edge/WAF enforcement, and deployment-sensitive verification remain tracked in
+Phase 11.

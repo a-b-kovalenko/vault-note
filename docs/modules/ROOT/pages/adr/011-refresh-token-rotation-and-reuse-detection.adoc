@@ -36,7 +36,8 @@ authenticate the request using its cookie.
   the same active token.
 * A client must log in again after reuse detection.
 * CSRF protection for cookie-backed requests is defined by ADR 013; rate
-  limiting and audit events remain separate follow-up work.
+  limiting is defined by ADR 015, while audit events remain separate follow-up
+  work.
 
 == Status
 

@@ -55,8 +55,8 @@ real frontend origin and review cookie `Secure` and `SameSite` settings.
 * Bruno and curl do not implement browser CORS automatically. Manual clients
   must first obtain `/csrf`, preserve the `XSRF-TOKEN` cookie, and send its
   value in `X-XSRF-TOKEN` for login, refresh, and logout.
-* Rate limiting, authentication audit events, and production cookie policy are
-  separate hardening decisions.
+* Rate limiting is defined by ADR 015. Authentication audit events and
+  production cookie policy remain separate hardening decisions.
 
 == Status
 

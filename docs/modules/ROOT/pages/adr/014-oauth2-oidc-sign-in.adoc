@@ -44,5 +44,5 @@ Implement OAuth2/OIDC sign-in as a backend-owned authorization-code flow:
 
 == Status
 
-Proposed. Accept this ADR after the Phase 5 OAuth2/OIDC implementation and
+Proposed. Accept this ADR after the Phase 7 OAuth2/OIDC implementation and
 provider-mocked verification are complete.
