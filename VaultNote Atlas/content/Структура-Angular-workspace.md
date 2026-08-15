@@ -34,7 +34,7 @@ CLI, який ігнорується Git і не є частиною workspace.
 - Маршрут `/login` завантажує тимчасову login page.
 - Auth feature уже містить frontend-моделі та API service.
 - Reactive form, повний auth state, access-token memory storage, refresh і
-  CSRF behavior будуть додані наступними кроками Phase 4.
+  CSRF behavior будуть додані наступними кроками Phase 3.
 - Frontend-тести та production build підключені до backend Gradle quality gate.
 
 ## Детальні нотатки

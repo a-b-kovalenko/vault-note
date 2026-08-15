@@ -8,7 +8,10 @@
 Login, registration і password-reset request тепер мають server-side rate
 limiting за IP та нормалізованим email. Поточне сховище — bounded in-memory
 store для одного JVM-процесу; shared storage для кількох backend-інстансів ще
-не підключено.
+не підключено. Provider для shared storage ще не обрано: PostgreSQL і Redis
+залишаються кандидатами. Тому finding частково закритий: local/single-instance
+scope готовий, а повне закриття відбудеться після виконання Phase 11 — вибору й
+перевірки shared storage, edge/WAF і deployment hardening.
 
 ## У чому проблема
 
@@ -40,9 +43,9 @@ SMTP abuse і denial-of-service для password recovery.
 - жодного постійного блокування акаунта.
 
 Для одного локального процесу достатньо bounded in-memory storage з expiry. Для
-кількох backend-інстансів потрібне shared atomic storage. Для VaultNote
-цільовим storage обрано PostgreSQL, а edge/WAF потрібен для coarse IP flood
-protection.
+кількох backend-інстансів потрібне shared atomic storage. Для VaultNote provider
+ще не обрано: PostgreSQL і Redis залишаються кандидатами. Edge/WAF потрібен для
+coarse IP flood protection.
 
 ## Що вже реалізовано
 
@@ -64,8 +67,8 @@ protection.
 
 ## Що ще потрібно зробити
 
-- Перевести counters із in-memory у shared atomic storage після розбору
-  нестабільної PostgreSQL-гілки.
+- Оцінити й обрати PostgreSQL або Redis, стабілізувати concurrency/CI-перевірки
+  та перевести counters із in-memory у shared atomic storage.
 - Додати failure policy для недоступного shared storage і вирішити, чи
   дозволяти запити при помилці ліміту.
 - Додати edge/WAF для coarse IP flood protection у публічному deployment.

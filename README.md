@@ -75,14 +75,18 @@ CI, and production deployment are outside the first iteration.
 
 ## Delivery phases
 
-- Phase 4: Angular authentication workspace with registration, email
-  verification, password recovery, login, `/me`, and logout.
-- Phase 4.5: unauthenticated email password-recovery flow and its PostgreSQL
+- Phase 3: Angular authentication workspace with registration, email
+  verification, login, `/me`, and logout.
+- Phase 4: unauthenticated email password-recovery flow and its PostgreSQL
   endpoint coverage.
-- Phase 5: OAuth2/OIDC sign-in with provider buttons and a callback flow.
-- Phase 6: remaining Angular screens, route guards, refresh handling, and
-  frontend Markdown preview/read rendering.
-- Later phases: documentation maintenance and final email/security hardening.
+- Phase 5: security-audit remediation and deployment-sensitive checks.
+- Phase 6: profile and user administration.
+- Phase 7: OAuth2/OIDC sign-in with provider buttons and a callback flow.
+- Phase 8: Notes, administrator Notes access, and Markdown preview.
+- Phase 9: remaining Angular cross-cutting screens, route guards, and error
+  presentation.
+- Phase 10: documentation maintenance and publishing.
+- Phase 11: final security, email, and authentication hardening.
 
 ## Engineering conventions
 

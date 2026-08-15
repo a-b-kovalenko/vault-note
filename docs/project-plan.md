@@ -75,8 +75,12 @@ exceptions.
 Create Liquibase migrations in schema `vaultnote` for:
 
 - `users`: `BIGINT` ID, unique email, `display_name`, Argon2id password hash,
-  verification state, and timestamps. Phase 5 makes `password_hash` nullable
+  verification state, and timestamps. Phase 7 makes `password_hash` nullable
   for accounts that initially use only an external provider.
+- `user_avatars` (Phase 6): one optional avatar per user, stored separately from
+  the user row with normalized image bytes, content type, size, and timestamps.
+  Keep the storage behind an application interface so the PostgreSQL-backed MVP
+  can later move to shared object storage without changing the profile API.
 - `user_roles`: many-to-many user assignments with stable numeric role codes;
   the initial codes are `USER` (1) and `ADMIN` (2).
 - `notes`: owner relation, title, Markdown content, timestamps, and `@Version`.
@@ -84,7 +88,7 @@ Create Liquibase migrations in schema `vaultnote` for:
   revocation state.
 - `email_verification_tokens`: user relation, single-use hashed token, expiry,
   used timestamp, and creation timestamp for the email-verification MVP.
-- `oauth_identities` (Phase 5): user relation, a stable provider value such as
+- `oauth_identities` (Phase 7): user relation, a stable provider value such as
   `GOOGLE` or `GITHUB`, the provider's stable subject identifier, and creation
   timestamp. Store the provider enum as a stable string and enforce unique
   `(provider, provider_subject)` and `(user_id, provider)` combinations.
@@ -216,43 +220,7 @@ emails, email delivery for an unverified account, IP/email limits, `429`,
 Use production-like cookie settings where possible. The `local` profile may omit
 the `Secure` flag for HTTP localhost; document the required production setting.
 
-## Authorization
-
-- `USER` can read, create, update, and permanently delete only owned notes.
-- `ADMIN` can read paginated lists of all users and all notes, but cannot alter
-  users, roles, or others' notes.
-- Backend service-level ownership and role checks are mandatory. Angular guards
-  and hidden UI controls are user experience only.
-- Notes are private. Sharing is outside this iteration.
-
-## Notes and profile
-
-Build CRUD for notes with `BIGINT` IDs, title limited to 200 characters, and
-Markdown content limited to 20,000 characters. Store source Markdown only;
-the current API returns that source Markdown directly. HTML rendering and
-sanitization are deferred until the final step of the Angular phase, when a
-preview or read-only mode is introduced.
-Attachments and images are outside this iteration.
-
-Use `CurrentUserProvider` in note services for current-user ownership checks.
-
-All collection endpoints are paginated. Sort a user's notes by `updatedAt`
-descending by default. Do not add search yet. Use optimistic locking and return
-`409 Conflict` as `ProblemDetail` if a note is updated from a stale version.
-
-The Profile page displays the email and verification state, permits only
-`display_name` updates, and provides logout for the current session. Email
-change and global logout are deferred.
-
-The implemented notes baseline currently includes the owner-only REST CRUD
-endpoints, explicit request/response DTOs, pagination with `updatedAt DESC` as
-the default order, `CurrentUserProvider` ownership checks, and centralized
-`NOTE_NOT_FOUND` handling, optimistic locking through `ETag`/`If-Match`, and
-PostgreSQL-backed endpoint integration coverage. The remaining notes work is
-administrator read-only access. Safe HTML rendering and sanitization are
-deferred until a preview or read-only mode is introduced.
-
-## Phase 4 — Minimal Angular
+## Phase 3 — Minimal Angular
 
 Create `frontend/` as a standalone Angular application with simple local
 styles and the generated client for the authentication endpoints.
@@ -269,7 +237,7 @@ access authentication with a stateful rotating refresh session: no
 memory, and a hashed refresh session in PostgreSQL behind an `HttpOnly` cookie.
 Do not add Notes, profile editing, administrator, or Markdown screens yet.
 
-## Phase 4.5 — Password management prerequisite
+## Phase 4 — Password management prerequisite
 
 Finish the unauthenticated email password-recovery flow before starting
 OAuth2/OIDC. This phase covers existing local accounts and also verifies an
@@ -277,6 +245,8 @@ unverified email after a successful reset.
 
 The implemented backend recovery baseline is a separate unauthenticated email
 flow:
+
+### Password recovery backend
 
 1. `POST /api/v1/auth/password-reset/request` always returns `202 Accepted`
    without account-specific data, whether the account exists or is verified.
@@ -296,12 +266,14 @@ flow:
 5. Invalid or expired tokens return the stable `PASSWORD_RESET_FAILED` error
    without revealing account information.
 
-The backend recovery baseline, PostgreSQL endpoint and concurrency coverage,
-and Angular forgot/reset-password pages are complete. The reset token is
-removed from the address bar after a successful confirmation. Before OAuth,
-the remaining confirmed security-audit findings are handled in Phase 4.75.
+### Password recovery frontend
 
-## Phase 4.75 — Security audit remediation
+The Angular forgot/reset-password pages, fresh-request path, and removal of the
+reset token from the address bar after a successful confirmation are complete.
+Before OAuth, the remaining confirmed security-audit findings are handled in
+Phase 5.
+
+## Phase 5 — Security audit remediation
 
 The defensive audit found one HIGH finding and three MEDIUM findings. `HIGH-1`,
 `MEDIUM-1`, and `MEDIUM-2` are resolved. `MEDIUM-3` is in progress: login,
@@ -311,6 +283,13 @@ rate-limit notice/countdown. Shared storage and multi-instance deployment
 policy remain. The remaining work is ordered by authentication/session
 correctness before adding another authentication provider:
 
+`MEDIUM-3` is therefore only partially resolved: the local/single-instance
+scope is complete, while the full finding closes after Phase 11 evaluates and
+validates the shared-store choice (PostgreSQL or Redis), then completes the
+shared storage, edge/WAF, and deployment-hardening tasks.
+
+### Security remediation backend
+
 1. [x] (`HIGH-1`) Remove the known JWT fallback, require an explicit secret, and
    document the stable local profile secret.
 2. [x] (`MEDIUM-1`) Make refresh-token family revocation commit independently
@@ -319,33 +298,64 @@ correctness before adding another authentication provider:
 3. [x] (`MEDIUM-2`) Use the configured refresh-cookie name consistently in
    login, refresh, logout, and cookie clearing. Add extractor unit coverage,
    startup validation, and integration coverage with a non-default cookie name.
-4. [ ] (`MEDIUM-3`) Define and implement rate limiting for login, registration,
-   and password reset. Select storage based on the deployment model: an
-   in-memory limiter is suitable only for one local instance; shared atomic
-   storage is required for multiple instances. Do not lock accounts permanently
-   or reveal account existence.
+4. [x] (`MEDIUM-3`, local scope) Define and implement rate limiting for login,
+   registration, and password reset. The local in-memory limiter is suitable
+   for one instance. The shared provider is not selected yet: PostgreSQL and
+   Redis remain candidates, while provider validation and edge/WAF hardening
+   are tracked in Phase 11. Do not lock accounts permanently or reveal account
+   existence.
    - [x] Protect login by IP and normalized email before database access and
      Argon2, with bounded local storage, `429`, and `Retry-After`.
    - [x] Protect registration by IP and normalized email/device quota.
    - [x] Protect password reset by IP and normalized email.
-   - [x] Add one shared Angular rate-limit notice/countdown to login,
-     registration, and forgot-password screens; preserve form values, disable
-     submit during the countdown, and expose `Retry-After` through CORS.
-5. [ ] Verify deployment-sensitive controls when a deployment target exists:
-   TLS and secure cookies, SMTP encryption, Mailpit loopback binding, Swagger
-   exposure, registration enumeration policy, and dependency supply-chain
-   hardening.
+
+### Security remediation frontend
+
+- [x] Add one shared Angular rate-limit notice/countdown to login, registration,
+  and forgot-password screens; preserve form values, disable submit during the
+  countdown, and expose `Retry-After` through CORS.
 
 OAuth starts after the refresh-session correctness findings `MEDIUM-1` and
 `MEDIUM-2` are closed. The remaining rate-limiting scopes and deployment-
 sensitive checks must be complete before exposing the backend to an untrusted
 network.
 
-## Phase 5 — OAuth2/OIDC sign-in
+## Phase 6 — Profile and user administration
+
+### Backend
+
+- [ ] Implement the profile resource. The API displays the email and
+  verification state, permits only `display_name` updates, and uses `GET` and
+  `PATCH /api/v1/users/me`; email changes and global logout remain deferred.
+- [ ] Add optional profile avatar upload and removal. Use
+  `PUT /api/v1/users/me/avatar`, `GET /api/v1/users/me/avatar`, and
+  `DELETE /api/v1/users/me/avatar`; keep the image endpoint authenticated and
+  user-scoped. Accept only decoded JPEG, PNG, or WebP images, enforce a small
+  upload and dimension limit, strip metadata, and normalize the stored image on
+  the server. Never trust the filename or client-provided content type.
+- [x] Implement the backend current-session logout endpoint.
+- [x] Add the paginated administrator user list API.
+
+### Frontend
+
+- [ ] Add an authenticated application shell with a compact account menu that
+  shows the user's initials or avatar, display name, and email. Include Profile,
+  a conditional Admin users link for `ADMIN`, and a separated Log out action.
+- [ ] Implement the Profile screen with read-only email and verification state,
+  editable `displayName`, and explicit save/cancel states.
+- [ ] Add avatar preview, upload, replacement, removal, and initials fallback.
+- [ ] Add the read-only Admin users screen using the existing paginated API.
+
+Backend service-level role checks are mandatory. Angular guards and hidden UI
+controls are user experience only; the backend remains the authorization source.
+
+## Phase 7 — OAuth2/OIDC sign-in
 
 After password recovery, the minimal Angular login flow, and the core security
 remediation are working, add external sign-in through an OAuth2/OIDC provider
 such as Google or GitHub in this order:
+
+### OAuth backend
 
 1. Prepare the account model for provider/passwordless users:
    make `users.password_hash` nullable and add the `oauth_identities` table.
@@ -374,40 +384,110 @@ such as Google or GitHub in this order:
    issue VaultNote's existing JWT access token and refresh-token cookie, keep
    access tokens out of redirect URLs, and obtain the frontend access token
    through the existing refresh flow.
-7. Add the Angular OAuth flow:
-   provider buttons, callback route, and access-token storage only in frontend
-   memory. Phone-based authentication remains outside the current scope.
-8. Add provider-mocked integration coverage and a local manual verification
-   flow.
 
-## Phase 6 — Remaining Angular frontend
+### OAuth frontend
 
-Complete the rest of the Angular application with lazy-loaded routes, simple
-local styles, and no UI component library. Public registration and email
-verification were delivered with the minimal authentication surface in Phase
-4. The remaining work is:
+- Add provider buttons to the login page.
+- Add a callback route that completes authentication through the existing
+  refresh flow.
+- Keep the access token only in frontend memory. Phone-based authentication
+  remains outside the current scope.
 
-- paginated Notes list and create/edit/delete flows;
-- profile and display-name editing;
-- read-only administrator users and Notes lists;
+### OAuth verification
+
+- Add provider-mocked integration coverage and a local manual verification
+  flow.
+
+## Phase 8 — Notes
+
+### Notes backend
+
+- `USER` can read, create, update, and permanently delete only owned notes.
+- `ADMIN` can read paginated lists of all notes, but cannot alter users, roles,
+  or others' notes.
+- Backend service-level ownership and role checks are mandatory. Angular guards
+  and hidden UI controls are user experience only.
+- Notes are private. Sharing is outside this iteration.
+
+Build CRUD for notes with `BIGINT` IDs, title limited to 200 characters, and
+Markdown content limited to 20,000 characters. Store source Markdown only;
+the current API returns that source Markdown directly. Attachments and images
+are outside this iteration.
+
+Use `CurrentUserProvider` in note services for current-user ownership checks.
+All collection endpoints are paginated. Sort a user's notes by `updatedAt`
+descending by default. Do not add search yet. Use optimistic locking and return
+`409 Conflict` as `ProblemDetail` if a note is updated from a stale version.
+
+The implemented notes baseline currently includes the owner-only REST CRUD
+endpoints, explicit request/response DTOs, pagination with `updatedAt DESC` as
+the default order, `CurrentUserProvider` ownership checks, and centralized
+`NOTE_NOT_FOUND` handling, optimistic locking through `ETag`/`If-Match`, and
+PostgreSQL-backed endpoint integration coverage. The remaining Notes work is the
+administrator read-only API. Add PostgreSQL-backed coverage for administrator
+authorization and ownership isolation.
+
+### Notes frontend
+
+Implement the paginated Notes list and create/edit/delete flows, the read-only
+administrator Notes view, and Markdown preview/read rendering. Parse the raw
+Markdown returned by the API, sanitize generated HTML before inserting it into
+the DOM, and allow only safe link protocols such as `http` and `https`. Generate
+the TypeScript client from OpenAPI and add focused Angular unit tests for Notes
+flows. Never persist access tokens in local storage or session storage.
+
+## Phase 9 — Remaining Angular frontend
+
+Complete the remaining cross-cutting Angular work with lazy-loaded routes and
+simple local styles, without a UI component library:
+
 - authenticated and administrator route guards;
 - standard `ProblemDetail` error presentation on top of the implemented auth
-  transport baseline.
+  transport baseline;
+- focused frontend unit tests and production-build verification;
+- browser e2e tests remain deferred.
 
-As the final step of this phase, add Markdown preview/read rendering:
-
-- parse the raw Markdown returned by the API;
-- sanitize generated HTML before inserting it into the DOM;
-- allow only safe link protocols such as `http` and `https`.
-
-Generate the TypeScript client from OpenAPI and add focused Angular unit tests
-for auth state, HTTP interceptors, route guards, and Notes flows. Defer browser
-e2e tests. Never persist access tokens in local storage or session storage.
+Never persist access tokens in local storage or session storage.
 
 Keep Java tests deterministic and behavior-focused. Use AssertJ for assertions,
 Mockito only for direct collaborators, and a shared PostgreSQL Testcontainer for
 the integration-test JVM. Reset test data deterministically; never depend on
 test order or arbitrary sleeps.
+
+## Phase 10 — Documentation and publishing
+
+- [x] Maintain Antora component metadata, navigation, and the published
+  documentation site.
+- [ ] Record the remaining architecture decision records.
+
+## Phase 11 — Final security and email hardening
+
+### Security and email backend
+
+- [ ] (`MEDIUM-3`) Evaluate and choose a shared atomic counter store
+  (PostgreSQL or Redis), validate it with concurrency/CI tests, activate it,
+  and add edge/WAF enforcement for coarse public IP flood protection.
+- [ ] Verify deployment-sensitive transport, SMTP, Mailpit, Swagger,
+  registration-enumeration, and dependency supply-chain controls when a target
+  deployment exists.
+
+- [ ] Add verification-email resend and invalidate older active verification
+  tokens when a new one is issued.
+- [ ] Add cleanup and audit handling for expired or invalidated tokens.
+- [ ] Add authentication audit events for successful and failed login,
+  refresh-token reuse, logout, and email-verification security events.
+- [ ] Add cleanup for expired refresh tokens. Remove records only after
+  `expires_at`; retain revoked but not-yet-expired records so reuse detection
+  remains possible.
+- [ ] Revisit outbox delivery, retry, and SMTP-failure semantics when reliable
+  asynchronous email delivery becomes necessary.
+
+### Verification-email frontend
+
+- [ ] Add resend controls to the registration success state and the invalid or
+  expired verification-link state. Preserve the email, show neutral feedback,
+  disable repeated submissions, and display the `Retry-After` countdown without
+  sending automatically on page load.
 
 ## Local developer experience
 
@@ -445,6 +525,9 @@ initial ADRs now describe decisions that are implemented in the repository:
 11. [x] Refresh-token rotation and reuse detection (`011`).
 12. [x] Current-session logout (`012`).
 13. [x] CSRF and CORS strategy (`013`).
+14. [x] Rate-limiting storage and deployment boundary (`015`); local policy is
+    accepted and shared provider selection plus deployment implementation remain
+    in Phase 11.
 
 The following ADRs remain planned. Proposed ADRs may capture an important
 upcoming decision before implementation and become accepted after verification:
@@ -474,26 +557,12 @@ upcoming decision before implementation and become accepted after verification:
 - A dedicated least-privilege DB user for production-like setups.
 - Browser e2e tests, application CI, production deployment, TLS, and real SMTP.
 
-## Final priority — Rate-limiting hardening
+## Final priority — Remaining hardening
 
-The local application-level part of MEDIUM-3 is implemented for login,
-registration, and password-reset requests. The Angular login, registration, and
-forgot-password screens share one rate-limit notice/countdown, preserve entered
-values, disable submit while blocked, and use the `Retry-After` response header.
-The finding remains open only for deployment hardening: before public
-multi-instance traffic, move counters to stable shared atomic storage and add
-an edge/WAF rule for coarse IP flood protection. Add application-level limits
-only for direct-origin or internal traffic, or for email-specific rules the
-edge cannot enforce.
-
-Add authentication audit events in the same final hardening phase. Cover
-successful and failed login, refresh-token reuse, logout, and email-verification
-security events without coupling the audit trail to authorization checks.
-
-Add refresh-token cleanup in the same final hardening phase. Remove records only
-after `expires_at`; retain revoked but not-yet-expired records so reuse
-detection continues to work. The cleanup may run as a scheduled job or an
-explicit maintenance task.
+The local application-level part of MEDIUM-3 is complete for the current
+authentication flows. The remaining security, authentication, and email work is
+tracked as the canonical checklist in Phase 11 — Final security and email
+hardening.
 
 ## Future direction — separate React frontend
 

@@ -285,13 +285,13 @@ Authorization: Bearer <token>
 
 У плані VaultNote це розділено так:
 
-- **Phase 4** — мінімальна Angular login page;
-- **Phase 5** — OAuth2/OIDC backend flow і кнопки provider-а;
-- **Phase 6** — решта Angular application.
+- **Phase 3** — мінімальна Angular login page;
+- **Phase 7** — OAuth2/OIDC backend flow і кнопки provider-а;
+- **Phase 9** — решта Angular application.
 
 ## Як це буде виглядати у VaultNote
 
-Зараз OAuth2/OIDC у VaultNote ще не реалізований. Він запланований на Phase 5.
+Зараз OAuth2/OIDC у VaultNote ще не реалізований. Він запланований на Phase 7.
 
 Архітектурне рішення зафіксоване як proposed ADR 014 у
 [плані проєкту](../../docs/project-plan.md).

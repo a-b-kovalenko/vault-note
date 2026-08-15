@@ -198,7 +198,7 @@ user_id = 42
 
 ## Рішення для VaultNote
 
-На Phase 5 реалізуємо тільки Google:
+На Phase 7 реалізуємо тільки Google:
 
 - один Google OAuth/OIDC client;
 - локальний callback через `localhost`;

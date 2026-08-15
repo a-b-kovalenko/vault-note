@@ -43,7 +43,7 @@ user_id = 42
 
 ## Де зберігається provider
 
-У Phase 5 provider identity буде окремим persistence-зв'язком, а не полем у
+У Phase 7 provider identity буде окремим persistence-зв'язком, а не полем у
 `users`. Планована таблиця `oauth_identities` матиме приблизно такі поля:
 
 ```text
