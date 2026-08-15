@@ -24,7 +24,7 @@ password-recovery request/response з frontend-іменами у `camelCase`. У
 ### `auth-api.service.ts`
 
 HTTP gateway для auth endpoints: login, registration, email verification,
-password reset, refresh, logout і current user. Перед state-changing запитом
+password reset, refresh, logout і profile. Перед state-changing запитом
 service гарантує наявність CSRF cookie, мапить backend `snake_case` у frontend
 `camelCase` і використовує `withCredentials`, щоб браузер міг прийняти та
 надсилати refresh-token cookie.
@@ -68,7 +68,7 @@ messages, submit button, OAuth placeholders і доступні атрибути
 - `/forgot-password` — email form для запиту reset link і generic success state;
 - `/reset-password?token=...` — новий пароль, confirmation, password policy,
   visibility controls і states для success або invalid/expired/used token;
-- `/me` — authenticated screen із current user і logout.
+- `/me` — authenticated screen із profile і logout.
 
 `ForgotPasswordPage` навмисно не показує, чи існує введений email. Після
 успішного `202 Accepted` він показує нейтральне повідомлення на кшталт:

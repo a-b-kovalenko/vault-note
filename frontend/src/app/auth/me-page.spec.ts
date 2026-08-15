@@ -5,25 +5,31 @@ import { Observable, of, throwError } from 'rxjs';
 
 import { AuthApiService } from './auth-api.service';
 import { AuthStateService } from './auth-state.service';
-import { CurrentUserResponse } from './auth.models';
+import { UserProfile } from './auth.models';
 import { MePage } from './me-page';
 
 describe('MePage', () => {
   let fixture: ComponentFixture<MePage>;
   let page: MePage;
-  let currentUserResponse: Observable<CurrentUserResponse>;
+  let profileResponse: Observable<UserProfile>;
   let logoutResponse: Observable<void>;
   let authState: AuthStateService;
   let navigate: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
-    currentUserResponse = of({ userId: 42, roles: ['USER'] });
+    profileResponse = of({
+      id: 42,
+      email: 'user@example.com',
+      displayName: 'Profile User',
+      emailVerified: true,
+      roles: ['USER'],
+    });
     logoutResponse = of(void 0);
     navigate = vi.fn().mockResolvedValue(true);
 
     const authApiService = {
-      currentUser(): Observable<CurrentUserResponse> {
-        return currentUserResponse;
+      profile(): Observable<UserProfile> {
+        return profileResponse;
       },
       logout(): Observable<void> {
         return logoutResponse;
@@ -46,15 +52,24 @@ describe('MePage', () => {
   it('loads and displays the authenticated user', () => {
     fixture.detectChanges();
 
-    expect(page.currentUser()).toEqual({ userId: 42, roles: ['USER'] });
+    expect(page.profile()).toEqual({
+      id: 42,
+      email: 'user@example.com',
+      displayName: 'Profile User',
+      emailVerified: true,
+      roles: ['USER'],
+    });
     expect(page.isLoading()).toBe(false);
     expect(fixture.nativeElement.textContent).toContain('42');
+    expect(fixture.nativeElement.textContent).toContain('user@example.com');
+    expect(fixture.nativeElement.textContent).toContain('Profile User');
+    expect(fixture.nativeElement.textContent).not.toContain('Email verification');
     expect(fixture.nativeElement.textContent).toContain('USER');
     expect(navigate).not.toHaveBeenCalled();
   });
 
   it('redirects to login when the current session is unauthorized', () => {
-    currentUserResponse = throwError(
+    profileResponse = throwError(
       () => new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' }),
     );
 

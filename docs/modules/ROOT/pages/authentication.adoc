@@ -65,19 +65,20 @@ create an `HttpSession`: it creates a refresh-token record and sets a cookie.
 revokes it and clears the cookie. CSRF protects these side effects; it is not
 dependent on Spring creating an HTTP session.
 
-== Protected endpoint
+== Protected user profile
 
-`GET /api/v1/auth/me` requires the access token in the `Authorization` header:
+`GET /api/v1/users/me` requires the access token in the `Authorization` header:
 
 [source,http]
 ----
-GET /api/v1/auth/me
+GET /api/v1/users/me
 Authorization: Bearer <jwt>
 ----
 
 The endpoint validates the JWT signature, issuer, and expiration, then returns
-the authenticated user's identifier and roles. `Current User` in the Bruno
-collection can be used to verify the request after copying the access token
+the authenticated user's profile, including the identifier, email, display name,
+verification state, and roles. `Profile` in the Bruno collection can be used to
+verify the request after copying the access token
 from a successful `Login` response into the local environment.
 
 == Access token
@@ -330,7 +331,7 @@ The implemented authenticated frontend flow is:
   CSRF bootstrap.
 . Angular maps the `snake_case` response, stores the access JWT in
   `AuthStateService`, and navigates to `/me`.
-. `MePage` calls `GET /api/v1/auth/me`; the bearer interceptor adds the access
+. `MePage` calls `GET /api/v1/users/me`; the bearer interceptor adds the access
   JWT to the request.
 . When a protected request receives `401`, the refresh interceptor uses the
   `HttpOnly` cookie to rotate the refresh session, stores the new access JWT in

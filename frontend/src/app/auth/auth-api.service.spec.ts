@@ -10,7 +10,7 @@ import { TestBed } from '@angular/core/testing';
 import { API_BASE_URL } from '../api/api-config';
 import { csrfInterceptor } from './csrf.interceptor';
 import { AuthApiService } from './auth-api.service';
-import { CurrentUserResponse, LoginResponse, RegisterUserResponse } from './auth.models';
+import { LoginResponse, RegisterUserResponse, UserProfile } from './auth.models';
 
 describe('AuthApiService', () => {
   let service: AuthApiService;
@@ -178,19 +178,64 @@ describe('AuthApiService', () => {
     expect(completed).toBe(true);
   });
 
-  it('loads the current user and maps the generated API response', () => {
-    let response: CurrentUserResponse | undefined;
+  it('loads the current profile and maps the API response', () => {
+    let response: UserProfile | undefined;
 
-    service.currentUser().subscribe((value) => {
+    service.profile().subscribe((value) => {
       response = value;
     });
 
-    const request = httpMock.expectOne(`${API_BASE_URL}/api/v1/auth/me`);
+    const request = httpMock.expectOne(`${API_BASE_URL}/api/v1/users/me`);
     expect(request.request.method).toBe('GET');
     expect(request.request.withCredentials).toBe(true);
-    request.flush({ user_id: 42, roles: ['USER'] });
+    request.flush({
+      id: 42,
+      email: 'user@example.com',
+      display_name: 'Profile User',
+      email_verified: true,
+      roles: ['USER'],
+    });
 
-    expect(response).toEqual({ userId: 42, roles: ['USER'] });
+    expect(response).toEqual({
+      id: 42,
+      email: 'user@example.com',
+      displayName: 'Profile User',
+      emailVerified: true,
+      roles: ['USER'],
+    });
+  });
+
+  it('bootstraps CSRF before updating the current profile', () => {
+    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
+    let response: UserProfile | undefined;
+
+    service.updateProfile({ displayName: 'Updated Profile' }).subscribe((value) => {
+      response = value;
+    });
+
+    const csrfRequest = httpMock.expectOne(`${API_BASE_URL}/csrf`);
+    csrfRequest.flush({ token: 'csrf-token' });
+
+    const request = httpMock.expectOne(`${API_BASE_URL}/api/v1/users/me`);
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.withCredentials).toBe(true);
+    expect(request.request.headers.get('X-XSRF-TOKEN')).toBe('csrf-token');
+    expect(request.request.body).toEqual({ display_name: 'Updated Profile' });
+    request.flush({
+      id: 42,
+      email: 'user@example.com',
+      display_name: 'Updated Profile',
+      email_verified: true,
+      roles: ['USER'],
+    });
+
+    expect(response).toEqual({
+      id: 42,
+      email: 'user@example.com',
+      displayName: 'Updated Profile',
+      emailVerified: true,
+      roles: ['USER'],
+    });
   });
 
   it('bootstraps CSRF before logout and sends credentials', () => {

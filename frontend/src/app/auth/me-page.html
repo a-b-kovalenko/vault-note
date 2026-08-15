@@ -1,14 +1,9 @@
 <main class="me-page">
   <section class="me-card" aria-labelledby="me-title">
-    <p class="eyebrow">Authenticated session</p>
+    <p class="eyebrow">Your profile</p>
     <div class="me-heading">
-      <h1 id="me-title">Me</h1>
-      <button
-        class="logout-button"
-        type="button"
-        [disabled]="isLoggingOut()"
-        (click)="onLogout()"
-      >
+      <h1 id="me-title">Profile</h1>
+      <button class="logout-button" type="button" [disabled]="isLoggingOut()" (click)="onLogout()">
         {{ isLoggingOut() ? 'Logging out…' : 'Log out' }}
       </button>
     </div>
@@ -17,11 +12,19 @@
       <p class="status-message" role="status">Loading your profile…</p>
     } @else if (loadError(); as errorMessage) {
       <p class="status-message status-message-error" role="alert">{{ errorMessage }}</p>
-    } @else if (currentUser(); as user) {
+    } @else if (profile(); as user) {
       <dl class="user-details">
         <div>
           <dt>User ID</dt>
-          <dd>{{ user.userId }}</dd>
+          <dd>{{ user.id }}</dd>
+        </div>
+        <div>
+          <dt>Display name</dt>
+          <dd>{{ user.displayName }}</dd>
+        </div>
+        <div>
+          <dt>Email</dt>
+          <dd>{{ user.email }}</dd>
         </div>
         <div>
           <dt>Roles</dt>

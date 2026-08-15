@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateNoteData, CreateNoteErrors, CreateNoteResponses, CsrfData, CsrfResponses, CurrentUserData, CurrentUserErrors, CurrentUserResponses, DeleteNoteData, DeleteNoteErrors, DeleteNoteResponses, GetNoteData, GetNoteErrors, GetNoteResponses, GetNotesData, GetNotesErrors, GetNotesResponses, GetUsersData, GetUsersErrors, GetUsersResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutResponses, RefreshData, RefreshErrors, RefreshResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, UpdateNoteData, UpdateNoteErrors, UpdateNoteResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses } from './types.gen';
+import type { ConfirmPasswordResetData, ConfirmPasswordResetErrors, ConfirmPasswordResetResponses, CreateNoteData, CreateNoteErrors, CreateNoteResponses, CsrfData, CsrfResponses, DeleteNoteData, DeleteNoteErrors, DeleteNoteResponses, GetCurrentProfileData, GetCurrentProfileErrors, GetCurrentProfileResponses, GetNoteData, GetNoteErrors, GetNoteResponses, GetNotesData, GetNotesErrors, GetNotesResponses, GetUsersData, GetUsersErrors, GetUsersResponses, LoginData, LoginErrors, LoginResponses, LogoutData, LogoutResponses, RefreshData, RefreshErrors, RefreshResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, RequestPasswordResetData, RequestPasswordResetErrors, RequestPasswordResetResponses, UpdateCurrentProfileData, UpdateCurrentProfileErrors, UpdateCurrentProfileResponses, UpdateNoteData, UpdateNoteErrors, UpdateNoteResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -83,7 +83,31 @@ export const registerUser = <ThrowOnError extends boolean = false>(options: Opti
 /**
  * Refresh access token
  */
-export const refresh = <ThrowOnError extends boolean = false>(options: Options<RefreshData, ThrowOnError>): RequestResult<RefreshResponses, RefreshErrors, ThrowOnError> => (options.client ?? client).post<RefreshResponses, RefreshErrors, ThrowOnError>({ url: '/api/v1/auth/refresh', ...options });
+export const refresh = <ThrowOnError extends boolean = false>(options?: Options<RefreshData, ThrowOnError>): RequestResult<RefreshResponses, RefreshErrors, ThrowOnError> => (options?.client ?? client).post<RefreshResponses, RefreshErrors, ThrowOnError>({ url: '/api/v1/auth/refresh', ...options });
+
+/**
+ * Request a password reset
+ */
+export const requestPasswordReset = <ThrowOnError extends boolean = false>(options: Options<RequestPasswordResetData, ThrowOnError>): RequestResult<RequestPasswordResetResponses, RequestPasswordResetErrors, ThrowOnError> => (options.client ?? client).post<RequestPasswordResetResponses, RequestPasswordResetErrors, ThrowOnError>({
+    url: '/api/v1/auth/password-reset/request',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Confirm a password reset
+ */
+export const confirmPasswordReset = <ThrowOnError extends boolean = false>(options: Options<ConfirmPasswordResetData, ThrowOnError>): RequestResult<ConfirmPasswordResetResponses, ConfirmPasswordResetErrors, ThrowOnError> => (options.client ?? client).post<ConfirmPasswordResetResponses, ConfirmPasswordResetErrors, ThrowOnError>({
+    url: '/api/v1/auth/password-reset/confirm',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * Logout
@@ -101,6 +125,28 @@ export const login = <ThrowOnError extends boolean = false>(options: Options<Log
 
 export const verifyEmail = <ThrowOnError extends boolean = false>(options: Options<VerifyEmailData, ThrowOnError>): RequestResult<VerifyEmailResponses, VerifyEmailErrors, ThrowOnError> => (options.client ?? client).post<VerifyEmailResponses, VerifyEmailErrors, ThrowOnError>({ url: '/api/v1/auth/email-verification', ...options });
 
+/**
+ * Get current user profile
+ */
+export const getCurrentProfile = <ThrowOnError extends boolean = false>(options?: Options<GetCurrentProfileData, ThrowOnError>): RequestResult<GetCurrentProfileResponses, GetCurrentProfileErrors, ThrowOnError> => (options?.client ?? client).get<GetCurrentProfileResponses, GetCurrentProfileErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/users/me',
+    ...options
+});
+
+/**
+ * Update current user profile
+ */
+export const updateCurrentProfile = <ThrowOnError extends boolean = false>(options: Options<UpdateCurrentProfileData, ThrowOnError>): RequestResult<UpdateCurrentProfileResponses, UpdateCurrentProfileErrors, ThrowOnError> => (options.client ?? client).patch<UpdateCurrentProfileResponses, UpdateCurrentProfileErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/v1/users/me',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
 export const csrf = <ThrowOnError extends boolean = false>(options: Options<CsrfData, ThrowOnError>): RequestResult<CsrfResponses, unknown, ThrowOnError> => (options.client ?? client).get<CsrfResponses, unknown, ThrowOnError>({ url: '/csrf', ...options });
 
 /**
@@ -109,11 +155,5 @@ export const csrf = <ThrowOnError extends boolean = false>(options: Options<Csrf
 export const getUsers = <ThrowOnError extends boolean = false>(options?: Options<GetUsersData, ThrowOnError>): RequestResult<GetUsersResponses, GetUsersErrors, ThrowOnError> => (options?.client ?? client).get<GetUsersResponses, GetUsersErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/v1/users',
-    ...options
-});
-
-export const currentUser = <ThrowOnError extends boolean = false>(options?: Options<CurrentUserData, ThrowOnError>): RequestResult<CurrentUserResponses, CurrentUserErrors, ThrowOnError> => (options?.client ?? client).get<CurrentUserResponses, CurrentUserErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/v1/auth/me',
     ...options
 });

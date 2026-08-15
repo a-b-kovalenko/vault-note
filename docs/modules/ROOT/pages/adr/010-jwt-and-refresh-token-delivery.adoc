@@ -35,7 +35,7 @@ use an environment or secret-manager value and must also enable `Secure`.
 
 The current implementation covers login, refresh-token persistence and
 rotation, reuse detection, current-session logout, cookie delivery, JWT request
-authentication, the protected `GET /api/v1/auth/me` access-check endpoint, and
+authentication, the protected `GET /api/v1/users/me` profile endpoint, and
 the CSRF/CORS boundary for browser clients. The detailed browser protection
 decision is recorded in ADR 013.
 
