@@ -2,7 +2,6 @@ package com.andrii.vaultnote.app.api.auth;
 
 import com.andrii.vaultnote.app.api.auth.dto.LoginRequest;
 import com.andrii.vaultnote.app.api.auth.dto.LoginResponse;
-import com.andrii.vaultnote.app.api.auth.dto.CurrentUserResponse;
 import com.andrii.vaultnote.app.api.auth.dto.PasswordResetConfirmRequest;
 import com.andrii.vaultnote.app.api.auth.dto.PasswordResetRequest;
 import com.andrii.vaultnote.app.api.auth.dto.RegisterUserRequest;
@@ -19,7 +18,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -29,18 +27,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
-
-import java.util.Objects;
-
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -208,24 +200,6 @@ public class AuthController {
     return ResponseEntity
       .noContent()
       .header(HttpHeaders.SET_COOKIE, refreshTokenCookieFactory.clear().toString())
-      .build();
-  }
-
-  @Operation
-  @ApiResponse(
-    responseCode = "200",
-    description = "Get authenticated user",
-    content = {
-      @Content(
-        mediaType = MediaType.APPLICATION_JSON_VALUE,
-        schema = @Schema(implementation = CurrentUserResponse.class))})
-  @ApiResponse(responseCode = "401", description = "Unauthorized", content = {@Content})
-  @SecurityRequirement(name = "bearerAuth")
-  @GetMapping("/me")
-  public CurrentUserResponse currentUser(@AuthenticationPrincipal Jwt jwt) {
-    return CurrentUserResponse.builder()
-      .userId(Long.parseLong(Objects.requireNonNull(jwt.getSubject())))
-      .roles(jwt.getClaimAsStringList("roles"))
       .build();
   }
 

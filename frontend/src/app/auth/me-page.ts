@@ -5,7 +5,7 @@ import { finalize } from 'rxjs';
 
 import { AuthApiService } from './auth-api.service';
 import { AuthStateService } from './auth-state.service';
-import { CurrentUserResponse } from './auth.models';
+import { UserProfile } from './auth.models';
 
 const GENERIC_USER_ERROR = 'Unable to load your profile right now. Please try again.';
 
@@ -20,15 +20,15 @@ export class MePage implements OnInit {
   private readonly authState = inject(AuthStateService);
   private readonly router = inject(Router);
 
-  readonly currentUser = signal<CurrentUserResponse | null>(null);
+  readonly profile = signal<UserProfile | null>(null);
   readonly isLoading = signal(true);
   readonly isLoggingOut = signal(false);
   readonly loadError = signal<string | null>(null);
 
   ngOnInit(): void {
-    this.authApiService.currentUser().subscribe({
-      next: (user) => {
-        this.currentUser.set(user);
+    this.authApiService.profile().subscribe({
+      next: (profile) => {
+        this.profile.set(profile);
         this.isLoading.set(false);
       },
       error: (error: unknown) => this.handleLoadError(error),

@@ -118,9 +118,9 @@ Implement these flows:
    limiting, token history, or cleanup jobs.
 3. Allow verified users to log in. Issue a 15-minute JWT access token returned
    to Angular memory and a 7-day refresh token in an `HttpOnly` cookie. Validate
-   the bearer JWT on protected requests and expose a current-user access-check
-   endpoint. Keep access authentication stateless while persisting the refresh
-   session for rotation and revocation.
+   the bearer JWT on protected requests and expose the authenticated user's
+   profile through `/api/v1/users/me`. Keep access authentication stateless
+   while persisting the refresh session for rotation and revocation.
 4. Store refresh tokens only as hashes. Rotate on every refresh, revoke the
    current session on logout, and clear the refresh-token cookie.
 5. When a rotated refresh token is reused, revoke every active token in the

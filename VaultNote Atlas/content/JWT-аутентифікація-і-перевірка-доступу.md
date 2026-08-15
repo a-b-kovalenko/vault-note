@@ -6,20 +6,20 @@ JWT не приховує дані — його header і payload можна л�
 сенс у тому, щоб передати claims, підписані backend: сервер перевіряє підпис,
 issuer і термін дії, а потім дозволяє або відхиляє запит. У VaultNote цей
 ланцюжок починається з access token у Bruno і завершується створенням
-`SecurityContext` перед викликом `AuthController`.
+`SecurityContext` перед викликом `UserController`.
 
 ## Де це використовується у VaultNote
 
 Основна перевірка доступу виконується endpoint-ом:
 
 ```http
-GET /api/v1/auth/me
+GET /api/v1/users/me
 Authorization: Bearer <access-token>
 ```
 
-Endpoint повертає `userId` і ролі з перевіреного JWT. Він потрібен як простий
-access-check: якщо токен валідний, запит отримує `200 OK`; якщо токена немає
-або він не проходить перевірку, запит не доходить до controller.
+Endpoint перевіряє JWT, завантажує поточного користувача з PostgreSQL і повертає
+його профіль: `id`, `email`, `display_name`, `email_verified` і ролі. Якщо токена
+немає або він не проходить перевірку, запит не доходить до controller.
 
 Пов'язані частини застосунку:
 
@@ -27,9 +27,9 @@ access-check: якщо токен валідний, запит отримує `2
 - **Підпис** — `JwtEncoder` і `NimbusJwtEncoder` у `JwtConfiguration`.
 - **Перевірка JWT** — `JwtDecoder` і `NimbusJwtDecoder` у `JwtConfiguration`.
 - **Підключення Bearer authentication** — `SecurityConfig`.
-- **Захищений endpoint** — `AuthController` і `CurrentUserResponse`.
-- **Перевірка PostgreSQL integration test** — `AuthenticatedUserIntegrationTest`.
-- **Ручна перевірка** — Bruno-реквести `Login` і `Current User`.
+- **Захищений endpoint** — `UserController` і `UserProfileDto`.
+- **Перевірка PostgreSQL integration test** — `UserIntegrationTest`.
+- **Ручна перевірка** — Bruno-реквести `Login` і `Profile`.
 
 ## Чому JWT можна розкодувати
 
@@ -118,15 +118,17 @@ Secret береться з `VAULTNOTE_JWT_SECRET` і має містити що�
 
 ```mermaid
 flowchart TD
-    A["Bruno: GET /api/v1/auth/me"] --> B["BearerTokenAuthenticationFilter"]
+    A["Bruno: GET /api/v1/users/me"] --> B["BearerTokenAuthenticationFilter"]
     B --> C["JwtAuthenticationProvider"]
     C --> D["JwtDecoder"]
     D --> E{"Підпис, issuer і exp валідні?"}
     E -->|Ні| F["401 Unauthorized"]
     E -->|Так| G["JwtAuthenticationToken"]
     G --> H["SecurityContext"]
-    H --> I["AuthController.currentUser"]
-    I --> J["200 OK: userId і roles"]
+    H --> I["CurrentUserProvider"]
+    I --> J["UserService.getCurrentProfile"]
+    J --> K["UserController.getCurrentProfile"]
+    K --> L["200 OK: profile"]
 ```
 
 ### 1. Bruno формує HTTP-запит
@@ -137,7 +139,7 @@ flowchart TD
 Authorization: Bearer eyJ...
 ```
 
-Для `Current User` потрібен саме access token із поля `access_token` у відповіді
+Для `Profile` потрібен саме access token із поля `access_token` у відповіді
 Login. Refresh token із `Set-Cookie` сюди не підходить.
 
 ### 2. BearerTokenAuthenticationFilter дістає токен
@@ -191,19 +193,14 @@ Base64URL і перевіряє автентичність підпису.
 Якщо authentication успішна, запит проходить далі. Якщо токен відсутній,
 прострочений або має неправильний підпис, controller не викликається.
 
-### 7. Controller отримує перевірений Jwt
+### 7. UserController отримує authenticated context
 
-Spring інжектить validated token у параметр:
+`UserController` викликає `UserService.getCurrentProfile()`. Сервіс отримує
+ідентифікатор через `CurrentUserProvider`, завантажує користувача з бази і
+мапить його в `UserProfileDto`.
 
-```java
-@AuthenticationPrincipal Jwt jwt
-```
-
-`AuthController` читає `sub` і `roles`, створює `CurrentUserResponse` і
-повертає його клієнту.
-
-Поточний endpoint не робить повторний запит у базу. Він довіряє claims лише
-після успішної криптографічної перевірки JWT.
+Тому `/api/v1/users/me` перевіряє не лише криптографічну валідність JWT, а й
+наявність поточного користувача в PostgreSQL.
 
 ## Що означає STATELESS
 
@@ -261,10 +258,9 @@ Claim `roles` перевіряється через `UserRole`, а
 на кшталт `ROLE_USER` і `ROLE_ADMIN` ще до входу в controller. Невідоме або
 відсутнє значення ролі відхиляється під час authentication.
 
-Поточний `GET /api/v1/auth/me` перевіряє саме автентифікацію, а не повну
-авторизацію. Він також не перевіряє, чи існує user із `sub` у базі. Тому
-видалений user теоретично залишатиметься authenticated до завершення терміну
-дії JWT.
+`GET /api/v1/users/me` перевіряє автентифікацію і завантажує профіль поточного
+користувача. Видалений user отримає помилку профілю навіть якщо його JWT ще не
+закінчився.
 
 У поточному authentication slice ще не реалізовані:
 

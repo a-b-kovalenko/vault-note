@@ -1,11 +1,11 @@
 meta {
-  name: Current User
+  name: Profile
   type: http
   seq: 5
 }
 
 get {
-  url: {{apiUrl}}/api/v1/auth/me
+  url: {{apiUrl}}/api/v1/users/me
   body: none
   auth: bearer
 }

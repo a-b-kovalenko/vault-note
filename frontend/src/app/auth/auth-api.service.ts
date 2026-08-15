@@ -5,8 +5,6 @@ import { map, Observable, switchMap } from 'rxjs';
 import { API_BASE_URL } from '../api/api-config';
 import { CsrfService } from './csrf.service';
 import {
-  CurrentUserApiResponse,
-  CurrentUserResponse,
   LoginApiResponse,
   LoginRequest,
   LoginResponse,
@@ -15,6 +13,9 @@ import {
   RegisterUserApiResponse,
   RegisterUserRequest,
   RegisterUserResponse,
+  UpdateUserProfileRequest,
+  UserProfile,
+  UserProfileApiResponse,
 } from './auth.models';
 
 @Injectable({ providedIn: 'root' })
@@ -98,12 +99,25 @@ export class AuthApiService {
     );
   }
 
-  currentUser(): Observable<CurrentUserResponse> {
+  profile(): Observable<UserProfile> {
     return this.http
-      .get<CurrentUserApiResponse>(`${API_BASE_URL}/api/v1/auth/me`, {
+      .get<UserProfileApiResponse>(`${API_BASE_URL}/api/v1/users/me`, {
         withCredentials: true,
       })
-      .pipe(map(AuthApiService.toCurrentUserResponse));
+      .pipe(map(AuthApiService.toUserProfile));
+  }
+
+  updateProfile(request: UpdateUserProfileRequest): Observable<UserProfile> {
+    return this.csrfService.ensureToken().pipe(
+      switchMap(() =>
+        this.http.patch<UserProfileApiResponse>(
+          `${API_BASE_URL}/api/v1/users/me`,
+          { display_name: request.displayName },
+          { withCredentials: true },
+        ),
+      ),
+      map(AuthApiService.toUserProfile),
+    );
   }
 
   logout(): Observable<void> {
@@ -134,13 +148,22 @@ export class AuthApiService {
     };
   }
 
-  private static toCurrentUserResponse(response: CurrentUserApiResponse): CurrentUserResponse {
-    if (response.user_id === undefined || response.roles === undefined) {
-      throw new Error('The current-user response did not contain a complete user identity.');
+  private static toUserProfile(response: UserProfileApiResponse): UserProfile {
+    if (
+      response.id === undefined ||
+      response.email === undefined ||
+      response.display_name === undefined ||
+      response.email_verified === undefined ||
+      response.roles === undefined
+    ) {
+      throw new Error('The user-profile response did not contain a complete profile.');
     }
 
     return {
-      userId: response.user_id,
+      id: response.id,
+      email: response.email,
+      displayName: response.display_name,
+      emailVerified: response.email_verified,
       roles: response.roles,
     };
   }

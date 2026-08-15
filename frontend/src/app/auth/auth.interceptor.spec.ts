@@ -51,9 +51,9 @@ describe('authInterceptor', () => {
       expiresIn: 900,
     });
 
-    httpClient().get(`${API_BASE_URL}/api/v1/auth/me`).subscribe();
+    httpClient().get(`${API_BASE_URL}/api/v1/users/me`).subscribe();
 
-    const request = httpMock.expectOne(`${API_BASE_URL}/api/v1/auth/me`);
+    const request = httpMock.expectOne(`${API_BASE_URL}/api/v1/users/me`);
     expect(request.request.headers.get('Authorization')).toBe('Bearer access-token');
     expect(request.request.withCredentials).toBe(true);
     request.flush({});
@@ -62,14 +62,14 @@ describe('authInterceptor', () => {
   it('refreshes once after a 401 and retries with the new access token', () => {
     let response: unknown;
     httpClient()
-      .get(`${API_BASE_URL}/api/v1/auth/me`)
+      .get(`${API_BASE_URL}/api/v1/users/me`)
       .subscribe((value) => (response = value));
 
-    const initialRequest = httpMock.expectOne(`${API_BASE_URL}/api/v1/auth/me`);
+    const initialRequest = httpMock.expectOne(`${API_BASE_URL}/api/v1/users/me`);
     initialRequest.flush({}, { status: 401, statusText: 'Unauthorized' });
 
     expect(refresh).toHaveBeenCalledTimes(1);
-    const retryRequest = httpMock.expectOne(`${API_BASE_URL}/api/v1/auth/me`);
+    const retryRequest = httpMock.expectOne(`${API_BASE_URL}/api/v1/users/me`);
     expect(retryRequest.request.headers.get('Authorization')).toBe('Bearer refreshed-access-token');
     retryRequest.flush({ user_id: 1 });
 
@@ -122,10 +122,10 @@ describe('authInterceptor', () => {
     });
 
     httpClient()
-      .get(`${API_BASE_URL}/api/v1/auth/me`)
+      .get(`${API_BASE_URL}/api/v1/users/me`)
       .subscribe({ error: () => undefined });
 
-    httpMock.expectOne(`${API_BASE_URL}/api/v1/auth/me`).flush(
+    httpMock.expectOne(`${API_BASE_URL}/api/v1/users/me`).flush(
       {},
       {
         status: 401,

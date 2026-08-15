@@ -13,8 +13,8 @@ has been implemented and verified. Branch integration is tracked separately.
 - Login endpoint, short-lived JWT issuance, refresh-token persistence,
   `HttpOnly` cookie delivery, refresh rotation, and reuse detection are
   implemented and verified.
-- Bearer JWT validation and the protected `GET /api/v1/auth/me` endpoint are
-  implemented and covered by PostgreSQL integration tests.
+- Bearer JWT validation and the protected `GET /api/v1/users/me` profile
+  endpoint are implemented and covered by PostgreSQL integration tests.
 - JWT `roles` claims are validated against the `UserRole` enum and mapped to
   Spring Security authorities; missing or unknown roles are rejected before the
   controller.
@@ -32,7 +32,7 @@ has been implemented and verified. Branch integration is tracked separately.
   tests.
 - The local browser flows were verified end to end: registration sends a
   display-name-personalized verification email, `/verify-email` confirms it,
-  login redirects to `/me`, current user data is loaded, and logout revokes the
+  login redirects to `/me`, profile data is loaded, and logout revokes the
   refresh session and returns to `/login`.
 - The backend password-recovery baseline is implemented for local accounts:
   generic reset requests, hashed expiring one-time tokens, Mailpit links,
@@ -116,8 +116,8 @@ has been implemented and verified. Branch integration is tracked separately.
 - [x] Implement login, short-lived access JWTs, and rotating refresh sessions.
   - [x] Implement login, short-lived access JWT issuance, and initial refresh
     token cookie delivery.
-  - [x] Validate bearer JWTs on protected requests and expose the current-user
-    access-check endpoint.
+  - [x] Validate bearer JWTs on protected requests and expose the authenticated
+    user profile resource.
   - [x] Add PostgreSQL integration coverage for successful and failed login,
     including access-token response, refresh cookie, and persisted token hash.
   - [x] Implement refresh endpoint, rotation, and token-family reuse detection.
@@ -241,6 +241,9 @@ has been implemented and verified. Branch integration is tracked separately.
 
 ### Profile frontend
 
+- [x] Migrate Angular `/me` to `GET /api/v1/users/me`, rename the API method
+  from `currentUser()` to `profile()`, regenerate the OpenAPI client, and
+  prepare `updateProfile()` for the future editable profile screen.
 - [ ] Add the authenticated application shell and account menu with Profile,
   conditional Admin users, and a separated Log out action.
 - [ ] Implement the Profile screen with read-only email and verification state,

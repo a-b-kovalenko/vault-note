@@ -50,8 +50,8 @@ describe('csrfInterceptor', () => {
   it('does not copy the token to safe or external requests', () => {
     vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
 
-    httpMockClient().get(`${API_BASE_URL}/api/v1/auth/me`).subscribe();
-    const safeRequest = httpMock.expectOne(`${API_BASE_URL}/api/v1/auth/me`);
+    httpMockClient().get(`${API_BASE_URL}/api/v1/users/me`).subscribe();
+    const safeRequest = httpMock.expectOne(`${API_BASE_URL}/api/v1/users/me`);
     expect(safeRequest.request.headers.has('X-XSRF-TOKEN')).toBe(false);
     safeRequest.flush({});
 
