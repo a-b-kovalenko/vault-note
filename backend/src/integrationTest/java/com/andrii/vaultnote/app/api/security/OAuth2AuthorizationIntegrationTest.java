@@ -63,7 +63,8 @@ class OAuth2AuthorizationIntegrationTest extends AbstractBaseIntegrationTest {
       .response();
 
     assertThat(response.statusCode()).isEqualTo(HttpStatus.FOUND.value());
-    assertThat(response.getHeader("Location")).contains("/login?error");
+    assertThat(response.getHeader("Location"))
+      .isEqualTo("http://localhost:4200/login?error=oauth");
     assertThat(response.getHeaders().getValues("Set-Cookie"))
       .noneMatch(header -> header.startsWith("JSESSIONID="))
       .anyMatch(header -> header.contains(COOKIE_NAME + "=") && header.contains("Max-Age=0"));

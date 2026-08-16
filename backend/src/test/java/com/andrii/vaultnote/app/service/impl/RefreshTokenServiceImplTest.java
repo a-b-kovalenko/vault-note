@@ -62,6 +62,37 @@ class RefreshTokenServiceImplTest {
   RefreshTokenServiceImpl refreshTokenService;
 
   @Test
+  void shouldCreateSessionAndPersistRefreshToken() {
+    var user = UserEntity.builder()
+      .id(1L)
+      .build();
+    var generatedRefreshToken = new SecureTokenGenerator.GeneratedToken(
+      RAW_REFRESH_TOKEN,
+      REFRESH_TOKEN_HASH);
+
+    when(clock.instant()).thenReturn(NOW);
+    when(secureTokenGenerator.generate()).thenReturn(generatedRefreshToken);
+    when(refreshTokenProperties.ttl()).thenReturn(REFRESH_TOKEN_TTL);
+
+    var result = refreshTokenService.createSession(user);
+
+    var refreshTokenCaptor = ArgumentCaptor.forClass(RefreshTokenEntity.class);
+    verify(refreshTokenRepository).save(refreshTokenCaptor.capture());
+    var savedRefreshToken = refreshTokenCaptor.getValue();
+
+    assertThat(result).isEqualTo(RAW_REFRESH_TOKEN);
+    assertThat(savedRefreshToken.getUser()).isSameAs(user);
+    assertThat(savedRefreshToken.getTokenHash()).isEqualTo(REFRESH_TOKEN_HASH);
+    assertThat(savedRefreshToken.getTokenFamilyId()).isNotNull();
+    assertThat(savedRefreshToken.getExpiresAt()).isEqualTo(NOW.plus(REFRESH_TOKEN_TTL));
+
+    verify(clock).instant();
+    verify(secureTokenGenerator).generate();
+    verify(refreshTokenProperties).ttl();
+    verifyNoInteractions(authenticationResultFactory, refreshTokenFamilyRevocationService);
+  }
+
+  @Test
   void shouldRotateRefreshToken() {
     var user = UserEntity.builder()
       .id(1L)
