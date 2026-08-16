@@ -46,7 +46,7 @@ public class UserEntity {
   @Setter
   String displayName;
 
-  @Column(name = "password_hash", nullable = false)
+  @Column(name = "password_hash")
   String passwordHash;
 
   @Column(name = "email_verified", nullable = false)
