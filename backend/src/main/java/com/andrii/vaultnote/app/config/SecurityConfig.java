@@ -12,7 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.savedrequest.NullRequestCache;
@@ -39,10 +40,9 @@ public class SecurityConfig {
     RolesJwtAuthenticationConverter jwtAuthenticationConverter,
     CsrfTokenRepository csrfTokenRepository,
     CsrfTokenRequestHandler csrfTokenRequestHandler,
-    AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository) {
-
-    var oauth2FailureHandler = new SimpleUrlAuthenticationFailureHandler("/login?error");
-    oauth2FailureHandler.setAllowSessionCreation(false);
+    AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository,
+    AuthenticationSuccessHandler oauth2SuccessHandler,
+    AuthenticationFailureHandler oauth2FailureHandler) {
 
     http
       .cors(Customizer.withDefaults())
@@ -74,6 +74,7 @@ public class SecurityConfig {
         .requestMatchers(POST, "/api/v1/auth/logout").permitAll()
         .anyRequest().authenticated())
       .oauth2Login(oauth2 -> oauth2
+        .successHandler(oauth2SuccessHandler)
         .failureHandler(oauth2FailureHandler)
         .authorizationEndpoint(endpoint -> endpoint
           .authorizationRequestRepository(authorizationRequestRepository)))

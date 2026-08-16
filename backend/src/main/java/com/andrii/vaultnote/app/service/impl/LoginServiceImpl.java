@@ -1,20 +1,15 @@
 package com.andrii.vaultnote.app.service.impl;
 
 import com.andrii.vaultnote.app.api.auth.dto.LoginRequest;
-import com.andrii.vaultnote.app.config.RefreshTokenProperties;
 import com.andrii.vaultnote.app.exception.AuthenticationFailedException;
-import com.andrii.vaultnote.app.security.SecureTokenGenerator;
 import com.andrii.vaultnote.app.security.ratelimit.RateLimitScope;
 import com.andrii.vaultnote.app.service.AuthenticationResultFactory;
 import com.andrii.vaultnote.app.service.LoginResult;
 import com.andrii.vaultnote.app.service.LoginService;
 import com.andrii.vaultnote.app.service.RateLimitService;
-import com.andrii.vaultnote.users.infrastructure.persistence.entity.RefreshTokenEntity;
+import com.andrii.vaultnote.app.service.RefreshTokenService;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
-import com.andrii.vaultnote.users.infrastructure.persistence.repository.RefreshTokenJpaRepository;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
-import java.time.Clock;
-import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -29,13 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class LoginServiceImpl implements LoginService {
 
-  SecureTokenGenerator secureTokenGenerator;
   AuthenticationResultFactory authenticationResultFactory;
-  RefreshTokenJpaRepository refreshTokenRepository;
-  RefreshTokenProperties refreshTokenProperties;
+  RefreshTokenService refreshTokenService;
   UserJpaRepository userRepository;
   PasswordEncoder passwordEncoder;
-  Clock clock;
   RateLimitService rateLimitService;
 
   @Override
@@ -50,15 +42,8 @@ public class LoginServiceImpl implements LoginService {
         request.password(), userEntity.getPasswordHash()))
       .orElseThrow(AuthenticationFailedException::new);
 
-    var generatedRefreshToken = secureTokenGenerator.generate();
-    var refreshToken = RefreshTokenEntity.builder()
-      .user(user)
-      .tokenHash(generatedRefreshToken.hash())
-      .tokenFamilyId(UUID.randomUUID())
-      .expiresAt(clock.instant().plus(refreshTokenProperties.ttl()))
-      .build();
-    refreshTokenRepository.save(refreshToken);
+    var rawRefreshToken = refreshTokenService.createSession(user);
 
-    return authenticationResultFactory.create(user, generatedRefreshToken.rawValue());
+    return authenticationResultFactory.create(user, rawRefreshToken);
   }
 }

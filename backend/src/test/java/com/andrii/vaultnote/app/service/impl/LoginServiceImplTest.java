@@ -2,8 +2,6 @@ package com.andrii.vaultnote.app.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -12,29 +10,23 @@ import static org.mockito.Mockito.when;
 import com.andrii.vaultnote.app.api.auth.dto.LoginRequest;
 import com.andrii.vaultnote.app.api.auth.dto.LoginResponse;
 import com.andrii.vaultnote.app.api.auth.dto.TokenType;
-import com.andrii.vaultnote.app.config.RefreshTokenProperties;
 import com.andrii.vaultnote.app.exception.AuthenticationFailedException;
 import com.andrii.vaultnote.app.exception.RateLimitExceededException;
-import com.andrii.vaultnote.app.security.SecureTokenGenerator;
 import com.andrii.vaultnote.app.security.ratelimit.RateLimitScope;
 import com.andrii.vaultnote.app.service.AuthenticationResultFactory;
 import com.andrii.vaultnote.app.service.LoginResult;
 import com.andrii.vaultnote.app.service.RateLimitService;
+import com.andrii.vaultnote.app.service.RefreshTokenService;
 import com.andrii.vaultnote.users.domain.UserRole;
-import com.andrii.vaultnote.users.infrastructure.persistence.entity.RefreshTokenEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
-import com.andrii.vaultnote.users.infrastructure.persistence.repository.RefreshTokenJpaRepository;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
-import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.EnumSet;
 import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -49,25 +41,16 @@ class LoginServiceImplTest {
   private static final String PASSWORD_HASH = "password-hash";
   private static final String ACCESS_TOKEN = "access-token";
   private static final String RAW_REFRESH_TOKEN = "raw-refresh-token";
-  private static final String REFRESH_TOKEN_HASH = "refresh-token-hash";
   private static final Duration ACCESS_TOKEN_TTL = Duration.ofMinutes(15);
-  private static final Duration REFRESH_TOKEN_TTL = Duration.ofDays(7);
-  private static final Instant NOW = Instant.parse("2026-08-10T12:00:00Z");
 
   @Mock
   UserJpaRepository userRepository;
   @Mock
-  RefreshTokenJpaRepository refreshTokenRepository;
-  @Mock
   PasswordEncoder passwordEncoder;
-  @Mock
-  SecureTokenGenerator secureTokenGenerator;
   @Mock
   AuthenticationResultFactory authenticationResultFactory;
   @Mock
-  RefreshTokenProperties refreshTokenProperties;
-  @Mock
-  Clock clock;
+  RefreshTokenService refreshTokenService;
   @Mock
   RateLimitService rateLimitService;
 
@@ -78,8 +61,6 @@ class LoginServiceImplTest {
   void shouldLoginVerifiedUserAndPersistRefreshToken() {
     var user = verifiedUser();
     var request = loginRequest();
-    var generatedRefreshToken = new SecureTokenGenerator.GeneratedToken(
-      RAW_REFRESH_TOKEN, REFRESH_TOKEN_HASH);
     var expectedResult = new LoginResult(
       LoginResponse.builder()
         .accessToken(ACCESS_TOKEN)
@@ -90,26 +71,16 @@ class LoginServiceImplTest {
 
     when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
     when(passwordEncoder.matches(PASSWORD, PASSWORD_HASH)).thenReturn(true);
-    when(secureTokenGenerator.generate()).thenReturn(generatedRefreshToken);
+    when(refreshTokenService.createSession(user)).thenReturn(RAW_REFRESH_TOKEN);
     when(authenticationResultFactory.create(user, RAW_REFRESH_TOKEN)).thenReturn(expectedResult);
-    when(clock.instant()).thenReturn(NOW);
-    when(refreshTokenProperties.ttl()).thenReturn(REFRESH_TOKEN_TTL);
 
     var result = loginService.login(request, "127.0.0.1");
 
-    var refreshTokenCaptor = ArgumentCaptor.forClass(RefreshTokenEntity.class);
-    verify(refreshTokenRepository).save(refreshTokenCaptor.capture());
-    var savedRefreshToken = refreshTokenCaptor.getValue();
-
-    assertThat(savedRefreshToken.getUser()).isSameAs(user);
-    assertThat(savedRefreshToken.getTokenHash()).isEqualTo(REFRESH_TOKEN_HASH);
-    assertThat(savedRefreshToken.getTokenFamilyId()).isNotNull();
-    assertThat(savedRefreshToken.getExpiresAt()).isEqualTo(NOW.plus(REFRESH_TOKEN_TTL));
     assertThat(result).isSameAs(expectedResult);
 
     verify(passwordEncoder).matches(PASSWORD, PASSWORD_HASH);
     verify(rateLimitService).check(RateLimitScope.LOGIN, "127.0.0.1", EMAIL);
-    verify(secureTokenGenerator).generate();
+    verify(refreshTokenService).createSession(user);
     verify(authenticationResultFactory).create(user, RAW_REFRESH_TOKEN);
   }
 
@@ -128,11 +99,8 @@ class LoginServiceImplTest {
     verifyNoInteractions(
       userRepository,
       passwordEncoder,
-      secureTokenGenerator,
-      refreshTokenRepository,
-      authenticationResultFactory,
-      refreshTokenProperties,
-      clock);
+      refreshTokenService,
+      authenticationResultFactory);
   }
 
   @Test
@@ -145,11 +113,8 @@ class LoginServiceImplTest {
 
     verifyNoInteractions(
       passwordEncoder,
-      secureTokenGenerator,
-      refreshTokenRepository,
-      authenticationResultFactory,
-      refreshTokenProperties,
-      clock);
+      refreshTokenService,
+      authenticationResultFactory);
   }
 
   @Test
@@ -165,11 +130,8 @@ class LoginServiceImplTest {
 
     verifyNoInteractions(
       passwordEncoder,
-      secureTokenGenerator,
-      refreshTokenRepository,
-      authenticationResultFactory,
-      refreshTokenProperties,
-      clock);
+      refreshTokenService,
+      authenticationResultFactory);
   }
 
   @Test
@@ -184,12 +146,8 @@ class LoginServiceImplTest {
 
     verify(passwordEncoder).matches(PASSWORD, PASSWORD_HASH);
     verifyNoInteractions(
-      secureTokenGenerator,
-      refreshTokenRepository,
-      authenticationResultFactory,
-      refreshTokenProperties,
-      clock);
-    verify(refreshTokenRepository, never()).save(any(RefreshTokenEntity.class));
+      refreshTokenService,
+      authenticationResultFactory);
   }
 
   private static LoginRequest loginRequest() {

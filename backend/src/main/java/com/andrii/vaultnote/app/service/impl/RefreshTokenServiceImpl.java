@@ -8,6 +8,7 @@ import com.andrii.vaultnote.app.service.LoginResult;
 import com.andrii.vaultnote.app.service.RefreshTokenFamilyRevocationService;
 import com.andrii.vaultnote.app.service.RefreshTokenService;
 import com.andrii.vaultnote.users.infrastructure.persistence.entity.RefreshTokenEntity;
+import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
 import com.andrii.vaultnote.users.infrastructure.persistence.repository.RefreshTokenJpaRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.Instant;
+import java.util.UUID;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -33,6 +36,20 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
   RefreshTokenJpaRepository refreshTokenRepository;
   RefreshTokenProperties refreshTokenProperties;
   Clock clock;
+
+  @Override
+  @Transactional
+  public String createSession(UserEntity user) {
+    var now = clock.instant();
+    var generatedRefreshToken = secureTokenGenerator.generate();
+    var refreshToken = createRefreshToken(
+      user,
+      UUID.randomUUID(),
+      now,
+      generatedRefreshToken);
+    refreshTokenRepository.save(refreshToken);
+    return generatedRefreshToken.rawValue();
+  }
 
   @Override
   @Transactional
@@ -63,12 +80,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     var generatedRefreshToken = secureTokenGenerator.generate();
-    var nextRefreshToken = RefreshTokenEntity.builder()
-      .user(token.getUser())
-      .tokenHash(generatedRefreshToken.hash())
-      .tokenFamilyId(token.getTokenFamilyId())
-      .expiresAt(now.plus(refreshTokenProperties.ttl()))
-      .build();
+    var nextRefreshToken = createRefreshToken(
+      token.getUser(),
+      token.getTokenFamilyId(),
+      now,
+      generatedRefreshToken);
     refreshTokenRepository.save(nextRefreshToken);
 
     return authenticationResultFactory.create(token.getUser(), generatedRefreshToken.rawValue());
@@ -91,6 +107,19 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
       .orElse(0);
 
     log.info("Logout completed; revoked {} refresh token(s)", revokedTokens);
+  }
+
+  private RefreshTokenEntity createRefreshToken(
+    UserEntity user,
+    UUID tokenFamilyId,
+    Instant issuedAt,
+    SecureTokenGenerator.GeneratedToken generatedRefreshToken) {
+    return RefreshTokenEntity.builder()
+      .user(user)
+      .tokenHash(generatedRefreshToken.hash())
+      .tokenFamilyId(tokenFamilyId)
+      .expiresAt(issuedAt.plus(refreshTokenProperties.ttl()))
+      .build();
   }
 
 }

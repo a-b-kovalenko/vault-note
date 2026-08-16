@@ -293,14 +293,16 @@ has been implemented and verified. Branch integration is tracked separately.
     disable the session request cache.
   - [x] Verify the Google redirect, state, PKCE parameters, and rejection of a
     callback with an incorrect state.
-- [ ] Implement OAuth callback identity resolution and the stateless VaultNote
-  handoff.
-  - [ ] Map verified provider identities to local users and assign `USER` by
+- [x] Implement the backend OAuth callback identity resolution and the
+  stateless VaultNote handoff.
+  - [x] Map verified provider identities to local users and assign `USER` by
     default.
-  - [ ] Handle explicit onboarding and account linking; never link by email
-    match alone.
-  - [ ] Issue the existing JWT access token and refresh-token cookie.
-  - [ ] Never place access or refresh tokens in redirect URLs.
+  - [x] Onboard new provider-only users and reject an existing local email;
+    explicit authenticated account linking remains a later step.
+  - [x] Create the existing refresh session and set its `HttpOnly` cookie; the
+    Angular callback will obtain the access JWT through the existing refresh
+    endpoint.
+  - [x] Never place access or refresh tokens in redirect URLs.
 
 ### OAuth frontend
 
