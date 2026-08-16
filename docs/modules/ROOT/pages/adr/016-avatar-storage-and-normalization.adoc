@@ -49,6 +49,14 @@ Frontend `accept` attributes and early size checks are convenience hints only.
 State-changing upload and removal use the existing CSRF flow; retrieval
 requires the authenticated Bearer token.
 
+The same avatar storage is also used when Google OIDC provides an optional
+`picture` claim. The backend fetches that image only from an explicit HTTPS
+allowlist, applies bounded time and response-size limits, passes the bytes
+through the same decoder and normalizer, and stores only the resulting local
+`256x256` JPEG. The remote URL is not persisted or returned as the avatar
+source. A local avatar always takes precedence; an unavailable or invalid
+Google image does not fail authentication.
+
 == Consequences
 
 * The `users` row and profile queries remain small and do not load image bytes.
@@ -62,6 +70,9 @@ requires the authenticated Bearer token.
   increase database storage. The separate repository/service boundary allows a
   later move to object storage without changing the user model or endpoint
   contract.
+* Google profile images are copied into the same local storage instead of being
+  fetched by the browser. This keeps the profile UI independent of provider
+  URLs and applies one validation policy to manual and provider-sourced images.
 * An authenticated browser cannot use a plain `<img src>` request when the
   access token is held in memory. Angular retrieves the image as a `Blob` via
   `HttpClient`, creates an object URL, and revokes it after replacement or
@@ -71,4 +82,5 @@ requires the authenticated Bearer token.
 
 Accepted for the current PostgreSQL-backed implementation and local/IDE
 workflow. Image decoding/normalization, the avatar service, controller
-endpoints, and frontend upload states remain implementation work under Phase 6.
+endpoints, frontend upload states, and server-side Google `picture` import are
+implemented and covered by tests under Phases 6 and 7.

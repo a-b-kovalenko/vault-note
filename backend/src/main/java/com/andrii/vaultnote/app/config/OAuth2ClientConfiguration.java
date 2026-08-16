@@ -18,7 +18,8 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequ
 @Configuration
 @EnableConfigurationProperties({
   OAuth2AuthorizationRequestCookieProperties.class,
-  OAuth2Properties.class
+  OAuth2Properties.class,
+  GoogleAvatarProperties.class
 })
 public class OAuth2ClientConfiguration {
 

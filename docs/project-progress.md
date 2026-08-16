@@ -62,11 +62,11 @@ has been implemented and verified. Branch integration is tracked separately.
   Therefore, `MEDIUM-3` is only partially resolved: the local single-instance
   scope is complete, while the full finding closes after the remaining Phase 12
   tasks are completed.
-  After OAuth, the next planned milestone is Phase 8: deploy the Angular SPA
-  and Spring Boot API to GCP while using Supabase Free PostgreSQL for demo data.
-  Then continue with the dedicated Notes phase and the remaining cross-cutting
-  Angular work such as route guards and standard frontend API-error
-  presentation.
+  After the remaining provider-mocked and manual OAuth verification, the next
+  planned milestone is Phase 8: deploy the Angular SPA and Spring Boot API to
+  GCP while using Supabase Free PostgreSQL for demo data. Then continue with
+  the dedicated Notes phase and the remaining cross-cutting Angular work such
+  as route guards and standard frontend API-error presentation.
 - The authenticated Angular application shell is implemented and verified: `/me`
   is rendered inside the shell, the account menu shows initials, display name,
   and email, the `ADMIN` link to All users is conditional, and logout is a
@@ -80,6 +80,14 @@ has been implemented and verified. Branch integration is tracked separately.
   implemented and verified on top of the existing paginated API; it lists all
   registered users, keeps backend `ADMIN` authorization as the source of truth,
   and exposes no user-management actions.
+- The base Google OAuth2/OIDC flow is implemented: the login button starts the
+  backend authorization flow, the Angular callback completes authentication
+  through refresh, and the access JWT remains in memory. The backend resolves
+  Google identities by `sub`, creates the VaultNote refresh session, and imports
+  the optional Google `picture` into local normalized avatar storage when no
+  local avatar exists. Existing local avatars are not overwritten; provider
+  mocked integration coverage and a final manual check of the avatar import
+  remain open.
 
 ## Phase 0 — Foundation
 
@@ -303,20 +311,26 @@ has been implemented and verified. Branch integration is tracked separately.
     Angular callback will obtain the access JWT through the existing refresh
     endpoint.
   - [x] Never place access or refresh tokens in redirect URLs.
+  - [x] Import the optional Google `picture` on the backend through the allowed
+    HTTPS host list, bounded download, existing image normalizer, and separate
+    avatar storage. Import failures do not block login.
 
 ### OAuth frontend
 
-- [ ] Add the Angular OAuth flow.
-  - [ ] Add provider buttons to the login page.
-  - [ ] Add a callback route that completes authentication through refresh.
-  - [ ] Keep the access token only in frontend memory.
+- [x] Add the Angular OAuth flow.
+  - [x] Add provider buttons to the login page.
+  - [x] Add a callback route that completes authentication through refresh and
+    loads the local profile avatar.
+  - [x] Keep the access token only in frontend memory.
 
 ### OAuth verification
 
 - [x] Add base integration coverage for the Google redirect, PKCE, and invalid
   state callback.
-- [ ] Add provider-mocked integration coverage and a complete local manual
-  verification flow.
+- [x] Add unit coverage for Google avatar URL validation, bounded download,
+  normalization/persistence, and non-blocking import failures.
+- [ ] Add provider-mocked integration coverage and complete the local manual
+  verification of the Google avatar import.
 
 ## Phase 8 — First GCP demo deployment
 

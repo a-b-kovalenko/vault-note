@@ -26,6 +26,8 @@ Implement OAuth2/OIDC sign-in as a backend-owned authorization-code flow:
   successful provider authentication;
 * never place access or refresh tokens in redirect URLs;
 * add provider buttons and a callback route to the Angular login flow;
+* when Google provides a `picture` claim, import it on the backend into the
+  existing normalized avatar storage only when no local avatar exists;
 * use provider-mocked integration coverage and a local browser verification
   flow.
 
@@ -36,6 +38,9 @@ Implement OAuth2/OIDC sign-in as a backend-owned authorization-code flow:
   lifecycle for both password and provider sign-in.
 * Provider configuration, redirect URIs, verified-email semantics, and account
   linking become deployment concerns.
+* Provider profile images are treated as untrusted remote input: the backend
+  uses an HTTPS host allowlist, bounded download, image validation, and the
+  existing `256x256` JPEG normalization before storing them locally.
 * The backend can be implemented and tested before the complete Angular
   application exists, but the final user experience requires a login button and
   callback route.

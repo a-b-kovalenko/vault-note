@@ -394,12 +394,14 @@ such as Google or GitHub in this order:
    identity. Existing accounts require explicit authenticated linking; matching
    email alone must never link accounts.
    If Google returns the optional `picture` claim, import the image server-side
-   only for a new user who has no local avatar: allow only an approved HTTPS
-   Google image host, enforce a bounded download, validate the decoded image,
-   strip metadata, normalize it to the existing 256×256 JPEG avatar format, and
-   store it separately from the user row. A missing or invalid provider image
-   must not block login. Do not re-import it after a manual avatar replacement
-   or removal; the local avatar remains authoritative.
+   for a new or already linked user only when no local avatar exists: allow only
+   an approved HTTPS Google image host, enforce a bounded download, validate the
+   decoded image, strip metadata, normalize it to the existing 256×256 JPEG
+   avatar format, and store it separately from the user row. A missing or
+   invalid provider image must not block login. An existing local avatar is
+   authoritative and is never overwritten; after an explicit removal, a later
+   Google login may import the provider picture again because no local avatar
+   remains.
 7. Complete the security handoff:
    issue VaultNote's existing JWT access token and refresh-token cookie, keep
    access tokens out of redirect URLs, and obtain the frontend access token
@@ -407,16 +409,18 @@ such as Google or GitHub in this order:
 
 ### OAuth frontend
 
-- Add provider buttons to the login page.
-- Add a callback route that completes authentication through the existing
-  refresh flow.
-- Keep the access token only in frontend memory. Phone-based authentication
+- [x] Add provider buttons to the login page.
+- [x] Add a callback route that completes authentication through the existing
+  refresh flow and loads the local profile avatar.
+- [x] Keep the access token only in frontend memory. Phone-based authentication
   remains outside the current scope.
 
 ### OAuth verification
 
-- Add provider-mocked integration coverage and a local manual verification
-  flow.
+- [x] Add unit coverage for Google avatar URL validation, bounded download,
+  normalization/persistence, and non-blocking import failures.
+- [ ] Add provider-mocked integration coverage and complete the local manual
+  verification of the Google avatar import.
 
 ## Phase 8 — First GCP demo deployment
 
