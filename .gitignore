@@ -3,6 +3,7 @@ build/
 node_modules/
 .workspace/
 .mcp.json
+.codex/config.toml
 .env
 .env.*
 !.env.example

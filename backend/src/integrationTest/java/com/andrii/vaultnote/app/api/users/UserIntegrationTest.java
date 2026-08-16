@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.andrii.vaultnote.app.api.error.ApiErrorResponse;
 import com.andrii.vaultnote.app.api.users.dto.UpdateUserProfileRequest;
+import com.andrii.vaultnote.app.api.users.dto.UserInfoDto;
 import com.andrii.vaultnote.app.security.AccessTokenGenerator;
 import com.andrii.vaultnote.support.AbstractBaseIntegrationTest;
 import com.andrii.vaultnote.users.domain.UserRole;
@@ -18,6 +19,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 import javax.imageio.ImageIO;
 import java.util.EnumSet;
 import java.util.UUID;
@@ -357,7 +359,7 @@ class UserIntegrationTest extends AbstractBaseIntegrationTest {
     var admin = saveUser("admin-users@example.com", "Admin User", UserRole.ADMIN);
     var accessToken = accessTokenGenerator.generate(admin).rawValue();
 
-    var response = given()
+    var rawResponse = given()
       .port(port)
       .auth()
       .oauth2(accessToken)
@@ -371,12 +373,19 @@ class UserIntegrationTest extends AbstractBaseIntegrationTest {
       .extract()
       .response();
 
-    assertThat(response.jsonPath().getInt("number")).isZero();
-    assertThat(response.jsonPath().getInt("size")).isEqualTo(1);
-    assertThat(response.jsonPath().getInt("numberOfElements")).isEqualTo(1);
-    assertThat(response.jsonPath().getInt("totalElements")).isEqualTo(3);
-    assertThat(response.jsonPath().getString("content[0].email")).isEqualTo(admin.getEmail());
-    assertThat(response.getBody().asString())
+    var page = rawResponse.as(UserPageResponse.class);
+    assertThat(page)
+      .extracting(
+        UserPageResponse::number,
+        UserPageResponse::size,
+        UserPageResponse::numberOfElements,
+        UserPageResponse::totalElements)
+      .containsExactly(0, 1, 1, 3);
+    assertThat(page.content())
+      .singleElement()
+      .extracting(UserInfoDto::id, UserInfoDto::email, UserInfoDto::displayName)
+      .containsExactly(admin.getId(), admin.getEmail(), admin.getDisplayName());
+    assertThat(rawResponse.getBody().asString())
       .doesNotContain("passwordHash")
       .doesNotContain("password_hash");
   }
@@ -448,5 +457,13 @@ class UserIntegrationTest extends AbstractBaseIntegrationTest {
     var output = new ByteArrayOutputStream();
     assertThat(ImageIO.write(image, format, output)).isTrue();
     return output.toByteArray();
+  }
+
+  private record UserPageResponse(
+    List<UserInfoDto> content,
+    int number,
+    int size,
+    int numberOfElements,
+    int totalElements) {
   }
 }

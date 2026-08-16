@@ -103,6 +103,12 @@ destination before creating the file.
 
 ## Security and data
 
+- When the user asks to find, inspect, or verify data in the VaultNote
+  PostgreSQL database, use the project-scoped `vaultnote-postgres` MCP from
+  `.codex/config.toml` first. Use read-only queries against database
+  `vault_note` and schema `vaultnote`; do not use Docker, `psql`, or the IDEA
+  database tools as the first path. If the MCP is unavailable, report that
+  explicitly before using a fallback.
 - Notes are private to their owner. `ADMIN` may read paginated users and notes,
   but must not alter users, roles, or other users' notes.
 - Keep the 15-minute access JWT only in Angular memory. Refresh tokens are
