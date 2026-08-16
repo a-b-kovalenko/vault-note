@@ -39,6 +39,9 @@ The backend foundation is in progress. The repository currently contains:
   accounts, and refresh-session revocation;
 * an explicit CORS allowlist and SPA-compatible CSRF protection for
   state-changing requests;
+* Google OAuth2/OIDC sign-in with a separate `oauth_identities` table,
+  backend-owned authorization-code flow, PKCE, refresh-cookie handoff, and
+  normalized Google avatar import;
 * a verified Angular authentication slice with `/login`, `/register`,
   `/verify-email`, `/forgot-password`, `/reset-password`, `/me`, in-memory
   access-token state, refresh handling, and current-session logout;
@@ -53,8 +56,6 @@ The following parts remain planned:
 * rate limiting and authentication audit events;
 * safe Markdown HTML rendering and sanitization as the final step of the Angular
   phase;
-* OAuth2/OIDC sign-in as the next phase, beginning with a separate
-  `oauth_identities` table for `provider` and `provider_subject` values;
 * administrator note views and profile workflows;
 * Notes, profile, and administrator Angular screens;
 * route guards and standard frontend API-error presentation.
@@ -87,12 +88,12 @@ integration-test database.
 
 The first iteration targets private Markdown notes with owner-only CRUD,
 pagination, optimistic locking, email/password authentication, email
-verification, JWT access tokens, rotating refresh sessions, and `USER` and
-read-only `ADMIN` roles.
+verification, Google OAuth2/OIDC sign-in, JWT access tokens, rotating refresh
+sessions, and `USER` and read-only `ADMIN` roles.
 
 The first iteration does not include raw HTML in notes, attachments, note
-sharing, authenticated set/change-password, passwordless provider accounts,
-OAuth2, search, browser end-to-end tests, application CI, or production
+sharing, authenticated set/change-password, explicit provider linking or
+unlinking, search, browser end-to-end tests, application CI, or production
 deployment.
 
 == Documentation map

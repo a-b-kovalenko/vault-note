@@ -12,7 +12,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 
 @Configuration
@@ -22,6 +25,16 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequ
   GoogleAvatarProperties.class
 })
 public class OAuth2ClientConfiguration {
+
+  private static final String AUTHORIZATION_BASE_URI = "/oauth2/authorization";
+
+  @Bean
+  public OAuth2AuthorizationRequestResolver oauth2AuthorizationRequestResolver(
+    ClientRegistrationRepository clientRegistrationRepository) {
+    return new DefaultOAuth2AuthorizationRequestResolver(
+      clientRegistrationRepository,
+      AUTHORIZATION_BASE_URI);
+  }
 
   @Bean
   public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository(

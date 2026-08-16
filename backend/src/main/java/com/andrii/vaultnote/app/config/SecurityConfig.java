@@ -10,6 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
@@ -41,6 +42,7 @@ public class SecurityConfig {
     CsrfTokenRepository csrfTokenRepository,
     CsrfTokenRequestHandler csrfTokenRequestHandler,
     AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository,
+    OAuth2AuthorizationRequestResolver authorizationRequestResolver,
     AuthenticationSuccessHandler oauth2SuccessHandler,
     AuthenticationFailureHandler oauth2FailureHandler) {
 
@@ -77,7 +79,8 @@ public class SecurityConfig {
         .successHandler(oauth2SuccessHandler)
         .failureHandler(oauth2FailureHandler)
         .authorizationEndpoint(endpoint -> endpoint
-          .authorizationRequestRepository(authorizationRequestRepository)))
+          .authorizationRequestRepository(authorizationRequestRepository)
+          .authorizationRequestResolver(authorizationRequestResolver)))
       .oauth2ResourceServer(oauth2 -> oauth2
         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
 

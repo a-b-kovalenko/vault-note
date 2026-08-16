@@ -1,0 +1,7 @@
+{
+  "sub": "wiremock-google-subject",
+  "name": "WireMock Google User",
+  "email": "wiremock-google@example.com",
+  "email_verified": true,
+  "picture": "https://lh3.googleusercontent.com/wiremock-avatar"
+}

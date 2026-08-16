@@ -1,8 +1,10 @@
 = Authentication
 :description: Current VaultNote login and token delivery flow
 
-VaultNote uses email/password authentication. A user must verify the email
-address before login succeeds.
+VaultNote supports local email/password authentication and Google OAuth2/OIDC
+sign-in. A local user must verify the email address before password login
+succeeds. Google sign-in requires a verified provider identity and creates the
+same VaultNote refresh session used by password login.
 
 == Current login flow
 
@@ -305,12 +307,14 @@ and send `X-XSRF-TOKEN`.
 The backend service and token persistence baseline are implemented, including
 PostgreSQL endpoint and concurrency scenarios. The Angular forgot/reset-password
 screens remove the token from the address bar after a successful confirmation.
-Passwordless provider-account support remains planned for Phase 7.
+Provider-only Google accounts are supported: password recovery can be used to
+set a local password, while an authenticated set/change-password endpoint
+remains deferred.
 
-== Planned OAuth provider identity storage
+== OAuth provider identity storage
 
 OAuth2/OIDC will not add a provider type or provider subject directly to the
-`users` table. Phase 7 will introduce a separate `oauth_identities` table with:
+`users` table. Phase 7 introduced a separate `oauth_identities` table with:
 
 * `user_id` — the local VaultNote user;
 * `provider` — a stable string value such as `GOOGLE` or `GITHUB`;
@@ -322,6 +326,31 @@ identity cannot belong to multiple VaultNote users, and unique
 `(user_id, provider)` so one user cannot link the same provider twice. The
 provider type is therefore stored in `oauth_identities.provider`, not in
 `users`.
+
+== Google OAuth2/OIDC sign-in
+
+Google sign-in uses a backend-owned authorization-code flow:
+
+. `GET /oauth2/authorization/google` starts the authorization request.
+. Spring Security stores the short-lived state and PKCE correlation data in a
+  protected cookie instead of `HttpSession`.
+. Google returns the authorization code to
+  `GET /login/oauth2/code/google`.
+. The backend verifies the provider identity, including the stable Google
+  `sub` and `email_verified` claim. Matching a local email does not link
+  accounts automatically.
+. A new provider-only user is created with the `USER` role,
+  `email_verified = true`, and no local password. The provider identity is
+  stored separately in `oauth_identities`.
+. VaultNote creates its normal refresh session and sends the refresh token in
+  the existing `HttpOnly` cookie. Angular then obtains the access JWT through
+  the existing refresh endpoint and keeps it in memory.
+
+When Google supplies a `picture` claim, the backend imports it only when the
+user has no local avatar. The image is downloaded from an approved HTTPS Google
+host, validated, normalized to the local `256x256` JPEG format, and stored
+separately from the user row. A missing or invalid provider image does not block
+login, and an existing local avatar is never overwritten.
 
 == Angular browser flow
 
