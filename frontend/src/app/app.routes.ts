@@ -25,6 +25,11 @@ export const routes: Routes = [
       import('./auth/verify-email-page').then(({ VerifyEmailPage }) => VerifyEmailPage),
   },
   {
+    path: 'oauth/callback',
+    loadComponent: () =>
+      import('./auth/oauth-callback-page').then(({ OAuthCallbackPage }) => OAuthCallbackPage),
+  },
+  {
     path: '',
     pathMatch: 'full',
     redirectTo: 'login',

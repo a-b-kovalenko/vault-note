@@ -4,24 +4,14 @@ import com.andrii.vaultnote.app.exception.OAuthLoginException;
 import com.andrii.vaultnote.app.service.OAuthLoginService;
 import com.andrii.vaultnote.app.service.RefreshTokenService;
 import com.andrii.vaultnote.users.domain.DisplayNameRules;
-import com.andrii.vaultnote.users.domain.OAuthProvider;
-import com.andrii.vaultnote.users.domain.UserRole;
-import com.andrii.vaultnote.users.infrastructure.persistence.entity.OAuthIdentityEntity;
-import com.andrii.vaultnote.users.infrastructure.persistence.entity.UserEntity;
-import com.andrii.vaultnote.users.infrastructure.persistence.repository.OAuthIdentityJpaRepository;
-import com.andrii.vaultnote.users.infrastructure.persistence.repository.UserJpaRepository;
-import jakarta.transaction.Transactional;
-import java.util.EnumSet;
 import java.util.Locale;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -31,21 +21,22 @@ public class OAuthLoginServiceImpl implements OAuthLoginService {
   private static final String EMAIL_CLAIM = "email";
   private static final String EMAIL_VERIFIED_CLAIM = "email_verified";
   private static final String NAME_CLAIM = "name";
+  private static final String PICTURE_CLAIM = "picture";
 
-  OAuthIdentityJpaRepository oauthIdentityRepository;
-  UserJpaRepository userRepository;
+  OAuthUserProvisioningService userProvisioningService;
+  GoogleAvatarImporter googleAvatarImporter;
   RefreshTokenService refreshTokenService;
 
   @Override
-  @Transactional
   public String login(OidcUser oidcUser) {
     var identity = readIdentity(oidcUser);
-    var user = oauthIdentityRepository
-      .findByProviderAndProviderSubject(OAuthProvider.GOOGLE, identity.subject())
-      .map(OAuthIdentityEntity::getUser)
-      .orElseGet(() -> createUserWithIdentity(identity));
+    var resolution = userProvisioningService.resolve(
+      identity.subject(),
+      identity.email(),
+      identity.displayName());
+    googleAvatarImporter.importIfAvailable(resolution.user().getId(), identity.pictureUrl());
 
-    return refreshTokenService.createSession(user);
+    return refreshTokenService.createSession(resolution.user());
   }
 
   private GoogleIdentity readIdentity(OidcUser oidcUser) {
@@ -65,30 +56,9 @@ public class OAuthLoginServiceImpl implements OAuthLoginService {
 
     var normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
     var displayName = displayName(oidcUser.getClaimAsString(NAME_CLAIM), normalizedEmail);
+    var pictureUrl = oidcUser.getClaimAsString(PICTURE_CLAIM);
 
-    return new GoogleIdentity(subject, normalizedEmail, displayName);
-  }
-
-  private UserEntity createUserWithIdentity(GoogleIdentity identity) {
-    if (userRepository.findByEmailIgnoreCase(identity.email()).isPresent()) {
-      log.warn("OAuth sign-in conflicts with an existing local account");
-      throw new OAuthLoginException();
-    }
-
-    var user = userRepository.save(UserEntity.builder()
-      .email(identity.email())
-      .displayName(identity.displayName())
-      .emailVerified(true)
-      .roles(EnumSet.of(UserRole.USER))
-      .build());
-
-    oauthIdentityRepository.save(OAuthIdentityEntity.builder()
-      .user(user)
-      .provider(OAuthProvider.GOOGLE)
-      .providerSubject(identity.subject())
-      .build());
-
-    return user;
+    return new GoogleIdentity(subject.trim(), normalizedEmail, displayName, pictureUrl);
   }
 
   private String displayName(String providerName, String email) {
@@ -109,6 +79,7 @@ public class OAuthLoginServiceImpl implements OAuthLoginService {
   private record GoogleIdentity(
     String subject,
     String email,
-    String displayName) {
+    String displayName,
+    String pictureUrl) {
   }
 }

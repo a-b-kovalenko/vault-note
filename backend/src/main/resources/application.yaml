@@ -55,6 +55,11 @@ app:
     from: ${VAULTNOTE_MAIL_FROM:no-reply@vaultnote.local}
   oauth2:
     frontend-base-url: ${VAULTNOTE_OAUTH2_FRONTEND_BASE_URL:http://localhost:4200}
+    google-avatar:
+      connect-timeout: ${VAULTNOTE_OAUTH2_GOOGLE_AVATAR_CONNECT_TIMEOUT:PT2S}
+      request-timeout: ${VAULTNOTE_OAUTH2_GOOGLE_AVATAR_REQUEST_TIMEOUT:PT5S}
+      max-download-size: ${VAULTNOTE_OAUTH2_GOOGLE_AVATAR_MAX_DOWNLOAD_SIZE:2MB}
+      allowed-hosts: ${VAULTNOTE_OAUTH2_GOOGLE_AVATAR_ALLOWED_HOSTS:lh3.googleusercontent.com,lh4.googleusercontent.com,lh5.googleusercontent.com,lh6.googleusercontent.com}
     authorization-request-cookie:
       cookie-name: ${VAULTNOTE_OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME:vaultnote_oauth2_authorization_request}
       max-age: ${VAULTNOTE_OAUTH2_AUTHORIZATION_REQUEST_COOKIE_MAX_AGE:PT5M}
