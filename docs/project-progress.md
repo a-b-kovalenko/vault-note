@@ -47,7 +47,7 @@ has been implemented and verified. Branch integration is tracked separately.
   pagination, DTO boundaries, `CurrentUserProvider` ownership checks,
   `NOTE_NOT_FOUND` handling, and PostgreSQL-backed integration coverage.
 - The Notes API currently returns source Markdown; safe HTML rendering is
-  planned as the final step of Phase 8, when a preview or read-only mode is
+  planned as the final step of Phase 9, when a preview or read-only mode is
   introduced.
 - `MEDIUM-3` is in progress: login, registration, and password-reset requests
   now have bounded in-memory IP- and normalized-email-aware limits with
@@ -60,11 +60,13 @@ has been implemented and verified. Branch integration is tracked separately.
   deployment remain; the shared-store provider is still open between
   PostgreSQL and Redis.
   Therefore, `MEDIUM-3` is only partially resolved: the local single-instance
-  scope is complete, while the full finding closes after the remaining Phase 11
+  scope is complete, while the full finding closes after the remaining Phase 12
   tasks are completed.
-  After that continue with OAuth, then the dedicated Notes phase, and finally
-  the remaining cross-cutting Angular work such as route guards and standard
-  frontend API-error presentation.
+  After OAuth, the next planned milestone is Phase 8: deploy the Angular SPA
+  and Spring Boot API to GCP while using Supabase Free PostgreSQL for demo data.
+  Then continue with the dedicated Notes phase and the remaining cross-cutting
+  Angular work such as route guards and standard frontend API-error
+  presentation.
 - The authenticated Angular application shell is implemented and verified: `/me`
   is rendered inside the shell, the account menu shows initials, display name,
   and email, the `ADMIN` link to All users is conditional, and logout is a
@@ -271,23 +273,28 @@ has been implemented and verified. Branch integration is tracked separately.
 
 ### OAuth backend
 
-- [ ] Complete authenticated password management for provider/passwordless
-  accounts.
-  - [ ] Make `users.password_hash` nullable.
-  - [ ] Persist provider identities with uniqueness constraints.
-- [ ] Implement authenticated password management.
-  - [ ] Add authenticated set/change-password use cases and endpoint.
-  - [ ] Require and verify `currentPassword` when changing an existing password.
-  - [ ] Allow an authenticated provider user to set a password when none exists.
-  - [ ] Reuse the existing password policy and `PasswordEncoder`.
-- [ ] Prevent removing the last available authentication method.
-  - [ ] Add unit and PostgreSQL integration coverage for set, change, and
-    invariant cases.
-- [ ] Add backend OAuth2 Client integration.
-  - [ ] Configure a provider such as Google or GitHub.
-  - [ ] Use a short-lived cookie-based authorization state compatible with the
-    stateless application security model.
-  - [ ] Implement authorization redirect and callback handling.
+- [x] Prepare the account persistence model for provider/passwordless users.
+  - [x] Make `users.password_hash` nullable.
+  - [x] Persist provider identities with uniqueness constraints and PostgreSQL
+    integration coverage.
+- [ ] Keep authenticated set/change-password outside the OAuth critical path.
+  The existing email password-reset flow remains the supported way to add a
+  local password to a provider-only account. Add a dedicated authenticated
+  endpoint later only if Account settings requires it.
+- [ ] Enforce the last-authentication-method invariant when explicit provider
+  linking or unlinking is implemented, with unit and PostgreSQL coverage.
+- [x] Add the base Google OAuth2 Client integration.
+  - [x] Move the Google `client_id` and `client_secret` to the ignored local
+    secrets file.
+  - [x] Configure Google scopes `openid profile email` and require PKCE.
+  - [x] Enable the standard `/oauth2/authorization/google` and
+    `/login/oauth2/code/google` endpoints.
+  - [x] Store the authorization request in a short-lived encrypted cookie and
+    disable the session request cache.
+  - [x] Verify the Google redirect, state, PKCE parameters, and rejection of a
+    callback with an incorrect state.
+- [ ] Implement OAuth callback identity resolution and the stateless VaultNote
+  handoff.
   - [ ] Map verified provider identities to local users and assign `USER` by
     default.
   - [ ] Handle explicit onboarding and account linking; never link by email
@@ -304,10 +311,51 @@ has been implemented and verified. Branch integration is tracked separately.
 
 ### OAuth verification
 
-- [ ] Add provider-mocked integration coverage and a local manual verification
-  flow.
+- [x] Add base integration coverage for the Google redirect, PKCE, and invalid
+  state callback.
+- [ ] Add provider-mocked integration coverage and a complete local manual
+  verification flow.
 
-## Phase 8 — Notes
+## Phase 8 — First GCP demo deployment
+
+- [ ] Define the first demo architecture: Firebase Hosting for Angular,
+  Cloud Run for the Spring Boot API, Supabase Free for external PostgreSQL,
+  Artifact Registry for the container image, and Secret Manager for runtime
+  secrets.
+- [ ] Choose compatible GCP and Supabase regions, enable required APIs, and
+  configure a billing budget and cost alerts.
+- [ ] Create the Supabase Free PostgreSQL project with TLS, a strong database
+  password, and a least-privilege application database role. Do not use
+  Supabase Auth, Supabase API, or Supabase Storage.
+- [ ] Add cloud deployment configuration without changing the local IDE flow:
+  production database settings, mandatory JWT secret, secure refresh-cookie
+  settings, CORS origin, mail settings, and Google OAuth credentials.
+- [ ] Build the Spring Boot container, publish it to Artifact Registry, and
+  deploy Cloud Run with a dedicated service account and Secret Manager access.
+  Configure health checks, instance limits, and a conservative database
+  connection pool.
+- [ ] Build Angular with the deployed API URL and publish it to Firebase
+  Hosting with SPA fallback and managed HTTPS.
+- [ ] Align deployed CORS, CSRF, secure-cookie, and production Google OAuth
+  callback settings. Keep access tokens in Angular memory and never put tokens
+  in redirect URLs.
+- [ ] Apply Liquibase to the empty Supabase database and verify the `vaultnote`
+  schema, constraints, indexes, and demo seed path. If local data is migrated,
+  use a reviewed `pg_dump`/restore process and exclude secrets or personal data.
+- [ ] Decide the deployed email path: configure real SMTP or use pre-created
+  verified demo users while Mailpit remains local-only.
+- [ ] Verify health, login, refresh, logout, CSRF, CORS, OAuth callback,
+  profile, avatar, and deployed Notes API flows. Test Cloud Run revision
+  rollback, Supabase pause/resume, database export, and the path to Cloud SQL.
+
+This phase is a demo deployment, not a production guarantee. Supabase Free may
+pause after inactivity, has a 500 MB database quota, and does not provide the
+backup and availability guarantees required for important private notes. Keep
+the data disposable and retain an export procedure. Full CI/CD, custom domains,
+Cloud SQL, private networking, high availability, and production backup policy
+remain follow-up work.
+
+## Phase 9 — Notes
 
 ### Notes backend
 
@@ -332,14 +380,14 @@ has been implemented and verified. Branch integration is tracked separately.
   - [ ] Sanitize generated HTML before inserting it into the DOM.
   - [ ] Allow only safe link protocols such as `http` and `https`.
 
-## Phase 9 — Remaining Angular frontend
+## Phase 10 — Remaining Angular frontend
 
 - [ ] Add authenticated and administrator route guards.
 - [ ] Add standard `ProblemDetail` error presentation.
 - [ ] Add focused frontend unit tests and production-build verification.
 - [ ] Defer browser e2e tests.
 
-## Phase 10 — Documentation and publishing
+## Phase 11 — Documentation and publishing
 
 - [x] Add Antora component metadata and navigation.
 - [ ] Record the remaining architecture decision records.
@@ -352,7 +400,7 @@ has been implemented and verified. Branch integration is tracked separately.
 - [x] Complete README setup, operations, and verification instructions.
 - [x] Publish Antora documentation to GitHub Pages.
 
-## Phase 11 — Final security and email hardening
+## Phase 12 — Final security and email hardening
 
 ### Security and email backend
 
@@ -387,7 +435,7 @@ has been implemented and verified. Branch integration is tracked separately.
 The local application-level part of MEDIUM-3 is complete for the current
 authentication flows. The shared-store choice (PostgreSQL or Redis) and the
 remaining security, authentication, and email work are tracked as the canonical
-checklist in Phase 11 — Final security and email hardening.
+checklist in Phase 12 — Final security and email hardening.
 
 ## Planned separate frontend client
 

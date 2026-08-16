@@ -8,6 +8,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 
+import { API_BASE_URL } from '../api/api-config';
 import { AuthApiService } from './auth-api.service';
 import { AuthStateService } from './auth-state.service';
 import { ApiErrorResponse, LoginRequest, ValidationViolation } from './auth.models';
@@ -43,6 +44,7 @@ export class LoginPage {
   readonly isSubmitting = signal(false);
   readonly loginError = signal<string | null>(null);
   readonly isPasswordVisible = signal(false);
+  readonly googleAuthorizationUrl = `${API_BASE_URL}/oauth2/authorization/google`;
 
   protected isInvalid(control: AbstractControl): boolean {
     return control.invalid && (control.dirty || control.touched);

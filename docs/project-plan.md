@@ -15,8 +15,10 @@ email/password sign-in, email verification, JWT access tokens, and roles.
 - The local PostgreSQL server already owns database `vault_note` and schema
   `vaultnote`. The existing database user is sufficient for local work.
 - Docker is used only for Mailpit. PostgreSQL stays in the shared local setup.
-- Application CI and deployment are not part of the first iteration. A small
-  docs-only GitHub Actions workflow publishes the documentation to Pages.
+- Full application CI/CD is not part of the first iteration. The first
+  application demo deployment is tracked in Phase 8 and may be performed
+  manually; a small docs-only GitHub Actions workflow publishes the
+  documentation to Pages.
 - OpenAPI is the API source of truth; Angular uses a generated TypeScript
   client.
 - API errors use RFC 9457 `ProblemDetail`.
@@ -284,7 +286,7 @@ policy remain. The remaining work is ordered by authentication/session
 correctness before adding another authentication provider:
 
 `MEDIUM-3` is therefore only partially resolved: the local/single-instance
-scope is complete, while the full finding closes after Phase 11 evaluates and
+scope is complete, while the full finding closes after Phase 12 evaluates and
 validates the shared-store choice (PostgreSQL or Redis), then completes the
 shared storage, edge/WAF, and deployment-hardening tasks.
 
@@ -302,7 +304,7 @@ shared storage, edge/WAF, and deployment-hardening tasks.
    registration, and password reset. The local in-memory limiter is suitable
    for one instance. The shared provider is not selected yet: PostgreSQL and
    Redis remain candidates, while provider validation and edge/WAF hardening
-   are tracked in Phase 11. Do not lock accounts permanently or reveal account
+   are tracked in Phase 12. Do not lock accounts permanently or reveal account
    existence.
    - [x] Protect login by IP and normalized email before database access and
      Argon2, with bounded local storage, `429`, and `Retry-After`.
@@ -367,25 +369,38 @@ such as Google or GitHub in this order:
    Store `provider` (`GOOGLE`, `GITHUB`, and future providers) together with
    `provider_subject`, `user_id`, and timestamps. Enforce unique
    `(provider, provider_subject)` and `(user_id, provider)` constraints.
-2. Implement authenticated password management:
-   add set/change-password use cases and endpoint; require `currentPassword`
-   when changing an existing password; allow setting a password when none
-   exists; reuse the existing password policy and `PasswordEncoder`.
-3. Enforce the account-recovery invariant:
-   prevent removing the last available authentication method, so a user keeps
-   either a local password or at least one linked provider identity. Add unit
-   and PostgreSQL integration coverage for set, change, and invariant cases.
-4. Configure Spring Security OAuth2 Client and the selected provider, then
-   implement the authorization redirect and callback with a short-lived,
-   cookie-based authorization state compatible with the stateless security
-   model.
-5. Resolve provider identity and onboarding:
+2. Keep authenticated password management out of the OAuth critical path for
+   now. The existing email password-reset flow can set a local password for a
+   provider-only account after email-based recovery. Add a dedicated
+   set/change-password endpoint later only if Account settings requires a
+   convenient authenticated password operation.
+3. Enforce the account-recovery invariant when explicit provider linking or
+   unlinking is implemented: prevent removing the last available
+   authentication method, so a user keeps either a local password or at least
+   one linked provider identity. Add unit and PostgreSQL integration coverage
+   for the invariant.
+4. Configure Spring Security OAuth2 Client for Google with scopes `openid
+   profile email`, the standard authorization and callback endpoints, PKCE, and
+   a short-lived encrypted cookie-based authorization state compatible with the
+   stateless security model. Keep the Google client credentials in ignored local
+   secrets or environment variables.
+5. Implement the authorization callback and reject missing, expired, or
+   incorrect state before exchanging the authorization code for provider
+   tokens.
+6. Resolve provider identity and onboarding:
    map a verified identity to a local `User`, assign `USER` by default, and for
    a new identity collect or confirm `displayName`, create the user with
    `email_verified = true` and `password_hash = null`, and persist the provider
    identity. Existing accounts require explicit authenticated linking; matching
    email alone must never link accounts.
-6. Complete the security handoff:
+   If Google returns the optional `picture` claim, import the image server-side
+   only for a new user who has no local avatar: allow only an approved HTTPS
+   Google image host, enforce a bounded download, validate the decoded image,
+   strip metadata, normalize it to the existing 256×256 JPEG avatar format, and
+   store it separately from the user row. A missing or invalid provider image
+   must not block login. Do not re-import it after a manual avatar replacement
+   or removal; the local avatar remains authoritative.
+7. Complete the security handoff:
    issue VaultNote's existing JWT access token and refresh-token cookie, keep
    access tokens out of redirect URLs, and obtain the frontend access token
    through the existing refresh flow.
@@ -403,7 +418,122 @@ such as Google or GitHub in this order:
 - Add provider-mocked integration coverage and a local manual verification
   flow.
 
-## Phase 8 — Notes
+## Phase 8 — First GCP demo deployment
+
+Deploy the first publicly reachable VaultNote demo while keeping the local
+development setup unchanged. This phase is intentionally a small, controlled
+deployment rather than a full production platform or CI/CD program.
+
+### Target architecture
+
+Use the following boundaries:
+
+```text
+Browser  ->  Firebase Hosting  ->  Angular SPA
+Browser  ->  Cloud Run  ->  Spring Boot API
+Cloud Run API  ->  TLS PostgreSQL connection  ->  Supabase Free PostgreSQL
+Cloud Run  <-  Google Secret Manager
+Cloud Run  <-  Artifact Registry container image
+```
+
+- Host the built Angular application on Firebase Hosting in the same Google
+  Cloud project. Select it over raw Cloud Storage because SPA fallback and
+  managed HTTPS require less deployment wiring.
+- Build the Spring Boot backend as a container and run it on Cloud Run.
+- Use Supabase Free only as an external PostgreSQL database for the demo. Do
+  not use Supabase Auth, Supabase API, or Supabase Storage; VaultNote remains
+  responsible for authentication, authorization, and persistence behavior.
+- Keep the local Docker/shared PostgreSQL setup and the `local` profile for
+  IDE development. The cloud deployment uses a separate environment profile.
+- Store runtime secrets in Google Secret Manager. Do not put secrets into the
+  container image, Angular bundle, repository, or deployment command history.
+
+The free Supabase database is suitable for a demo with non-critical data, but
+it may pause after inactivity, has a 500 MB database quota, and does not provide
+the production backup and availability guarantees expected for important
+private notes. Keep the demo data disposable and retain an export procedure.
+See the current [Supabase Free plan](https://supabase.com/pricing) limits.
+
+### Deployment steps
+
+1. **Choose the Google Cloud project, region, and cost guardrails.**
+   Enable only the APIs required for Cloud Run, Artifact Registry, Secret
+   Manager, Cloud Build if used, and Firebase Hosting. Choose a region near
+   the Supabase database region. Configure a billing budget and alerts; free
+   tiers do not guarantee a zero invoice when configuration or network usage
+   exceeds the included limits.
+
+2. **Create the demo PostgreSQL database.**
+   Create a Supabase Free project in a suitable region, configure a strong
+   database password, require TLS, and obtain the PostgreSQL connection
+   details. Use a least-privilege application database role where the provider
+   supports it. Keep the database URL, username, and password out of the
+   frontend. Use the provider's pooled/session connection option only after
+   verifying compatibility with Spring Boot, Hibernate, Liquibase, and the
+   connection pool.
+
+3. **Prepare production-like application configuration.**
+   Add a cloud deployment configuration without weakening the existing local
+   profile. Supply the Supabase JDBC settings, mandatory JWT secret, refresh
+   cookie settings (`Secure=true`, the selected `SameSite` policy, and the
+   configured cookie name), exact Firebase origin, mail settings, and Google
+   OAuth credentials through Secret Manager or deployment environment
+   bindings. Keep `ddl-auto=validate`; Liquibase remains the schema owner.
+
+4. **Package and deploy the backend.**
+   Build a reproducible Java container, publish it to Artifact Registry, and
+   deploy a Cloud Run service with a dedicated service account. Grant only the
+   permissions needed to read its Secret Manager secrets and write/read the
+   required logs. Configure the application port from Cloud Run, health
+   checks, request timeout, minimum instances, maximum instances, and a
+   conservative Hikari connection pool. Limit maximum instances so Cloud Run
+   cannot create more database connections than the Supabase plan can handle.
+
+5. **Deploy the Angular SPA.**
+   Build Angular with the production API base URL, deploy the static output to
+   Firebase Hosting, configure the SPA rewrite to `index.html`, and confirm
+   that browser requests go only to the public API URL. The access JWT remains
+   in Angular memory; the refresh token remains in the `HttpOnly` cookie.
+
+6. **Align browser and OAuth security settings.**
+   Add the exact Firebase origin to the backend CORS allowlist. Verify that
+   credentials are enabled and wildcard origins are not used. Register the
+   production OAuth callback URL in Google Cloud, keep the callback on the
+   backend, and never put VaultNote access or refresh tokens in a redirect URL.
+   Verify CSRF bootstrap, cookies, and cross-origin state-changing requests
+   through the deployed frontend.
+
+7. **Apply and verify the database schema.**
+   Run Liquibase against an empty Supabase database and verify all constraints,
+   indexes, and the `vaultnote` schema. For the first demo, prefer creating
+   test accounts through the application. If existing local demo data is
+   migrated, use a reviewed `pg_dump`/restore process and do not copy local
+   secrets or unintended personal data.
+
+8. **Decide the demo email path.**
+   Mailpit remains local-only. A deployed registration and password-recovery
+   flow needs a real SMTP provider or another explicitly configured delivery
+   service. If that is not ready, use pre-created verified demo accounts and
+   do not present the deployment as a complete public registration service.
+
+9. **Verify operations and rollback.**
+   Check health, registration or seeded login, refresh, logout, CSRF, CORS,
+   Google OAuth callback, profile, avatar, and notes flows from the deployed
+   Angular origin. Inspect Cloud Run logs, test a new revision rollback, run a
+   database-size query, and export the demo database before destructive
+   changes. Document how to resume a paused Supabase project and how to move
+   the database to Cloud SQL later.
+
+### Phase boundary
+
+The first deployment may use manual Google Cloud and Firebase commands. A
+repeatable CI/CD pipeline, custom domain, production SMTP, Cloud SQL, private
+networking, high availability, and full production backup/restore policy are
+separate follow-up work. The application must remain portable so moving from
+Supabase to Cloud SQL changes deployment configuration rather than domain or
+REST code.
+
+## Phase 9 — Notes
 
 ### Notes backend
 
@@ -441,7 +571,7 @@ the DOM, and allow only safe link protocols such as `http` and `https`. Generate
 the TypeScript client from OpenAPI and add focused Angular unit tests for Notes
 flows. Never persist access tokens in local storage or session storage.
 
-## Phase 9 — Remaining Angular frontend
+## Phase 10 — Remaining Angular frontend
 
 Complete the remaining cross-cutting Angular work with lazy-loaded routes and
 simple local styles, without a UI component library:
@@ -459,13 +589,13 @@ Mockito only for direct collaborators, and a shared PostgreSQL Testcontainer for
 the integration-test JVM. Reset test data deterministically; never depend on
 test order or arbitrary sleeps.
 
-## Phase 10 — Documentation and publishing
+## Phase 11 — Documentation and publishing
 
 - [x] Maintain Antora component metadata, navigation, and the published
   documentation site.
 - [ ] Record the remaining architecture decision records.
 
-## Phase 11 — Final security and email hardening
+## Phase 12 — Final security and email hardening
 
 ### Security and email backend
 
@@ -532,7 +662,7 @@ initial ADRs now describe decisions that are implemented in the repository:
 13. [x] CSRF and CORS strategy (`013`).
 14. [x] Rate-limiting storage and deployment boundary (`015`); local policy is
     accepted and shared provider selection plus deployment implementation remain
-    in Phase 11.
+    in Phase 12.
 
 The following ADRs remain planned. Proposed ADRs may capture an important
 upcoming decision before implementation and become accepted after verification:
@@ -561,13 +691,14 @@ upcoming decision before implementation and become accepted after verification:
 - Editing email, logout from all devices, and session management UI.
 - Complete audit records for privileged data access.
 - A dedicated least-privilege DB user for production-like setups.
-- Browser e2e tests, application CI, production deployment, TLS, and real SMTP.
+- Browser e2e tests, application CI/CD, production-grade deployment, private
+  networking, and real SMTP.
 
 ## Final priority — Remaining hardening
 
 The local application-level part of MEDIUM-3 is complete for the current
 authentication flows. The remaining security, authentication, and email work is
-tracked as the canonical checklist in Phase 11 — Final security and email
+tracked as the canonical checklist in Phase 12 — Final security and email
 hardening.
 
 ## Future direction — separate React frontend

@@ -3,6 +3,7 @@ import { HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 
+import { API_BASE_URL } from '../api/api-config';
 import { AuthApiService } from './auth-api.service';
 import { AuthStateService } from './auth-state.service';
 import { LoginRequest, LoginResponse } from './auth.models';
@@ -111,6 +112,14 @@ describe('LoginPage', () => {
     forgotPasswordButton.click();
 
     expect(navigate).toHaveBeenCalledWith(['/forgot-password']);
+  });
+
+  it('should link Google sign-in to the backend OAuth authorization endpoint', () => {
+    const googleButton = fixture.nativeElement.querySelector(
+      '.oauth-button-google',
+    ) as HTMLAnchorElement;
+
+    expect(googleButton.getAttribute('href')).toBe(`${API_BASE_URL}/oauth2/authorization/google`);
   });
 
   it('should show an error after an invalid control is touched', () => {
@@ -247,9 +256,9 @@ describe('LoginPage', () => {
       email: 'user@example.com',
       password: 'password',
     });
-    expect((fixture.nativeElement.querySelector('.submit-button') as HTMLButtonElement).disabled).toBe(
-      true,
-    );
+    expect(
+      (fixture.nativeElement.querySelector('.submit-button') as HTMLButtonElement).disabled,
+    ).toBe(true);
     expect(fixture.nativeElement.textContent).toContain('5 seconds');
   });
 });

@@ -53,6 +53,11 @@ app:
         window: ${VAULTNOTE_RATE_LIMIT_PASSWORD_RESET_WINDOW:PT1H}
   mail:
     from: ${VAULTNOTE_MAIL_FROM:no-reply@vaultnote.local}
+  oauth2:
+    authorization-request-cookie:
+      cookie-name: ${VAULTNOTE_OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME:vaultnote_oauth2_authorization_request}
+      max-age: ${VAULTNOTE_OAUTH2_AUTHORIZATION_REQUEST_COOKIE_MAX_AGE:PT5M}
+      secure: ${VAULTNOTE_OAUTH2_AUTHORIZATION_REQUEST_COOKIE_SECURE:false}
   email-verification:
     base-url: ${VAULTNOTE_EMAIL_VERIFICATION_BASE_URL:http://localhost:4200}
     token-ttl: ${VAULTNOTE_EMAIL_VERIFICATION_TOKEN_TTL:PT24H}
