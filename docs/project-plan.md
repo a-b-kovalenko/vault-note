@@ -334,13 +334,13 @@ network.
   dimension limits, strips metadata, normalizes the stored image to 256×256
   JPEG, and keeps avatar bytes separate from the user row.
 - [x] Implement the backend current-session logout endpoint.
-- [x] Add the paginated administrator user list API.
+- [x] Add the paginated user list API for administrators.
 
 ### Frontend
 
 - [x] Add an authenticated application shell with a compact account menu that
   shows the user's initials or avatar, display name, and email. Include Profile,
-  a conditional Admin users link for `ADMIN`, and a separated Log out action.
+  a conditional All users link for `ADMIN`, and a separated Log out action.
 - [x] Implement the Profile screen with read-only email and verification state,
   editable `displayName`, and explicit save/cancel states.
 - [x] Add avatar preview, upload, replacement, removal, and initials fallback.
@@ -348,7 +348,8 @@ network.
   avatar actions are visible only in `Edit profile` mode; the operations are
   applied immediately, while `Cancel` applies only to the display-name draft.
   Regenerate the Angular OpenAPI client after backend contract changes.
-- [ ] Add the read-only Admin users screen using the existing paginated API.
+- [x] Add the read-only All users screen for administrators using the existing
+  paginated API.
 
 Backend service-level role checks are mandatory. Angular guards and hidden UI
 controls are user experience only; the backend remains the authorization source.

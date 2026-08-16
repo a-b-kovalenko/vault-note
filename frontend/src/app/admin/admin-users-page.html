@@ -1,0 +1,86 @@
+<main class="admin-users-page">
+  <section class="admin-users-card" aria-labelledby="admin-users-title">
+    <p class="eyebrow">Administration</p>
+
+    <div class="admin-users-heading">
+      <div>
+        <h1 id="admin-users-title">All users</h1>
+        <p class="subtitle">Review all registered accounts without changing them.</p>
+      </div>
+      <a class="secondary-button" routerLink="/me">Back to profile</a>
+    </div>
+
+    @if (isLoading()) {
+      <p class="status-message" role="status">Loading users…</p>
+    } @else if (accessDenied()) {
+      <div class="message-panel message-panel-error" role="alert">
+        <h2>Access restricted</h2>
+        <p>{{ forbiddenUsersError }}</p>
+        <a class="secondary-button" routerLink="/me">Return to profile</a>
+      </div>
+    } @else if (loadError(); as errorMessage) {
+      <div class="message-panel message-panel-error" role="alert">
+        <h2>Users are unavailable</h2>
+        <p>{{ errorMessage }}</p>
+      </div>
+    } @else {
+      <div class="list-toolbar">
+        <p class="results-label">{{ resultsLabel() }}</p>
+        <span class="read-only-badge">Read only</span>
+      </div>
+
+      @if (users().length === 0) {
+        <div class="message-panel">
+          <h2>No users yet</h2>
+          <p>The user list does not contain any accounts.</p>
+        </div>
+      } @else {
+        <div class="table-wrapper">
+          <table>
+            <caption class="visually-hidden">
+              Registered VaultNote users
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">User</th>
+                <th scope="col">Email</th>
+                <th scope="col">User ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of users(); track user.id) {
+                <tr>
+                  <td>{{ user.displayName }}</td>
+                  <td>{{ user.email }}</td>
+                  <td>#{{ user.id }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      @if (totalPages() > 1) {
+        <nav class="pagination" aria-label="User list pages">
+          <button
+            class="secondary-button"
+            type="button"
+            [disabled]="isLoading() || !hasPreviousPage()"
+            (click)="onPreviousPage()"
+          >
+            Previous
+          </button>
+          <span aria-live="polite">{{ pageLabel() }}</span>
+          <button
+            class="secondary-button"
+            type="button"
+            [disabled]="isLoading() || !hasNextPage()"
+            (click)="onNextPage()"
+          >
+            Next
+          </button>
+        </nav>
+      }
+    }
+  </section>
+</main>

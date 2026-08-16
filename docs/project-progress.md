@@ -67,14 +67,17 @@ has been implemented and verified. Branch integration is tracked separately.
   frontend API-error presentation.
 - The authenticated Angular application shell is implemented and verified: `/me`
   is rendered inside the shell, the account menu shows initials, display name,
-  and email, the `ADMIN` link is conditional, and logout is a separated action.
+  and email, the `ADMIN` link to All users is conditional, and logout is a
+  separated action.
   Profile state is shared between the shell and child pages to avoid duplicate
   profile requests. The Profile screen now supports display-name save/cancel
   states while email and verification state remain read-only. Avatar upload,
   replacement, retrieval, removal, initials fallback, and generated OpenAPI
   client updates are implemented and verified. Avatar actions are available
-  only in `Edit profile` mode; the Admin users screen remains as the next
-  Phase 6 task.
+  only in `Edit profile` mode. The read-only All users screen is also
+  implemented and verified on top of the existing paginated API; it lists all
+  registered users, keeps backend `ADMIN` authorization as the source of truth,
+  and exposes no user-management actions.
 
 ## Phase 0 — Foundation
 
@@ -245,7 +248,7 @@ has been implemented and verified. Branch integration is tracked separately.
   Validate and normalize image content on the server and keep normalized
   256×256 JPEG bytes in separate avatar storage.
 - [x] Implement the backend current-session logout endpoint.
-- [x] Add the paginated administrator user list API.
+- [x] Add the paginated user list API for administrators.
 
 ### Profile frontend
 
@@ -253,14 +256,16 @@ has been implemented and verified. Branch integration is tracked separately.
   from `currentUser()` to `profile()`, regenerate the OpenAPI client, and
   prepare `updateProfile()` for the future editable profile screen.
 - [x] Add the authenticated application shell and account menu with Profile,
-  conditional Admin users, and a separated Log out action.
+  conditional All users access for administrators, and a separated Log out
+  action.
 - [x] Implement the Profile screen with read-only email and verification state,
   editable `displayName`, and save/cancel states.
 - [x] Add avatar preview, upload, replacement, removal, and initials fallback.
   Share avatar state between the authenticated shell and Profile, show avatar
   actions only in `Edit profile` mode, and regenerate the OpenAPI client after
   the backend contract became available.
-- [ ] Add the read-only Admin users screen using the existing paginated API.
+- [x] Add the read-only All users screen for administrators using the existing
+  paginated API.
 
 ## Phase 7 — OAuth2/OIDC sign-in
 

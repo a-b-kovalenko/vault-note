@@ -70,7 +70,7 @@ describe('AuthenticatedShell', () => {
     expect(fixture.nativeElement.textContent).toContain('Profile User');
     expect(fixture.nativeElement.textContent).toContain('user@example.com');
     expect(fixture.nativeElement.textContent).toContain('Profile');
-    expect(fixture.nativeElement.textContent).not.toContain('Admin users');
+    expect(fixture.nativeElement.textContent).not.toContain('All users');
     expect(fixture.nativeElement.querySelector('.account-menu-separator')).not.toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Log out');
   });
@@ -86,7 +86,7 @@ describe('AuthenticatedShell', () => {
     expect(fixture.nativeElement.querySelector('.account-trigger .account-avatar span')).toBeNull();
   });
 
-  it('shows the Admin users link only for an administrator', () => {
+  it('shows the All users link only for an administrator', () => {
     profileResponse = of({
       id: 7,
       email: 'admin@example.com',
@@ -104,7 +104,7 @@ describe('AuthenticatedShell', () => {
     ) as HTMLAnchorElement | null;
 
     expect(adminLink).not.toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('Admin users');
+    expect(fixture.nativeElement.textContent).toContain('All users');
   });
 
   it('logs out, clears the local session, and redirects to login', () => {

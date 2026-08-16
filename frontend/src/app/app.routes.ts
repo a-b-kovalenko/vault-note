@@ -38,6 +38,11 @@ export const routes: Routes = [
         path: 'me',
         loadComponent: () => import('./auth/me-page').then(({ MePage }) => MePage),
       },
+      {
+        path: 'admin/users',
+        loadComponent: () =>
+          import('./admin/admin-users-page').then(({ AdminUsersPage }) => AdminUsersPage),
+      },
     ],
   },
   {
