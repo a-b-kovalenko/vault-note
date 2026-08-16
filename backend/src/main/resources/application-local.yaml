@@ -1,6 +1,17 @@
 spring:
   config:
     import: optional:classpath:application-local-secrets.yaml
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            scope:
+              - openid
+              - profile
+              - email
+            client-settings:
+              require-proof-key: true
   datasource:
     url: ${VAULTNOTE_DATABASE_URL:jdbc:postgresql://localhost:5432/vault_note}
     username: ${VAULTNOTE_DATABASE_USERNAME:user}

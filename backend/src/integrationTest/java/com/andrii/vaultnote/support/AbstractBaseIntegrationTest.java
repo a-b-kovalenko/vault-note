@@ -33,6 +33,18 @@ public abstract class AbstractBaseIntegrationTest {
   private static final String CSRF_COOKIE_NAME = "XSRF-TOKEN";
   private static final String CSRF_HEADER_NAME = "X-XSRF-TOKEN";
   private static final String TEST_JWT_SECRET = "integration-test-jwt-secret-that-is-long-enough";
+  private static final String DATASOURCE_URL_PROPERTY = "spring.datasource.url";
+  private static final String DATASOURCE_USERNAME_PROPERTY = "spring.datasource.username";
+  private static final String DATASOURCE_PASSWORD_PROPERTY = "spring.datasource.password";
+  private static final String JWT_SECRET_PROPERTY = "app.jwt.secret";
+  private static final String GOOGLE_CLIENT_ID_PROPERTY = "spring.security.oauth2.client.registration.google.client-id";
+  private static final String GOOGLE_CLIENT_SECRET_PROPERTY = "spring.security.oauth2.client.registration.google.client-secret";
+  private static final String GOOGLE_SCOPE_PROPERTY = "spring.security.oauth2.client.registration.google.scope";
+  private static final String GOOGLE_REQUIRE_PROOF_KEY_PROPERTY = "spring.security.oauth2.client.registration.google.client-settings.require-proof-key";
+  private static final String TEST_GOOGLE_CLIENT_ID = "integration-google-client-id";
+  private static final String TEST_GOOGLE_CLIENT_SECRET = "integration-google-client-secret";
+  private static final String TEST_GOOGLE_SCOPE = "openid,profile,email";
+  private static final String TEST_GOOGLE_REQUIRE_PROOF_KEY = "true";
 
   protected static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:16-alpine")
     .withDatabaseName("vault_note")
@@ -49,10 +61,14 @@ public abstract class AbstractBaseIntegrationTest {
 
   @DynamicPropertySource
   static void registerPostgresProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
-    registry.add("spring.datasource.username", POSTGRES::getUsername);
-    registry.add("spring.datasource.password", POSTGRES::getPassword);
-    registry.add("app.jwt.secret", () -> TEST_JWT_SECRET);
+    registry.add(DATASOURCE_URL_PROPERTY, POSTGRES::getJdbcUrl);
+    registry.add(DATASOURCE_USERNAME_PROPERTY, POSTGRES::getUsername);
+    registry.add(DATASOURCE_PASSWORD_PROPERTY, POSTGRES::getPassword);
+    registry.add(JWT_SECRET_PROPERTY, () -> TEST_JWT_SECRET);
+    registry.add(GOOGLE_CLIENT_ID_PROPERTY, () -> TEST_GOOGLE_CLIENT_ID);
+    registry.add(GOOGLE_CLIENT_SECRET_PROPERTY, () -> TEST_GOOGLE_CLIENT_SECRET);
+    registry.add(GOOGLE_SCOPE_PROPERTY, () -> TEST_GOOGLE_SCOPE);
+    registry.add(GOOGLE_REQUIRE_PROOF_KEY_PROPERTY, () -> TEST_GOOGLE_REQUIRE_PROOF_KEY);
   }
 
   protected RequestSpecification givenWithCsrf() {

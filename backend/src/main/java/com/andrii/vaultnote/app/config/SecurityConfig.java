@@ -9,9 +9,13 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.savedrequest.NullRequestCache;
 
 import static jakarta.servlet.DispatcherType.ERROR;
 
@@ -34,7 +38,12 @@ public class SecurityConfig {
     HttpSecurity http,
     RolesJwtAuthenticationConverter jwtAuthenticationConverter,
     CsrfTokenRepository csrfTokenRepository,
-    CsrfTokenRequestHandler csrfTokenRequestHandler) {
+    CsrfTokenRequestHandler csrfTokenRequestHandler,
+    AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository) {
+
+    var oauth2FailureHandler = new SimpleUrlAuthenticationFailureHandler("/login?error");
+    oauth2FailureHandler.setAllowSessionCreation(false);
+
     http
       .cors(Customizer.withDefaults())
       .csrf(csrf -> csrf
@@ -45,6 +54,7 @@ public class SecurityConfig {
           "/api/v1/auth/email-verification"))
       .sessionManagement(session -> session
         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+      .requestCache(requestCache -> requestCache.requestCache(new NullRequestCache()))
       .authorizeHttpRequests(auth -> auth
         .dispatcherTypeMatchers(ERROR).permitAll()
         .requestMatchers(OPTIONS, "/**").permitAll()
@@ -53,6 +63,8 @@ public class SecurityConfig {
         .requestMatchers(GET, "/swagger-ui/**").permitAll()
         .requestMatchers(GET, "/v3/api-docs/**").permitAll()
         .requestMatchers(GET, "/csrf").permitAll()
+        .requestMatchers(GET, "/oauth2/authorization/**").permitAll()
+        .requestMatchers(GET, "/login/oauth2/code/**").permitAll()
         .requestMatchers(POST, "/api/v1/auth/registrations").permitAll()
         .requestMatchers(POST, "/api/v1/auth/email-verification").permitAll()
         .requestMatchers(POST, "/api/v1/auth/password-reset/request").permitAll()
@@ -61,6 +73,10 @@ public class SecurityConfig {
         .requestMatchers(POST, "/api/v1/auth/refresh").permitAll()
         .requestMatchers(POST, "/api/v1/auth/logout").permitAll()
         .anyRequest().authenticated())
+      .oauth2Login(oauth2 -> oauth2
+        .failureHandler(oauth2FailureHandler)
+        .authorizationEndpoint(endpoint -> endpoint
+          .authorizationRequestRepository(authorizationRequestRepository)))
       .oauth2ResourceServer(oauth2 -> oauth2
         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
 

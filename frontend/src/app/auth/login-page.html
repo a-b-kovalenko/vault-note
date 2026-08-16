@@ -145,7 +145,7 @@
       </div>
 
       <div class="oauth-buttons">
-        <button class="oauth-button" type="button" disabled>
+        <a class="oauth-button oauth-button-google" [href]="googleAuthorizationUrl">
           <svg class="oauth-icon oauth-icon-google" viewBox="0 0 24 24" aria-hidden="true">
             <path
               fill="#4285F4"
@@ -165,7 +165,7 @@
             />
           </svg>
           <span>Continue with Google</span>
-        </button>
+        </a>
 
         <button class="oauth-button" type="button" disabled>
           <svg class="oauth-icon oauth-icon-github" viewBox="0 0 24 24" aria-hidden="true">
