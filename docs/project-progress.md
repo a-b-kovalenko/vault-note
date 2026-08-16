@@ -62,11 +62,11 @@ has been implemented and verified. Branch integration is tracked separately.
   Therefore, `MEDIUM-3` is only partially resolved: the local single-instance
   scope is complete, while the full finding closes after the remaining Phase 12
   tasks are completed.
-  After the remaining provider-mocked and manual OAuth verification, the next
-  planned milestone is Phase 8: deploy the Angular SPA and Spring Boot API to
-  GCP while using Supabase Free PostgreSQL for demo data. Then continue with
-  the dedicated Notes phase and the remaining cross-cutting Angular work such
-  as route guards and standard frontend API-error presentation.
+  The next planned milestone is Phase 8: deploy the Angular SPA and Spring
+  Boot API to GCP while using Supabase Free PostgreSQL for demo data. Then
+  continue with the dedicated Notes phase and the remaining cross-cutting
+  Angular work such as route guards and standard frontend API-error
+  presentation.
 - The authenticated Angular application shell is implemented and verified: `/me`
   is rendered inside the shell, the account menu shows initials, display name,
   and email, the `ADMIN` link to All users is conditional, and logout is a
@@ -86,8 +86,11 @@ has been implemented and verified. Branch integration is tracked separately.
   Google identities by `sub`, creates the VaultNote refresh session, and imports
   the optional Google `picture` into local normalized avatar storage when no
   local avatar exists. Existing local avatars are not overwritten; provider
-  mocked integration coverage and a final manual check of the avatar import
-  remain open.
+  mocked integration coverage now verifies the token exchange, JWK validation,
+  PKCE/state callback, userinfo claims, refresh-cookie handoff, avatar
+  persistence, missing-picture fallback, and no-replacement behavior. The
+  local Google login and avatar import were also manually verified through the
+  IDE/browser flow.
 
 ## Phase 0 — Foundation
 
@@ -329,8 +332,10 @@ has been implemented and verified. Branch integration is tracked separately.
   state callback.
 - [x] Add unit coverage for Google avatar URL validation, bounded download,
   normalization/persistence, and non-blocking import failures.
-- [ ] Add provider-mocked integration coverage and complete the local manual
-  verification of the Google avatar import.
+- [x] Add provider-mocked integration coverage for the Google token exchange,
+  JWK validation, userinfo claims, PKCE callback, refresh-cookie handoff,
+  avatar persistence, missing-picture fallback, and no-replacement behavior.
+- [x] Complete the local manual verification of the Google avatar import.
 
 ## Phase 8 — First GCP demo deployment
 
@@ -406,13 +411,23 @@ remain follow-up work.
 ## Phase 11 — Documentation and publishing
 
 - [x] Add Antora component metadata and navigation.
-- [ ] Record the remaining architecture decision records.
+- [x] Record the architecture decision records.
+  - [x] Record the monorepo layout (`001`).
+  - [x] Record the Antora documentation strategy (`002`).
+  - [x] Record the backend package boundaries (`003`, superseded by `006`).
+  - [x] Record the PostgreSQL and Liquibase persistence baseline (`004`).
+  - [x] Record users persistence ownership (`005`).
+  - [x] Record the single-module modular monolith (`006`).
+  - [x] Record the Liquibase and Testcontainers strategy (`007`).
+  - [x] Record the mail delivery boundary (`008`).
   - [x] Record the fixed numeric role-code strategy (`009`).
   - [x] Record JWT access and initial refresh-token delivery (`010`).
   - [x] Record refresh-token rotation and reuse detection (`011`).
   - [x] Record current-session logout (`012`).
   - [x] Record the CSRF and CORS strategy (`013`).
+  - [x] Record OAuth2/OIDC sign-in and provider identity mapping (`014`).
   - [x] Record the rate-limiting storage and deployment boundary (`015`).
+  - [x] Record avatar storage and normalization (`016`).
 - [x] Complete README setup, operations, and verification instructions.
 - [x] Publish Antora documentation to GitHub Pages.
 

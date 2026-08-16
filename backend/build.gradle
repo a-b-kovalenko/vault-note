@@ -41,6 +41,7 @@ ext {
   bouncycastleVersion = '1.84'
   restAssuredVersion = '6.0.0'
   databaseRiderVersion = '1.44.0'
+  wiremockVersion = '3.13.2'
 
   jacocoExclusions = [
       '**/*Application.class',
@@ -80,6 +81,7 @@ dependencies {
   testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
   testImplementation "io.rest-assured:rest-assured:${restAssuredVersion}"
   testImplementation "com.github.database-rider:rider-spring:${databaseRiderVersion}"
+  testImplementation "org.wiremock:wiremock-standalone:${wiremockVersion}"
 
   compileOnly "org.projectlombok:lombok:${lombokVersion}"
   annotationProcessor "org.projectlombok:lombok:${lombokVersion}"

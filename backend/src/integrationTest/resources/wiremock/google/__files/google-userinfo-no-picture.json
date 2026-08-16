@@ -1,0 +1,6 @@
+{
+  "sub": "wiremock-no-picture-subject",
+  "name": "No Picture User",
+  "email": "wiremock-no-picture@example.com",
+  "email_verified": true
+}

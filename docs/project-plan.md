@@ -358,9 +358,15 @@ controls are user experience only; the backend remains the authorization source.
 
 ## Phase 7 — OAuth2/OIDC sign-in
 
-After password recovery, the minimal Angular login flow, and the core security
-remediation are working, add external sign-in through an OAuth2/OIDC provider
-such as Google or GitHub in this order:
+The base Google OAuth2/OIDC MVP is implemented and verified: backend-owned
+authorization-code flow, cookie-based state and PKCE, provider identity
+onboarding, VaultNote refresh-cookie handoff, Angular callback, Google avatar
+import, provider-mocked integration coverage, and local browser verification.
+Explicit provider linking/unlinking and authenticated password management remain
+deferred follow-up work.
+
+The phase added external sign-in through an OAuth2/OIDC provider in the
+following order:
 
 ### OAuth backend
 
@@ -419,8 +425,10 @@ such as Google or GitHub in this order:
 
 - [x] Add unit coverage for Google avatar URL validation, bounded download,
   normalization/persistence, and non-blocking import failures.
-- [ ] Add provider-mocked integration coverage and complete the local manual
-  verification of the Google avatar import.
+- [x] Add provider-mocked integration coverage for the Google token exchange,
+  JWK validation, userinfo claims, PKCE callback, refresh-cookie handoff,
+  avatar persistence, missing-picture fallback, and no-replacement behavior.
+- [x] Complete the local manual verification of the Google avatar import.
 
 ## Phase 8 — First GCP demo deployment
 
@@ -597,7 +605,23 @@ test order or arbitrary sleeps.
 
 - [x] Maintain Antora component metadata, navigation, and the published
   documentation site.
-- [ ] Record the remaining architecture decision records.
+- [x] Record the architecture decision records.
+  - [x] Record the monorepo layout (`001`).
+  - [x] Record the Antora documentation strategy (`002`).
+  - [x] Record the backend package boundaries (`003`, superseded by `006`).
+  - [x] Record the PostgreSQL and Liquibase persistence baseline (`004`).
+  - [x] Record users persistence ownership (`005`).
+  - [x] Record the single-module modular monolith (`006`).
+  - [x] Record the Liquibase and Testcontainers strategy (`007`).
+  - [x] Record the mail delivery boundary (`008`).
+  - [x] Record the fixed numeric role-code strategy (`009`).
+  - [x] Record JWT access and initial refresh-token delivery (`010`).
+  - [x] Record refresh-token rotation and reuse detection (`011`).
+  - [x] Record current-session logout (`012`).
+  - [x] Record the CSRF and CORS strategy (`013`).
+  - [x] Record OAuth2/OIDC sign-in and provider identity mapping (`014`).
+  - [x] Record the rate-limiting storage and deployment boundary (`015`).
+  - [x] Record avatar storage and normalization (`016`).
 
 ## Phase 12 — Final security and email hardening
 
@@ -664,17 +688,18 @@ initial ADRs now describe decisions that are implemented in the repository:
 11. [x] Refresh-token rotation and reuse detection (`011`).
 12. [x] Current-session logout (`012`).
 13. [x] CSRF and CORS strategy (`013`).
-14. [x] Rate-limiting storage and deployment boundary (`015`); local policy is
+14. [x] OAuth2/OIDC sign-in, provider identity mapping, and handoff to
+    VaultNote tokens (`014`).
+15. [x] Rate-limiting storage and deployment boundary (`015`); local policy is
     accepted and shared provider selection plus deployment implementation remain
     in Phase 12.
+16. [x] Avatar storage and normalization (`016`).
 
 The following ADRs remain planned. Proposed ADRs may capture an important
 upcoming decision before implementation and become accepted after verification:
 
 - [ ] OpenAPI as the contract source and generated Angular client.
 - [ ] Antora publishing to GitHub Pages.
-- [ ] OAuth2/OIDC sign-in, provider identity mapping, and handoff to VaultNote
-  tokens (`014`, proposed).
 
 ## Verification sequence
 

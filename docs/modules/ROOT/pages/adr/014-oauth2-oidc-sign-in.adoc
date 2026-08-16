@@ -1,5 +1,5 @@
 = ADR 014: OAuth2/OIDC sign-in
-:status: proposed
+:status: accepted
 :date: 2026-08-11
 
 == Context
@@ -49,5 +49,6 @@ Implement OAuth2/OIDC sign-in as a backend-owned authorization-code flow:
 
 == Status
 
-Proposed. Accept this ADR after the Phase 7 OAuth2/OIDC implementation and
-provider-mocked verification are complete.
+Accepted after the Phase 7 Google OAuth2/OIDC implementation, provider-mocked
+integration coverage, Google avatar import, and local browser verification were
+completed.

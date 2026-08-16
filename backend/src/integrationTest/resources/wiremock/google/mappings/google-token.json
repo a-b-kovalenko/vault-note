@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/oauth2/token",
+    "bodyPatterns": [
+      {
+        "contains": "code=mock-authorization-code"
+      },
+      {
+        "contains": "code_verifier="
+      }
+    ]
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "google-token-response.json"
+  }
+}

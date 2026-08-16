@@ -1,0 +1,18 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/userinfo",
+    "headers": {
+      "Authorization": {
+        "equalTo": "Bearer wiremock-no-picture-access-token"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "google-userinfo-no-picture.json"
+  }
+}
