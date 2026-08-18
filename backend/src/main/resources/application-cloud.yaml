@@ -15,6 +15,7 @@ spring:
       client:
         registration:
           google:
+            redirect-uri: ${VAULTNOTE_OAUTH2_REDIRECT_URI:https://vaultnote-505715.web.app/login/oauth2/code/google}
             scope:
               - openid
               - profile

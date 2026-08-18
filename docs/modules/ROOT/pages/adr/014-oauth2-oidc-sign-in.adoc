@@ -32,6 +32,9 @@ Implement OAuth2/OIDC sign-in as a backend-owned authorization-code flow:
   `https://vaultnote-505715.web.app/login/oauth2/code/google`;
 * route the production callback through Firebase Hosting to Cloud Run and
   redirect the completed flow to the Angular `/oauth/callback` route;
+* set the cloud registration's `redirect-uri` explicitly from
+  `VAULTNOTE_OAUTH2_REDIRECT_URI` so forwarded proxy headers cannot change the
+  URI sent to Google unexpectedly;
 * keep Google client credentials in runtime configuration and Secret Manager,
   not in the repository or the frontend bundle;
 * use provider-mocked integration coverage and a local browser verification

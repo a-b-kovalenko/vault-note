@@ -527,8 +527,10 @@ See the current [Supabase Free plan](https://supabase.com/pricing) limits.
    `VAULTNOTE_FRONTEND_BASE_URL=https://vaultnote-505715.web.app` is configured,
    and Google OAuth now contains
    `https://vaultnote-505715.web.app/login/oauth2/code/google` in addition to
-   the local redirect URI. Firebase rewrites the callback to Cloud Run. The
-   deployed CSRF, cookie, OAuth, and browser flow verification remains pending.
+   the local redirect URI. The cloud profile explicitly sets this value through
+   `VAULTNOTE_OAUTH2_REDIRECT_URI`, and Firebase rewrites the callback to Cloud
+   Run. The deployed CSRF, cookie, OAuth, and browser flow verification remains
+   pending.
 
 7. **Apply and verify the database schema.**
    Liquibase has already run successfully against the empty Supabase database.
