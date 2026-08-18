@@ -31,7 +31,10 @@ leave `Secure` disabled. Every runtime must provide a unique JWT secret; the
 application has no known fallback secret and rejects the old development
 placeholder. The local profile loads a stable secret from the ignored
 `application-local-secrets.yaml` classpath file, while deployed environments
-use an environment or secret-manager value and must also enable `Secure`.
+use an environment or Secret Manager value and must also enable `Secure`. In
+the first GCP demo, Firebase Hosting rewrites keep the normal frontend/API
+browser flow on one origin; the cloud cookie policy remains `HttpOnly`,
+`Secure=true`, and `SameSite=Lax`.
 
 The current implementation covers login, refresh-token persistence and
 rotation, reuse detection, current-session logout, cookie delivery, JWT request
@@ -52,6 +55,8 @@ stored through a hashed database record plus an `HttpOnly` cookie. No
 * Access tokens limit the lifetime of a leaked bearer token.
 * Cookie-backed authentication endpoints must participate in the CSRF flow
   described by ADR 013.
+* The same-origin demo setup reduces browser cross-origin cookie complexity,
+  but it does not change the token model or the CSRF requirement.
 * Cookie and JWT settings must be externalized per environment.
 
 == Status

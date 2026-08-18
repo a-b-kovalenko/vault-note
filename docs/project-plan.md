@@ -15,10 +15,10 @@ email/password sign-in, email verification, JWT access tokens, and roles.
 - The local PostgreSQL server already owns database `vault_note` and schema
   `vaultnote`. The existing database user is sufficient for local work.
 - Docker is used only for Mailpit. PostgreSQL stays in the shared local setup.
-- Full application CI/CD is not part of the first iteration. The first
-  application demo deployment is tracked in Phase 8 and may be performed
-  manually; a small docs-only GitHub Actions workflow publishes the
-  documentation to Pages.
+- Full production CI/CD is not part of the first iteration. The first
+  application demo deployment is tracked in Phase 8 and uses small GitHub
+  Actions workflows with Workload Identity Federation; Google Cloud and
+  Firebase resources still require one-time manual setup.
 - OpenAPI is the API source of truth; Angular uses a generated TypeScript
   client.
 - API errors use RFC 9457 `ProblemDetail`.
@@ -434,7 +434,7 @@ following order:
 
 Deploy the first publicly reachable VaultNote demo while keeping the local
 development setup unchanged. This phase is intentionally a small, controlled
-deployment rather than a full production platform or CI/CD program.
+deployment with minimal CI/CD rather than a full production platform.
 
 ### Target architecture
 
@@ -442,15 +442,23 @@ Use the following boundaries:
 
 ```text
 Browser  ->  Firebase Hosting  ->  Angular SPA
-Browser  ->  Cloud Run  ->  Spring Boot API
+Browser  ->  Firebase Hosting rewrite  ->  Cloud Run -> Spring Boot API
 Cloud Run API  ->  TLS PostgreSQL connection  ->  Supabase Free PostgreSQL
 Cloud Run  <-  Google Secret Manager
 Cloud Run  <-  Artifact Registry container image
 ```
 
+The deployment preparation is implemented for project `vaultnote-505715` in
+region `europe-north2 (Stockholm)`. The Firebase Hosting site is
+`vaultnote-505715.web.app`; the first actual GitHub Actions deployment remains
+pending.
+
 - Host the built Angular application on Firebase Hosting in the same Google
   Cloud project. Select it over raw Cloud Storage because SPA fallback and
   managed HTTPS require less deployment wiring.
+- Route `/api/**`, `/csrf`, `/oauth2/**`, and `/login/oauth2/**` from Firebase
+  Hosting to Cloud Run. Angular uses the current browser origin in production,
+  while local hostnames continue to use `http://localhost:8080`.
 - Build the Spring Boot backend as a container and run it on Cloud Run.
 - Use Supabase Free only as an external PostgreSQL database for the demo. Do
   not use Supabase Auth, Supabase API, or Supabase Storage; VaultNote remains
@@ -469,58 +477,57 @@ See the current [Supabase Free plan](https://supabase.com/pricing) limits.
 ### Deployment steps
 
 1. **Choose the Google Cloud project, region, and cost guardrails.**
-   Enable only the APIs required for Cloud Run, Artifact Registry, Secret
-   Manager, Cloud Build if used, and Firebase Hosting. Choose a region near
-   the Supabase database region. Configure a billing budget and alerts; free
-   tiers do not guarantee a zero invoice when configuration or network usage
-   exceeds the included limits.
+   The selected project is `vaultnote-505715` and the selected region is
+   `europe-north2 (Stockholm)`, close to the Supabase North EU region. Required
+   Cloud Run, Artifact Registry, Secret Manager, IAM, Firebase, and Hosting
+   resources have been prepared. Billing budget alerts remain an operational
+   check before opening the demo publicly; free tiers do not guarantee a zero
+   invoice when configuration or network usage exceeds the included limits.
 
 2. **Create the demo PostgreSQL database.**
-   Create a Supabase Free project in a suitable region, configure a strong
-   database password, require TLS, and obtain the PostgreSQL connection
-   details. Use a least-privilege application database role where the provider
-   supports it. Keep the database URL, username, and password out of the
-   frontend. Use the provider's pooled/session connection option only after
-   verifying compatibility with Spring Boot, Hibernate, Liquibase, and the
-   connection pool.
+   The Supabase Free project is created in North EU (Stockholm), uses TLS, and
+   is accessed by the local backend through the `local-supabase` profile and by
+   the cloud backend through Secret Manager. The `vaultnote` schema and all
+   current Liquibase changesets have been applied successfully. Supabase Auth,
+   Data API, and Storage are not used.
 
 3. **Prepare production-like application configuration.**
-   Add a cloud deployment configuration without weakening the existing local
-   profile. Supply the Supabase JDBC settings, mandatory JWT secret, refresh
-   cookie settings (`Secure=true`, the selected `SameSite` policy, and the
-   configured cookie name), exact Firebase origin, mail settings, and Google
-   OAuth credentials through Secret Manager or deployment environment
-   bindings. Keep `ddl-auto=validate`; Liquibase remains the schema owner.
+   `application-cloud.yaml`, `application-local-supabase.yaml`, and the
+   existing local profile keep cloud and IDE configuration separate. Cloud
+   deployment reads the Supabase settings, mandatory JWT secret, Google OAuth
+   credentials, exact Firebase origin, and secure cookie settings from runtime
+   bindings. `ddl-auto=validate` remains enabled and Liquibase remains the
+   schema owner.
 
 4. **Package and deploy the backend.**
-   Build a reproducible Java container, publish it to Artifact Registry, and
-   deploy a Cloud Run service with a dedicated service account. Grant only the
-   permissions needed to read its Secret Manager secrets and write/read the
-   required logs. Configure the application port from Cloud Run, health
-   checks, request timeout, minimum instances, maximum instances, and a
-   conservative Hikari connection pool. Limit maximum instances so Cloud Run
-   cannot create more database connections than the Supabase plan can handle.
+   `backend/Dockerfile`, `.dockerignore`, and the backend GitHub Actions
+   workflow are ready. The workflow will publish SHA-tagged images to the
+   `vaultnote` Artifact Registry repository and create or update Cloud Run
+   service `vault-note` with `vaultnote-runtime`. The initial settings are
+   512 MiB, one CPU, 20 concurrent requests, zero minimum instances, and one
+   maximum instance. The first workflow run is still pending.
 
 5. **Deploy the Angular SPA.**
-   Build Angular with the production API base URL, deploy the static output to
-   Firebase Hosting, configure the SPA rewrite to `index.html`, and confirm
-   that browser requests go only to the public API URL. The access JWT remains
-   in Angular memory; the refresh token remains in the `HttpOnly` cookie.
+   `firebase.json`, `.firebaserc`, the same-origin API configuration, and the
+   frontend GitHub Actions workflow are ready. The workflow will build
+   `frontend/dist/frontend/browser` and publish it to Firebase Hosting with an
+   SPA fallback. The first frontend deployment is still pending. The access
+   JWT remains in Angular memory; the refresh token remains in the `HttpOnly`
+   cookie.
 
 6. **Align browser and OAuth security settings.**
-   Add the exact Firebase origin to the backend CORS allowlist. Verify that
-   credentials are enabled and wildcard origins are not used. Register the
-   production OAuth callback URL in Google Cloud, keep the callback on the
-   backend, and never put VaultNote access or refresh tokens in a redirect URL.
-   Verify CSRF bootstrap, cookies, and cross-origin state-changing requests
-   through the deployed frontend.
+   The GitHub repository variable
+   `VAULTNOTE_FRONTEND_BASE_URL=https://vaultnote-505715.web.app` is configured,
+   and Google OAuth now contains
+   `https://vaultnote-505715.web.app/login/oauth2/code/google` in addition to
+   the local redirect URI. Firebase rewrites the callback to Cloud Run. The
+   deployed CSRF, cookie, OAuth, and browser flow verification remains pending.
 
 7. **Apply and verify the database schema.**
-   Run Liquibase against an empty Supabase database and verify all constraints,
-   indexes, and the `vaultnote` schema. For the first demo, prefer creating
-   test accounts through the application. If existing local demo data is
-   migrated, use a reviewed `pg_dump`/restore process and do not copy local
-   secrets or unintended personal data.
+   Liquibase has already run successfully against the empty Supabase database.
+   The deployed schema should still be checked after the first Cloud Run
+   startup. For the first demo, prefer creating test accounts through the
+   application and keep the data disposable.
 
 8. **Decide the demo email path.**
    Mailpit remains local-only. A deployed registration and password-recovery
@@ -538,12 +545,12 @@ See the current [Supabase Free plan](https://supabase.com/pricing) limits.
 
 ### Phase boundary
 
-The first deployment may use manual Google Cloud and Firebase commands. A
-repeatable CI/CD pipeline, custom domain, production SMTP, Cloud SQL, private
-networking, high availability, and full production backup/restore policy are
-separate follow-up work. The application must remain portable so moving from
-Supabase to Cloud SQL changes deployment configuration rather than domain or
-REST code.
+The first deployment uses repeatable GitHub Actions workflows authenticated by
+Workload Identity Federation. One-time Google Cloud and Firebase setup remains
+manual. A custom domain, production SMTP, Cloud SQL, private networking, high
+availability, and full production backup/restore policy are separate
+follow-up work. The application must remain portable so moving from Supabase
+to Cloud SQL changes deployment configuration rather than domain or REST code.
 
 ## Phase 9 — Notes
 
@@ -622,6 +629,7 @@ test order or arbitrary sleeps.
   - [x] Record OAuth2/OIDC sign-in and provider identity mapping (`014`).
   - [x] Record the rate-limiting storage and deployment boundary (`015`).
   - [x] Record avatar storage and normalization (`016`).
+  - [x] Record the first GCP demo deployment boundary (`017`).
 
 ## Phase 12 — Final security and email hardening
 

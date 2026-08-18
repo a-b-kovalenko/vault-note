@@ -1,0 +1,15 @@
+.git
+.github
+.workspace
+.idea
+.gradle
+build
+backend/build
+frontend/node_modules
+frontend/dist
+docs/node_modules
+docs/build
+.env
+.env.*
+backend/src/main/resources/application-local-secrets.yaml
+**/*.iml

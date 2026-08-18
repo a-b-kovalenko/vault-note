@@ -4,11 +4,16 @@
 
 == Context
 
-VaultNote will be called by an Angular application hosted at a different
-origin from the Spring Boot API. The refresh token is delivered in an
-`HttpOnly` cookie, so the browser can attach it automatically to refresh and
-logout requests. CORS must allow the trusted frontend to call the API, while
-CSRF must prevent another site from driving those cookie-backed operations.
+VaultNote is called by an Angular application. During local development the
+Angular dev server and Spring Boot API use different origins. In the first
+cloud demo Firebase Hosting serves the Angular application and rewrites the
+API paths to Cloud Run, so the normal browser flow uses one public origin.
+Direct calls to the Cloud Run URL still need the explicit CORS boundary.
+
+The refresh token is delivered in an `HttpOnly` cookie, so the browser can
+attach it automatically to refresh and logout requests. CORS must allow the
+trusted frontend to call the API, while CSRF must prevent another site from
+driving those cookie-backed operations.
 
 The API also has public registration and email-verification endpoints. They
 must remain usable before a browser session exists and therefore need an
@@ -18,7 +23,9 @@ explicit boundary in the initial CSRF configuration.
 
 Use an explicit, environment-driven CORS allowlist:
 
-* default the allowed origin to `http://localhost:4200`;
+* default the allowed origin to `http://localhost:4200` for local
+  development;
+* configure the exact Firebase Hosting origin in the cloud demo;
 * allow credentials because the refresh token is in a cookie;
 * allow the API methods and headers required by the Angular client, including
   `Authorization`, `Content-Type`, and `X-XSRF-TOKEN`;
@@ -42,12 +49,16 @@ revokes it and clears the cookie. These operations remain CSRF-protected under
 `SessionCreationPolicy.STATELESS`.
 
 Use `SameSite=Lax` for the local CSRF cookie and keep the CORS origin in
-`VAULTNOTE_CORS_ALLOWED_ORIGINS`. Production deployments must provide their
-real frontend origin and review cookie `Secure` and `SameSite` settings.
+`VAULTNOTE_CORS_ALLOWED_ORIGINS`. The cloud demo uses the Firebase Hosting
+origin, `Secure=true`, and the existing `SameSite=Lax` cookie policy. The
+same-origin Hosting rewrites simplify normal browser requests, but they do not
+replace the explicit CORS configuration for direct API access.
 
 == Consequences
 
 * A trusted Angular client can perform credentialed cross-origin requests.
+* The first cloud demo normally uses same-origin Hosting rewrites, while the
+  local IDE flow continues to exercise the explicit cross-origin CORS path.
 * A foreign origin cannot use CORS to read VaultNote responses and cannot
   satisfy the CSRF header check for cookie-backed mutation requests.
 * The CSRF cookie is intentionally readable by frontend JavaScript; it is not

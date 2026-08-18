@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    # The local-supabase profile keeps the backend local and only changes the
+    # database connection. Fail fast when the IDE configuration is incomplete.
+    url: ${VAULTNOTE_DATABASE_URL}
+    username: ${VAULTNOTE_DATABASE_USERNAME}
+    password: ${VAULTNOTE_DATABASE_PASSWORD}
+    hikari:
+      maximum-pool-size: 3
+      minimum-idle: 1
+      connection-timeout: 10000

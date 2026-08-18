@@ -1,0 +1,38 @@
+server:
+  forward-headers-strategy: framework
+
+spring:
+  datasource:
+    url: ${VAULTNOTE_DATABASE_URL}
+    username: ${VAULTNOTE_DATABASE_USERNAME}
+    password: ${VAULTNOTE_DATABASE_PASSWORD}
+    hikari:
+      maximum-pool-size: 3
+      minimum-idle: 1
+      connection-timeout: 10000
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            scope:
+              - openid
+              - profile
+              - email
+            client-settings:
+              require-proof-key: true
+
+app:
+  cors:
+    allowed-origins: ${VAULTNOTE_CORS_ALLOWED_ORIGINS}
+  oauth2:
+    frontend-base-url: ${VAULTNOTE_OAUTH2_FRONTEND_BASE_URL}
+    authorization-request-cookie:
+      secure: ${VAULTNOTE_OAUTH2_AUTHORIZATION_REQUEST_COOKIE_SECURE:true}
+  email-verification:
+    base-url: ${VAULTNOTE_EMAIL_VERIFICATION_BASE_URL}
+  password-reset:
+    base-url: ${VAULTNOTE_PASSWORD_RESET_BASE_URL}
+  refresh-token:
+    secure: ${VAULTNOTE_REFRESH_TOKEN_COOKIE_SECURE:true}
+    same-site: ${VAULTNOTE_REFRESH_TOKEN_COOKIE_SAME_SITE:Lax}

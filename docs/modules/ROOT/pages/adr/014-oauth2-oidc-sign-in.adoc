@@ -28,6 +28,12 @@ Implement OAuth2/OIDC sign-in as a backend-owned authorization-code flow:
 * add provider buttons and a callback route to the Angular login flow;
 * when Google provides a `picture` claim, import it on the backend into the
   existing normalized avatar storage only when no local avatar exists;
+* keep the local redirect URI and add the first demo redirect URI
+  `https://vaultnote-505715.web.app/login/oauth2/code/google`;
+* route the production callback through Firebase Hosting to Cloud Run and
+  redirect the completed flow to the Angular `/oauth/callback` route;
+* keep Google client credentials in runtime configuration and Secret Manager,
+  not in the repository or the frontend bundle;
 * use provider-mocked integration coverage and a local browser verification
   flow.
 
@@ -41,6 +47,9 @@ Implement OAuth2/OIDC sign-in as a backend-owned authorization-code flow:
 * Provider profile images are treated as untrusted remote input: the backend
   uses an HTTPS host allowlist, bounded download, image validation, and the
   existing `256x256` JPEG normalization before storing them locally.
+* Firebase Hosting provides the public browser origin for the first demo, so
+  the OAuth callback and cookie handoff can use the same deployed origin while
+  the local localhost callback remains available.
 * The backend can be implemented and tested before the complete Angular
   application exists, but the final user experience requires a login button and
   callback route.
@@ -51,4 +60,5 @@ Implement OAuth2/OIDC sign-in as a backend-owned authorization-code flow:
 
 Accepted after the Phase 7 Google OAuth2/OIDC implementation, provider-mocked
 integration coverage, Google avatar import, and local browser verification were
-completed.
+completed. The production redirect URI is configured for the first GCP demo;
+deployed OAuth verification remains pending.

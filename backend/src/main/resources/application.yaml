@@ -1,4 +1,8 @@
 spring:
+  profiles:
+    group:
+      local-supabase:
+        - local
   servlet:
     multipart:
       max-file-size: ${VAULTNOTE_AVATAR_MAX_UPLOAD_SIZE:2MB}

@@ -19,3 +19,4 @@
 ** xref:adr/014-oauth2-oidc-sign-in.adoc[ADR 014: OAuth2/OIDC sign-in]
 ** xref:adr/015-rate-limiting-storage-and-deployment-boundary.adoc[ADR 015: Rate-limiting storage and deployment boundary]
 ** xref:adr/016-avatar-storage-and-normalization.adoc[ADR 016: Avatar storage and normalization]
+** xref:adr/017-gcp-demo-deployment.adoc[ADR 017: First GCP demo deployment boundary]

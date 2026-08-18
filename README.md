@@ -10,8 +10,11 @@ production-inspired authentication lifecycle.
 > current-session logout. The repository also contains JWT access tokens,
 > rotating refresh sessions, users and Notes APIs, optimistic locking,
 > local/test profiles, CORS, SPA-compatible CSRF protection, PostgreSQL
-> integration coverage, and an Angular workspace. Rate limiting, audit events,
-> OAuth2/OIDC, and the remaining frontend screens are still planned.
+> integration coverage, profile and avatar management, the administrator user
+> list, Google OAuth2/OIDC sign-in with PKCE, and an Angular workspace. The
+> first GCP demo deployment is prepared with Cloud Run, Firebase Hosting,
+> Supabase PostgreSQL, Secret Manager, Artifact Registry, and WIF-based GitHub
+> Actions; the first automated deployment is still pending.
 
 ## Planned architecture
 
@@ -28,11 +31,11 @@ The backend uses package-level boundaries for `common`, `users`, `notes`,
 the frontend client and its TypeScript models are generated from the backend
 document.
 
-Future OAuth2/OIDC provider identities will be stored separately from local
-user credentials in a planned `vaultnote.oauth_identities` table. Each row will
-contain the local `user_id`, a stable `provider` value such as `GOOGLE` or
-`GITHUB`, and the provider's stable subject identifier. Unique constraints on
-`(provider, provider_subject)` and `(user_id, provider)` will prevent duplicate
+OAuth2/OIDC provider identities are stored separately from local user
+credentials in the `vaultnote.oauth_identities` table. Each row contains the
+local `user_id`, a stable `provider` value such as `GOOGLE` or `GITHUB`, and the
+provider's stable subject identifier. Unique constraints on
+`(provider, provider_subject)` and `(user_id, provider)` prevent duplicate
 identities and duplicate links for one user.
 
 ## Obsidian knowledge vault
@@ -68,10 +71,14 @@ rules are in [.agents/AGENTS.md](.agents/AGENTS.md).
 - `USER` and read-only `ADMIN` roles.
 - PostgreSQL database `vault_note`, using the non-public `vaultnote` schema.
 - Mailpit for local email testing; PostgreSQL remains an existing local server.
+- Google OAuth2/OIDC sign-in with provider-owned authorization code flow, PKCE,
+  and normalized Google avatar import.
+- A first disposable GCP demo deployment using Supabase Free PostgreSQL.
 
-Raw HTML, attachments, note sharing, authenticated set/change-password,
-passwordless provider accounts, OAuth2, search, browser e2e tests, application
-CI, and production deployment are outside the first iteration.
+Raw HTML, attachments, note sharing, explicit provider linking or unlinking,
+search, browser e2e tests, real cloud SMTP, and production-grade deployment
+hardening are outside the first iteration. A limited demo deployment is tracked
+separately in Phase 8.
 
 ## Delivery phases
 
@@ -82,11 +89,12 @@ CI, and production deployment are outside the first iteration.
 - Phase 5: security-audit remediation and deployment-sensitive checks.
 - Phase 6: profile and user administration.
 - Phase 7: OAuth2/OIDC sign-in with provider buttons and a callback flow.
-- Phase 8: Notes, administrator Notes access, and Markdown preview.
-- Phase 9: remaining Angular cross-cutting screens, route guards, and error
+- Phase 8: first GCP demo deployment with Supabase Free PostgreSQL.
+- Phase 9: Notes, administrator Notes access, and Markdown preview.
+- Phase 10: remaining Angular cross-cutting screens, route guards, and error
   presentation.
-- Phase 10: documentation maintenance and publishing.
-- Phase 11: final security, email, and authentication hardening.
+- Phase 11: documentation maintenance and publishing.
+- Phase 12: final security, email, and authentication hardening.
 
 ## Engineering conventions
 
