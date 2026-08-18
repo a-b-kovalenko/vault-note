@@ -6,6 +6,7 @@ import com.andrii.vaultnote.app.config.OAuth2AuthorizationRequestCookiePropertie
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Base64;
 import java.util.Set;
 import javax.crypto.spec.SecretKeySpec;
 import jakarta.servlet.http.Cookie;
@@ -66,8 +67,9 @@ class CookieOAuth2AuthorizationRequestRepositoryTest {
       saveResponse);
 
     var cookieValue = cookieValue(saveResponse);
-    var tamperedValue = cookieValue.substring(0, cookieValue.length() - 1)
-      + (cookieValue.endsWith("A") ? "B" : "A");
+    var tamperedBytes = Base64.getUrlDecoder().decode(cookieValue);
+    tamperedBytes[tamperedBytes.length - 1] ^= 0x01;
+    var tamperedValue = Base64.getUrlEncoder().withoutPadding().encodeToString(tamperedBytes);
     var request = new MockHttpServletRequest();
     request.setCookies(new Cookie(COOKIE_NAME, tamperedValue));
 
