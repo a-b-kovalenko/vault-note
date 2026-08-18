@@ -28,6 +28,7 @@ import org.springframework.security.oauth2.client.web.AuthorizationRequestReposi
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.util.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Stores the OAuth authorization request in a short-lived encrypted cookie.
@@ -37,6 +38,7 @@ import org.springframework.util.StringUtils;
  * verifier from client-side inspection. The existing application JWT secret is
  * domain-separated before it is used as the cookie-encryption key.
  */
+@Slf4j
 public class CookieOAuth2AuthorizationRequestRepository
   implements
     AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
@@ -47,6 +49,16 @@ public class CookieOAuth2AuthorizationRequestRepository
   private static final int GCM_IV_LENGTH_BYTES = 12;
   private static final int GCM_TAG_LENGTH_BITS = 128;
   private static final int MAX_COOKIE_VALUE_LENGTH = 4096;
+  private static final String FAILURE_REASON_COOKIE_MISSING = "cookie_missing";
+  private static final String FAILURE_REASON_COOKIE_BLANK = "cookie_blank";
+  private static final String FAILURE_REASON_COOKIE_TOO_LARGE = "cookie_too_large";
+  private static final String FAILURE_REASON_INVALID_BASE64 = "invalid_base64";
+  private static final String FAILURE_REASON_CIPHERTEXT_TOO_SHORT = "ciphertext_too_short";
+  private static final String FAILURE_REASON_COOKIE_EXPIRED = "cookie_expired";
+  private static final String FAILURE_REASON_DECRYPTION_FAILED = "decryption_failed";
+  private static final String FAILURE_REASON_DESERIALIZATION_FAILED = "deserialization_failed";
+  private static final String FAILURE_REASON_PAYLOAD_INVALID = "payload_invalid";
+  private static final String NO_EXCEPTION = "none";
 
   private final ObjectMapper objectMapper;
   private final OAuth2AuthorizationRequestCookieProperties properties;
@@ -69,10 +81,25 @@ public class CookieOAuth2AuthorizationRequestRepository
 
   @Override
   public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
-    return findCookie(request)
-      .map(Cookie::getValue)
-      .map(this::decrypt)
-      .orElse(null);
+    var cookie = findCookie(request);
+    if (cookie.isEmpty()) {
+      log.warn(
+        "OAuth2 authorization request cookie rejected: reason={}, valueLength=0, exceptionType={}",
+        FAILURE_REASON_COOKIE_MISSING,
+        NO_EXCEPTION);
+      return null;
+    }
+
+    var cookieValue = cookie.get().getValue();
+    var result = decrypt(cookieValue);
+    if (result.authorizationRequest() == null) {
+      log.warn(
+        "OAuth2 authorization request cookie rejected: reason={}, valueLength={}, exceptionType={}",
+        result.failureReason(),
+        cookieValue == null ? 0 : cookieValue.length(),
+        result.exceptionType());
+    }
+    return result.authorizationRequest();
   }
 
   @Override
@@ -137,18 +164,25 @@ public class CookieOAuth2AuthorizationRequestRepository
     }
   }
 
-  private OAuth2AuthorizationRequest decrypt(String encodedPayload) {
-    if (!StringUtils.hasText(encodedPayload)
-      || encodedPayload.length() > MAX_COOKIE_VALUE_LENGTH) {
-      return null;
+  private DecryptionResult decrypt(String encodedPayload) {
+    if (!StringUtils.hasText(encodedPayload)) {
+      return DecryptionResult.failure(FAILURE_REASON_COOKIE_BLANK);
+    }
+    if (encodedPayload.length() > MAX_COOKIE_VALUE_LENGTH) {
+      return DecryptionResult.failure(FAILURE_REASON_COOKIE_TOO_LARGE);
+    }
+
+    byte[] encryptedPayload;
+    try {
+      encryptedPayload = Base64.getUrlDecoder().decode(encodedPayload);
+    } catch (IllegalArgumentException exception) {
+      return DecryptionResult.failure(FAILURE_REASON_INVALID_BASE64, exception);
+    }
+    if (encryptedPayload.length <= GCM_IV_LENGTH_BYTES) {
+      return DecryptionResult.failure(FAILURE_REASON_CIPHERTEXT_TOO_SHORT);
     }
 
     try {
-      var encryptedPayload = Base64.getUrlDecoder().decode(encodedPayload);
-      if (encryptedPayload.length <= GCM_IV_LENGTH_BYTES) {
-        return null;
-      }
-
       var initializationVector = new byte[GCM_IV_LENGTH_BYTES];
       var ciphertext = new byte[encryptedPayload.length - GCM_IV_LENGTH_BYTES];
       var buffer = ByteBuffer.wrap(encryptedPayload);
@@ -161,13 +195,23 @@ public class CookieOAuth2AuthorizationRequestRepository
         encryptionKey,
         new GCMParameterSpec(GCM_TAG_LENGTH_BITS, initializationVector));
       var payload = objectMapper.readValue(cipher.doFinal(ciphertext), CookiePayload.class);
-      if (payload.expiresAt() <= Instant.now().getEpochSecond()) {
-        return null;
+      if (payload == null) {
+        return DecryptionResult.failure(FAILURE_REASON_PAYLOAD_INVALID);
       }
-      return payload.toAuthorizationRequest();
-    } catch (GeneralSecurityException | IOException
-      | IllegalArgumentException exception) {
-      return null;
+      if (payload.expiresAt() <= Instant.now().getEpochSecond()) {
+        return DecryptionResult.failure(FAILURE_REASON_COOKIE_EXPIRED);
+      }
+      var authorizationRequest = payload.toAuthorizationRequest();
+      if (authorizationRequest == null) {
+        return DecryptionResult.failure(FAILURE_REASON_PAYLOAD_INVALID);
+      }
+      return DecryptionResult.success(authorizationRequest);
+    } catch (GeneralSecurityException exception) {
+      return DecryptionResult.failure(FAILURE_REASON_DECRYPTION_FAILED, exception);
+    } catch (IOException exception) {
+      return DecryptionResult.failure(FAILURE_REASON_DESERIALIZATION_FAILED, exception);
+    } catch (IllegalArgumentException exception) {
+      return DecryptionResult.failure(FAILURE_REASON_PAYLOAD_INVALID, exception);
     }
   }
 
@@ -203,6 +247,27 @@ public class CookieOAuth2AuthorizationRequestRepository
       return new SecretKeySpec(digest.digest(), "AES");
     } catch (GeneralSecurityException exception) {
       throw new IllegalStateException("Unable to derive OAuth2 cookie encryption key", exception);
+    }
+  }
+
+  private record DecryptionResult(
+    OAuth2AuthorizationRequest authorizationRequest,
+    String failureReason,
+    String exceptionType) {
+
+    private static DecryptionResult success(OAuth2AuthorizationRequest authorizationRequest) {
+      return new DecryptionResult(authorizationRequest, null, null);
+    }
+
+    private static DecryptionResult failure(String failureReason) {
+      return new DecryptionResult(null, failureReason, NO_EXCEPTION);
+    }
+
+    private static DecryptionResult failure(String failureReason, Exception exception) {
+      return new DecryptionResult(
+        null,
+        failureReason,
+        exception.getClass().getSimpleName());
     }
   }
 
