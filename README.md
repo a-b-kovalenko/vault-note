@@ -14,7 +14,9 @@ production-inspired authentication lifecycle.
 > list, Google OAuth2/OIDC sign-in with PKCE, and an Angular workspace. The
 > first GCP demo deployment is prepared with Cloud Run, Firebase Hosting,
 > Supabase PostgreSQL, Secret Manager, Artifact Registry, and WIF-based GitHub
-> Actions; the first automated deployment is still pending.
+> Actions; the initial backend deployment completed, but the first frontend
+> deployment is pending because Firebase Hosting does not support the initial
+> Cloud Run region. The deployment is being corrected to a supported region.
 
 ## Planned architecture
 

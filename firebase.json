@@ -8,28 +8,28 @@
         "source": "/api/**",
         "run": {
           "serviceId": "vault-note",
-          "region": "europe-north2"
+          "region": "europe-north1"
         }
       },
       {
         "source": "/csrf",
         "run": {
           "serviceId": "vault-note",
-          "region": "europe-north2"
+          "region": "europe-north1"
         }
       },
       {
         "source": "/oauth2/**",
         "run": {
           "serviceId": "vault-note",
-          "region": "europe-north2"
+          "region": "europe-north1"
         }
       },
       {
         "source": "/login/oauth2/**",
         "run": {
           "serviceId": "vault-note",
-          "region": "europe-north2"
+          "region": "europe-north1"
         }
       },
       {

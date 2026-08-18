@@ -21,12 +21,14 @@ Use the following demo deployment boundary:
   the SPA fallback.
 * Firebase Hosting rewrites `/api/**`, `/csrf`, `/oauth2/**`, and
   `/login/oauth2/**` to the Cloud Run service `vault-note` in
-  `europe-north2` (Stockholm).
+  `europe-north1` (Finland), the closest region supported by Firebase Hosting
+  for Cloud Run rewrites.
 * The production Angular client uses the current browser origin for API
   requests. Local hostnames continue to use `http://localhost:8080`, so the
   IDE workflow remains unchanged.
 * Cloud Run runs the Spring Boot container from the `vaultnote` Artifact
-  Registry repository. The first demo uses 512 MiB, one CPU, concurrency 20,
+  Registry repository, which remains in the already-created `europe-north2`
+  repository region. The first demo uses 512 MiB, one CPU, concurrency 20,
   zero minimum instances, and one maximum instance.
 * Supabase Free provides only the external PostgreSQL database over TLS. The
   application does not use Supabase Auth, Data API, or Storage. Liquibase
