@@ -50,14 +50,17 @@ The backend foundation is in progress. The repository currently contains:
 * unit coverage for the login, refresh, and token-generation services, plus
   PostgreSQL integration coverage for health, registration, email verification,
   login, password recovery, refresh rotation, and Notes CRUD.
+* a prepared first GCP demo deployment using Firebase Hosting, Cloud Run,
+  Supabase Free PostgreSQL, Secret Manager, Artifact Registry, and GitHub
+  Actions authenticated through Workload Identity Federation.
 
 The following parts remain planned:
 
+* the first automated GCP deployment and its browser verification;
 * rate limiting and authentication audit events;
 * safe Markdown HTML rendering and sanitization as the final step of the Angular
   phase;
-* administrator note views and profile workflows;
-* Notes, profile, and administrator Angular screens;
+* administrator note views and Notes Angular screens;
 * route guards and standard frontend API-error presentation.
 
 == Target architecture
@@ -93,8 +96,9 @@ sessions, and `USER` and read-only `ADMIN` roles.
 
 The first iteration does not include raw HTML in notes, attachments, note
 sharing, authenticated set/change-password, explicit provider linking or
-unlinking, search, browser end-to-end tests, application CI, or production
-deployment.
+unlinking, search, browser end-to-end tests, real cloud SMTP, or production-
+grade deployment hardening. A disposable GCP demo deployment is tracked in
+Phase 8.
 
 == Documentation map
 

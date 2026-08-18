@@ -41,11 +41,13 @@ Use a two-layer rate-limiting policy:
   response as known emails. No rule creates a permanent account lockout or
   exposes which limit was exceeded.
 
-Neither candidate shared store nor edge/WAF enforcement is active in the current
-local mode. Provider evaluation, concurrency/CI validation, activation, and
-edge/WAF enforcement are the remaining `MEDIUM-3` work in Phase 11. They must
-be completed before exposing a multi-instance backend to untrusted public
-traffic.
+Neither candidate shared store nor edge/WAF enforcement is active in the
+current local mode. The first GCP demo keeps Cloud Run at a maximum of one
+instance while the limiter remains in memory. This is a bounded demonstration
+configuration, not production-grade multi-instance protection. Provider
+evaluation, concurrency/CI validation, activation, and edge/WAF enforcement
+remain `MEDIUM-3` work in Phase 12. They must be completed before exposing a
+multi-instance backend to untrusted public traffic.
 
 PostgreSQL was explored in the separate `feat/postgres-rate-limit-storage`
 branch, but its CI checks remained unstable and the branch was not merged. This
@@ -73,4 +75,4 @@ concurrency and failure-policy criteria.
 Accepted for the local application policy and two-layer deployment boundary. The
 shared-store provider remains undecided; PostgreSQL and Redis, failure policy,
 edge/WAF enforcement, and deployment-sensitive verification remain tracked in
-Phase 11.
+Phase 12. The first GCP demo uses the one-instance boundary described above.

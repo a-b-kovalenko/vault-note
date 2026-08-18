@@ -1,0 +1,75 @@
+= ADR 017: First GCP demo deployment boundary
+:status: accepted
+:date: 2026-08-18
+
+== Context
+
+VaultNote needs a publicly reachable demo without breaking the local
+development flow through IntelliJ IDEA. The demo should use the existing
+Spring Boot authentication model, external PostgreSQL, Google OAuth2/OIDC,
+CSRF protection, secure cookies, and the Angular SPA.
+
+This is not yet a production platform. The database is a Supabase Free
+project, the application rate limiter is still in memory, Mailpit is local
+only, and the first deployment must stay small and easy to remove or recreate.
+
+== Decision
+
+Use the following demo deployment boundary:
+
+* Firebase Hosting classic serves the Angular production build and provides
+  the SPA fallback.
+* Firebase Hosting rewrites `/api/**`, `/csrf`, `/oauth2/**`, and
+  `/login/oauth2/**` to the Cloud Run service `vault-note` in
+  `europe-north2` (Stockholm).
+* The production Angular client uses the current browser origin for API
+  requests. Local hostnames continue to use `http://localhost:8080`, so the
+  IDE workflow remains unchanged.
+* Cloud Run runs the Spring Boot container from the `vaultnote` Artifact
+  Registry repository. The first demo uses 512 MiB, one CPU, concurrency 20,
+  zero minimum instances, and one maximum instance.
+* Supabase Free provides only the external PostgreSQL database over TLS. The
+  application does not use Supabase Auth, Data API, or Storage. Liquibase
+  remains the schema owner.
+* Runtime secrets are read from Google Secret Manager by a dedicated Cloud
+  Run service account. A separate deployer service account is used by GitHub
+  Actions.
+* GitHub Actions authenticates to Google Cloud through Workload Identity
+  Federation. No long-lived service-account JSON key is stored in GitHub or
+  the repository. Backend images use commit SHA tags.
+* The production frontend URL is
+  `https://vaultnote-505715.web.app`. The Google OAuth callback is
+  `https://vaultnote-505715.web.app/login/oauth2/code/google`; the local
+  callback remains configured as well. Firebase rewrites the callback to
+  Cloud Run, which redirects the completed flow to `/oauth/callback`.
+* Cloud Run is publicly reachable at the network boundary because the browser
+  must reach it through Hosting. Spring Security remains responsible for
+  application authentication and authorization.
+
+The first deployment is intentionally limited to one instance because the
+current application rate limiter is in memory. This reduces, but does not
+eliminate, the limitations of a non-shared limiter and is not a production
+security guarantee.
+
+== Consequences
+
+* Local PostgreSQL and the `local` profile remain available for IDE
+  development; `local-supabase` can be used explicitly when testing against
+  the remote database.
+* Firebase Hosting gives the SPA and API one browser origin in the demo, so
+  cookie and CSRF behavior is simpler than a separately hosted frontend and
+  API. Direct Cloud Run access remains subject to the explicit CORS policy.
+* GitHub Actions can repeat deployments without storing a GCP private key, but
+  the initial Google Cloud, Firebase, OAuth, IAM, and Secret Manager setup is
+  still manual.
+* Supabase Free can pause and has limited storage and availability guarantees;
+  demo data must be treated as disposable.
+* A shared PostgreSQL or Redis rate-limit store, production SMTP, custom
+  domain, private networking, backup/restore policy, and high availability are
+  separate follow-up decisions.
+
+== Status
+
+Accepted for the first demo deployment. The workflows and cloud resources are
+prepared; the first automated deployment and deployed browser verification are
+still pending.

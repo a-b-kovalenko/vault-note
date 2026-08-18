@@ -1,0 +1,101 @@
+name: Deploy backend to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - backend/**
+      - .github/workflows/deploy-cloud-run.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  GCP_PROJECT_ID: vaultnote-505715
+  GCP_REGION: europe-north2
+  ARTIFACT_REPOSITORY: vaultnote
+  SERVICE_NAME: vault-note
+  IMAGE_NAME: europe-north2-docker.pkg.dev/vaultnote-505715/vaultnote/vaultnote-api
+  WIF_PROVIDER: projects/835573267393/locations/global/workloadIdentityPools/github-actions/providers/github
+  DEPLOYER_SERVICE_ACCOUNT: vaultnote-github-deployer@vaultnote-505715.iam.gserviceaccount.com
+  RUNTIME_SERVICE_ACCOUNT: vaultnote-runtime@vaultnote-505715.iam.gserviceaccount.com
+
+jobs:
+  deploy:
+    name: Build and deploy backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+
+      - name: Validate production frontend URL
+        env:
+          FRONTEND_BASE_URL: ${{ vars.VAULTNOTE_FRONTEND_BASE_URL }}
+        run: |
+          if [ -z "$FRONTEND_BASE_URL" ]; then
+            echo "Repository variable VAULTNOTE_FRONTEND_BASE_URL is required."
+            exit 1
+          fi
+
+          case "$FRONTEND_BASE_URL" in
+            https://*) ;;
+            *)
+              echo "VAULTNOTE_FRONTEND_BASE_URL must use HTTPS."
+              exit 1
+              ;;
+          esac
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Cloud Run
+        env:
+          FRONTEND_BASE_URL: ${{ vars.VAULTNOTE_FRONTEND_BASE_URL }}
+        run: |
+          gcloud run deploy "$SERVICE_NAME" \
+            --project="$GCP_PROJECT_ID" \
+            --region="$GCP_REGION" \
+            --platform=managed \
+            --image="${IMAGE_NAME}:${GITHUB_SHA}" \
+            --service-account="$RUNTIME_SERVICE_ACCOUNT" \
+            --allow-unauthenticated \
+            --ingress=all \
+            --port=8080 \
+            --memory=512Mi \
+            --cpu=1 \
+            --timeout=60s \
+            --concurrency=20 \
+            --min=0 \
+            --max=1 \
+            --set-env-vars="SPRING_PROFILES_ACTIVE=cloud,VAULTNOTE_CORS_ALLOWED_ORIGINS=${FRONTEND_BASE_URL},VAULTNOTE_OAUTH2_FRONTEND_BASE_URL=${FRONTEND_BASE_URL},VAULTNOTE_EMAIL_VERIFICATION_BASE_URL=${FRONTEND_BASE_URL},VAULTNOTE_PASSWORD_RESET_BASE_URL=${FRONTEND_BASE_URL},VAULTNOTE_OAUTH2_AUTHORIZATION_REQUEST_COOKIE_SECURE=true,VAULTNOTE_REFRESH_TOKEN_COOKIE_SECURE=true,VAULTNOTE_REFRESH_TOKEN_COOKIE_SAME_SITE=Lax" \
+            --set-secrets="VAULTNOTE_DATABASE_URL=vaultnote-database-url:latest,VAULTNOTE_DATABASE_USERNAME=vaultnote-database-username:latest,VAULTNOTE_DATABASE_PASSWORD=vaultnote-database-password:latest,VAULTNOTE_JWT_SECRET=vaultnote-jwt-secret:latest,SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID=vaultnote-google-client-id:latest,SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET=vaultnote-google-client-secret:latest" \
+            --quiet

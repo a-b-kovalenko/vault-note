@@ -24,13 +24,19 @@ values are supplied through environment variables with local-development
 defaults.
 
 PostgreSQL remains an existing local service. Docker is reserved for Mailpit in
-the project development setup.
+the project development setup. The first disposable GCP demo may connect the
+same Liquibase-managed `vaultnote` schema to an external Supabase Free
+PostgreSQL database over TLS. Supabase Auth, Data API, and Storage are not part
+of the persistence boundary.
 
 == Consequences
 
 * Database evolution is explicit, ordered, and auditable.
 * Application startup detects drift between JPA mappings and the database.
 * Local development requires the shared PostgreSQL database to be available.
+* The demo deployment keeps the database outside GCP and supplies its
+  connection values through cloud runtime configuration and Secret Manager.
+  Supabase Free is not a production availability or backup guarantee.
 * The isolated Liquibase and Testcontainers integration-test strategy is
   documented in ADR 007.
 

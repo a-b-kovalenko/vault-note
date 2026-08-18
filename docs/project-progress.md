@@ -62,11 +62,10 @@ has been implemented and verified. Branch integration is tracked separately.
   Therefore, `MEDIUM-3` is only partially resolved: the local single-instance
   scope is complete, while the full finding closes after the remaining Phase 12
   tasks are completed.
-  The next planned milestone is Phase 8: deploy the Angular SPA and Spring
-  Boot API to GCP while using Supabase Free PostgreSQL for demo data. Then
-  continue with the dedicated Notes phase and the remaining cross-cutting
-  Angular work such as route guards and standard frontend API-error
-  presentation.
+  Phase 8 is now the active milestone: the GCP/Firebase resources, cloud
+  configuration, WIF identities, secrets, GitHub workflows, production OAuth
+  redirect, and Firebase Hosting rewrite are prepared. The first automated
+  frontend/backend deployment and deployed browser verification remain.
 - The authenticated Angular application shell is implemented and verified: `/me`
   is rendered inside the shell, the account menu shows initials, display name,
   and email, the `ADMIN` link to All users is conditional, and logout is a
@@ -339,30 +338,32 @@ has been implemented and verified. Branch integration is tracked separately.
 
 ## Phase 8 — First GCP demo deployment
 
-- [ ] Define the first demo architecture: Firebase Hosting for Angular,
+- [x] Define the first demo architecture: Firebase Hosting for Angular,
   Cloud Run for the Spring Boot API, Supabase Free for external PostgreSQL,
   Artifact Registry for the container image, and Secret Manager for runtime
   secrets.
-- [ ] Choose compatible GCP and Supabase regions, enable required APIs, and
-  configure a billing budget and cost alerts.
-- [ ] Create the Supabase Free PostgreSQL project with TLS, a strong database
-  password, and a least-privilege application database role. Do not use
-  Supabase Auth, Supabase API, or Supabase Storage.
-- [ ] Add cloud deployment configuration without changing the local IDE flow:
+- [x] Choose the GCP project `vaultnote-505715` and region
+  `europe-north2 (Stockholm)`. The Supabase project is in North EU (Stockholm)
+  and the required APIs and deployment resources are prepared. Billing budget
+  alerts remain an operational check.
+- [x] Create the Supabase Free PostgreSQL project with TLS and a strong
+  database password. Apply the `vaultnote` schema through Liquibase. Do not
+  use Supabase Auth, Supabase API, or Supabase Storage.
+- [x] Add cloud deployment configuration without changing the local IDE flow:
   production database settings, mandatory JWT secret, secure refresh-cookie
   settings, CORS origin, mail settings, and Google OAuth credentials.
-- [ ] Build the Spring Boot container, publish it to Artifact Registry, and
-  deploy Cloud Run with a dedicated service account and Secret Manager access.
-  Configure health checks, instance limits, and a conservative database
-  connection pool.
-- [ ] Build Angular with the deployed API URL and publish it to Firebase
-  Hosting with SPA fallback and managed HTTPS.
-- [ ] Align deployed CORS, CSRF, secure-cookie, and production Google OAuth
-  callback settings. Keep access tokens in Angular memory and never put tokens
-  in redirect URLs.
-- [ ] Apply Liquibase to the empty Supabase database and verify the `vaultnote`
-  schema, constraints, indexes, and demo seed path. If local data is migrated,
-  use a reviewed `pg_dump`/restore process and exclude secrets or personal data.
+- [x] Prepare the Spring Boot container, Artifact Registry repository, Cloud
+  Run workflow, dedicated runtime service account, and Secret Manager access.
+  The first image publication and Cloud Run service creation remain pending.
+- [x] Prepare the Angular production build, Firebase Hosting site, SPA
+  fallback, same-origin API configuration, and frontend deployment workflow.
+  The first Firebase Hosting publication remains pending.
+- [x] Align the configured CORS origin, secure-cookie settings, and production
+  Google OAuth callback URI. Firebase Hosting rewrites `/api/**`, `/csrf`,
+  `/oauth2/**`, and `/login/oauth2/**` to Cloud Run. Deployed browser
+  verification remains pending.
+- [x] Apply Liquibase to the empty Supabase database and verify the `vaultnote`
+  schema. Local demo data is not being migrated automatically.
 - [ ] Decide the deployed email path: configure real SMTP or use pre-created
   verified demo users while Mailpit remains local-only.
 - [ ] Verify health, login, refresh, logout, CSRF, CORS, OAuth callback,
@@ -428,6 +429,7 @@ remain follow-up work.
   - [x] Record OAuth2/OIDC sign-in and provider identity mapping (`014`).
   - [x] Record the rate-limiting storage and deployment boundary (`015`).
   - [x] Record avatar storage and normalization (`016`).
+  - [x] Record the first GCP demo deployment boundary (`017`).
 - [x] Complete README setup, operations, and verification instructions.
 - [x] Publish Antora documentation to GitHub Pages.
 
