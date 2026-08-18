@@ -2,6 +2,7 @@ package com.andrii.vaultnote.app.config;
 
 import com.andrii.vaultnote.app.api.auth.RefreshTokenCookieFactory;
 import com.andrii.vaultnote.app.security.oauth2.CookieOAuth2AuthorizationRequestRepository;
+import com.andrii.vaultnote.app.security.oauth2.OAuth2AuthenticationFailureHandler;
 import com.andrii.vaultnote.app.security.oauth2.OAuth2AuthenticationSuccessHandler;
 import com.andrii.vaultnote.app.service.OAuthLoginService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,7 +12,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizationRequestResolver;
@@ -60,8 +60,6 @@ public class OAuth2ClientConfiguration {
   @Bean
   public AuthenticationFailureHandler oauth2AuthenticationFailureHandler(
     OAuth2Properties oauth2Properties) {
-    var handler = new SimpleUrlAuthenticationFailureHandler(oauth2Properties.loginErrorUrl());
-    handler.setAllowSessionCreation(false);
-    return handler;
+    return new OAuth2AuthenticationFailureHandler(oauth2Properties.loginErrorUrl());
   }
 }
