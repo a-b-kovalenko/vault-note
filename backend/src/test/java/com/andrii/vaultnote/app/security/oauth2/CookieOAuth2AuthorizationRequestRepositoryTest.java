@@ -11,12 +11,16 @@ import java.util.Set;
 import javax.crypto.spec.SecretKeySpec;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
 
+@ExtendWith(OutputCaptureExtension.class)
 class CookieOAuth2AuthorizationRequestRepositoryTest {
 
   private static final String COOKIE_NAME = "vaultnote_oauth2_authorization_request";
@@ -59,7 +63,7 @@ class CookieOAuth2AuthorizationRequestRepositoryTest {
   }
 
   @Test
-  void shouldRejectTamperedAuthorizationRequestCookie() {
+  void shouldRejectTamperedAuthorizationRequestCookie(CapturedOutput output) {
     var saveResponse = new MockHttpServletResponse();
     repository.saveAuthorizationRequest(
       authorizationRequest(),
@@ -74,6 +78,20 @@ class CookieOAuth2AuthorizationRequestRepositoryTest {
     request.setCookies(new Cookie(COOKIE_NAME, tamperedValue));
 
     assertThat(repository.loadAuthorizationRequest(request)).isNull();
+    assertThat(output)
+      .contains("reason=decryption_failed")
+      .contains("exceptionType=")
+      .doesNotContain(cookieValue);
+  }
+
+  @Test
+  void shouldLogWhenAuthorizationRequestCookieIsMissing(CapturedOutput output) {
+    assertThat(repository.loadAuthorizationRequest(new MockHttpServletRequest())).isNull();
+
+    assertThat(output)
+      .contains("reason=cookie_missing")
+      .contains("valueLength=0")
+      .contains("exceptionType=none");
   }
 
   @Test
