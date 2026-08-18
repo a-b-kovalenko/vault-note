@@ -56,7 +56,7 @@ The backend foundation is in progress. The repository currently contains:
 
 The following parts remain planned:
 
-* the first automated GCP deployment and its browser verification;
+* the region-corrected frontend deployment and its browser verification;
 * rate limiting and authentication audit events;
 * safe Markdown HTML rendering and sanitization as the final step of the Angular
   phase;

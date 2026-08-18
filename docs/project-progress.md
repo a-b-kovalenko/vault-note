@@ -64,8 +64,9 @@ has been implemented and verified. Branch integration is tracked separately.
   tasks are completed.
   Phase 8 is now the active milestone: the GCP/Firebase resources, cloud
   configuration, WIF identities, secrets, GitHub workflows, production OAuth
-  redirect, and Firebase Hosting rewrite are prepared. The first automated
-  frontend/backend deployment and deployed browser verification remain.
+  redirect, and Firebase Hosting rewrite are prepared. The initial backend
+  deployment succeeded, while the frontend deployment awaits the region fix
+  and deployed browser verification.
 - The authenticated Angular application shell is implemented and verified: `/me`
   is rendered inside the shell, the account menu shows initials, display name,
   and email, the `ADMIN` link to All users is conditional, and logout is a
@@ -342,10 +343,12 @@ has been implemented and verified. Branch integration is tracked separately.
   Cloud Run for the Spring Boot API, Supabase Free for external PostgreSQL,
   Artifact Registry for the container image, and Secret Manager for runtime
   secrets.
-- [x] Choose the GCP project `vaultnote-505715` and region
-  `europe-north2 (Stockholm)`. The Supabase project is in North EU (Stockholm)
-  and the required APIs and deployment resources are prepared. Billing budget
-  alerts remain an operational check.
+- [x] Choose the GCP project `vaultnote-505715`. Cloud Run and Firebase Hosting
+  rewrites use `europe-north1 (Finland)`, the closest supported region; the
+  existing Artifact Registry repository remains in `europe-north2 (Stockholm)`.
+  The Supabase project is in North EU (Stockholm) and the required APIs and
+  deployment resources are prepared. Billing budget alerts remain an
+  operational check.
 - [x] Create the Supabase Free PostgreSQL project with TLS and a strong
   database password. Apply the `vaultnote` schema through Liquibase. Do not
   use Supabase Auth, Supabase API, or Supabase Storage.
@@ -354,7 +357,9 @@ has been implemented and verified. Branch integration is tracked separately.
   settings, CORS origin, mail settings, and Google OAuth credentials.
 - [x] Prepare the Spring Boot container, Artifact Registry repository, Cloud
   Run workflow, dedicated runtime service account, and Secret Manager access.
-  The first image publication and Cloud Run service creation remain pending.
+  The first backend deployment created the Cloud Run service, but the initial
+  `europe-north2` region is incompatible with Firebase Hosting rewrites; the
+  region correction and redeployment remain pending.
 - [x] Prepare the Angular production build, Firebase Hosting site, SPA
   fallback, same-origin API configuration, and frontend deployment workflow.
   The first Firebase Hosting publication remains pending.

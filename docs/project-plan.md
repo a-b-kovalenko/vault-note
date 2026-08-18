@@ -448,9 +448,11 @@ Cloud Run  <-  Google Secret Manager
 Cloud Run  <-  Artifact Registry container image
 ```
 
-The deployment preparation is implemented for project `vaultnote-505715` in
-region `europe-north2 (Stockholm)`. The Firebase Hosting site is
-`vaultnote-505715.web.app`; the first actual GitHub Actions deployment remains
+The deployment preparation is implemented for project `vaultnote-505715`.
+Cloud Run and Firebase Hosting rewrites use `europe-north1 (Finland)`, the
+closest region supported by Firebase Hosting. The existing Artifact Registry
+repository remains in `europe-north2 (Stockholm)`. The Firebase Hosting site is
+`vaultnote-505715.web.app`; the first successful frontend deployment remains
 pending.
 
 - Host the built Angular application on Firebase Hosting in the same Google
@@ -477,12 +479,15 @@ See the current [Supabase Free plan](https://supabase.com/pricing) limits.
 ### Deployment steps
 
 1. **Choose the Google Cloud project, region, and cost guardrails.**
-   The selected project is `vaultnote-505715` and the selected region is
-   `europe-north2 (Stockholm)`, close to the Supabase North EU region. Required
-   Cloud Run, Artifact Registry, Secret Manager, IAM, Firebase, and Hosting
-   resources have been prepared. Billing budget alerts remain an operational
-   check before opening the demo publicly; free tiers do not guarantee a zero
-   invoice when configuration or network usage exceeds the included limits.
+   The selected project is `vaultnote-505715`. Cloud Run uses
+   `europe-north1 (Finland)` because Firebase Hosting does not support
+   `europe-north2` for Cloud Run rewrites. The existing Artifact Registry
+   repository remains in `europe-north2 (Stockholm)`, close to the Supabase
+   North EU region. Required Cloud Run, Artifact Registry, Secret Manager, IAM,
+   Firebase, and Hosting resources have been prepared. Billing budget alerts
+   remain an operational check before opening the demo publicly; free tiers do
+   not guarantee a zero invoice when configuration or network usage exceeds the
+   included limits.
 
 2. **Create the demo PostgreSQL database.**
    The Supabase Free project is created in North EU (Stockholm), uses TLS, and
@@ -505,7 +510,9 @@ See the current [Supabase Free plan](https://supabase.com/pricing) limits.
    `vaultnote` Artifact Registry repository and create or update Cloud Run
    service `vault-note` with `vaultnote-runtime`. The initial settings are
    512 MiB, one CPU, 20 concurrent requests, zero minimum instances, and one
-   maximum instance. The first workflow run is still pending.
+   maximum instance. The first backend workflow succeeded in the unsupported
+   `europe-north2` region; the corrected `europe-north1` deployment remains
+   pending.
 
 5. **Deploy the Angular SPA.**
    `firebase.json`, `.firebaserc`, the same-origin API configuration, and the

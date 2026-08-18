@@ -15,7 +15,8 @@ permissions:
 
 env:
   GCP_PROJECT_ID: vaultnote-505715
-  GCP_REGION: europe-north2
+  GCP_REGION: europe-north1
+  ARTIFACT_REGISTRY_REGION: europe-north2
   ARTIFACT_REPOSITORY: vaultnote
   SERVICE_NAME: vault-note
   IMAGE_NAME: europe-north2-docker.pkg.dev/vaultnote-505715/vaultnote/vaultnote-api
@@ -45,7 +46,7 @@ jobs:
           project_id: ${{ env.GCP_PROJECT_ID }}
 
       - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+        run: gcloud auth configure-docker "${ARTIFACT_REGISTRY_REGION}-docker.pkg.dev" --quiet
 
       - name: Validate production frontend URL
         env:
