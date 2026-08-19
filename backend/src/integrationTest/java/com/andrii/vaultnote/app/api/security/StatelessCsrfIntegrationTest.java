@@ -17,9 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.TestPropertySource;
 
-@TestPropertySource(properties = "app.security.csrf.mode=stateless")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 class StatelessCsrfIntegrationTest extends AbstractBaseIntegrationTest {
 

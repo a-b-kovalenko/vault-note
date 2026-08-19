@@ -39,7 +39,8 @@ class CsrfCorsIntegrationTest extends AbstractBaseIntegrationTest {
   }
 
   /**
-   * Issues an Angular-compatible CSRF token and exposes its cookie/header names.
+   * Issues an Angular-compatible stateless CSRF token and exposes its header
+   * names.
    */
   @Test
   void shouldIssueCsrfTokenForSpaClient() {
@@ -56,12 +57,8 @@ class CsrfCorsIntegrationTest extends AbstractBaseIntegrationTest {
     assertThat(token).isNotBlank();
     assertThat(response.jsonPath().getString("headerName")).isEqualTo("X-XSRF-TOKEN");
     assertThat(response.jsonPath().getString("parameterName")).isEqualTo("_csrf");
-    assertThat(response.getCookie("XSRF-TOKEN")).isEqualTo(token);
-    assertThat(response.getHeader("Set-Cookie"))
-      .contains("XSRF-TOKEN=" + token)
-      .contains("Path=/")
-      .contains("SameSite=Lax")
-      .doesNotContain("HttpOnly");
+    assertThat(response.getCookie("XSRF-TOKEN")).isNull();
+    assertThat(response.getHeader("Set-Cookie")).isNull();
   }
 
   /**

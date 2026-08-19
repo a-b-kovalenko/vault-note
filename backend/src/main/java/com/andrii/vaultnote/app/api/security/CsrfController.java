@@ -14,7 +14,7 @@ public class CsrfController {
 
   @Operation(
     summary = "Get CSRF token",
-    description = "Returns a CSRF token for browser clients. Cookie mode also exposes it in the XSRF-TOKEN cookie.")
+    description = "Returns a short-lived CSRF token for browser clients. The token is not persisted in a cookie or server-side session.")
   @ApiResponse(responseCode = "200", description = "CSRF token issued")
   @GetMapping("/csrf")
   public CsrfToken csrf(CsrfToken csrfToken) {

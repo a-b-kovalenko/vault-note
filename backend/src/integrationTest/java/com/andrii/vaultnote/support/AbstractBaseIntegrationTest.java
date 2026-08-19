@@ -30,7 +30,6 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 public abstract class AbstractBaseIntegrationTest {
 
   private static final String CSRF_ENDPOINT = "/csrf";
-  private static final String CSRF_COOKIE_NAME = "XSRF-TOKEN";
   private static final String CSRF_HEADER_NAME = "X-XSRF-TOKEN";
   private static final String TEST_JWT_SECRET = "integration-test-jwt-secret-that-is-long-enough";
   private static final String DATASOURCE_URL_PROPERTY = "spring.datasource.url";
@@ -83,7 +82,6 @@ public abstract class AbstractBaseIntegrationTest {
 
     return given()
       .port(port)
-      .cookie(CSRF_COOKIE_NAME, csrfResponse.getCookie(CSRF_COOKIE_NAME))
       .header(CSRF_HEADER_NAME, csrfResponse.jsonPath().getString("token"));
   }
 
