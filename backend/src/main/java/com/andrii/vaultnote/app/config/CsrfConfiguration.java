@@ -9,7 +9,6 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
@@ -24,18 +23,11 @@ public class CsrfConfiguration {
     CsrfProperties properties,
     SecretKey jwtSecretKey,
     Clock clock) {
-    if (properties.mode() == CsrfProperties.Mode.STATELESS) {
-      var tokenService = new StatelessCsrfTokenService(
-        jwtSecretKey,
-        properties.tokenTtl(),
-        clock);
-      return new StatelessCsrfTokenRepository(tokenService);
-    }
-
-    var repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
-    repository.setCookiePath("/");
-    repository.setCookieCustomizer(builder -> builder.sameSite("Lax"));
-    return repository;
+    var tokenService = new StatelessCsrfTokenService(
+      jwtSecretKey,
+      properties.tokenTtl(),
+      clock);
+    return new StatelessCsrfTokenRepository(tokenService);
   }
 
   @Bean

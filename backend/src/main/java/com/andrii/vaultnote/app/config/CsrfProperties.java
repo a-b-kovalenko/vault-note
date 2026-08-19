@@ -7,11 +7,5 @@ import org.springframework.validation.annotation.Validated;
 
 @Validated
 @ConfigurationProperties(prefix = "app.security.csrf")
-public record CsrfProperties(
-  @NotNull Mode mode,
-  @NotNull Duration tokenTtl) {
-
-  public enum Mode {
-    COOKIE, STATELESS
-  }
+public record CsrfProperties(@NotNull Duration tokenTtl) {
 }
