@@ -34,7 +34,6 @@ describe('AuthApiService', () => {
   });
 
   it('bootstraps CSRF before login and maps the generated API response', () => {
-    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
     let response: LoginResponse | undefined;
 
     service.login({ email: 'user@example.com', password: 'password' }).subscribe((value) => {
@@ -65,8 +64,7 @@ describe('AuthApiService', () => {
     });
   });
 
-  it('uses the CSRF cookie and refresh endpoint for a session refresh', () => {
-    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
+  it('uses the in-memory CSRF token and refresh endpoint for a session refresh', () => {
     let response: LoginResponse | undefined;
 
     service.refresh().subscribe((value) => {
@@ -89,7 +87,6 @@ describe('AuthApiService', () => {
   });
 
   it('bootstraps CSRF before registration and maps the response', () => {
-    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
     let response: RegisterUserResponse | undefined;
 
     service
@@ -124,6 +121,8 @@ describe('AuthApiService', () => {
 
     service.verifyEmail('raw-token').subscribe({ complete: () => (completed = true) });
 
+    httpMock.expectOne(`${API_BASE_URL}/csrf`).flush({ token: 'csrf-token' });
+
     const request = httpMock.expectOne(
       `${API_BASE_URL}/api/v1/auth/email-verification?token=raw-token`,
     );
@@ -136,7 +135,6 @@ describe('AuthApiService', () => {
   });
 
   it('bootstraps CSRF before requesting a password reset', () => {
-    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
     let completed = false;
 
     service.requestPasswordReset({ email: 'user@example.com' }).subscribe({
@@ -156,7 +154,6 @@ describe('AuthApiService', () => {
   });
 
   it('bootstraps CSRF before confirming a password reset', () => {
-    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
     let completed = false;
 
     service
@@ -206,7 +203,6 @@ describe('AuthApiService', () => {
   });
 
   it('bootstraps CSRF before updating the current profile', () => {
-    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
     let response: UserProfile | undefined;
 
     service.updateProfile({ displayName: 'Updated Profile' }).subscribe((value) => {
@@ -239,7 +235,6 @@ describe('AuthApiService', () => {
   });
 
   it('bootstraps CSRF before logout and sends credentials', () => {
-    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
     let completed = false;
 
     service.logout().subscribe({ complete: () => (completed = true) });

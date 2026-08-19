@@ -32,6 +32,8 @@ describe('CsrfService', () => {
 
     request.flush({ token: 'csrf-token' });
 
+    expect(service.getToken()).toBe('csrf-token');
+
     service.ensureToken().subscribe((value) => completions.push(value));
 
     expect(completions).toHaveLength(3);
@@ -48,5 +50,14 @@ describe('CsrfService', () => {
 
     service.ensureToken().subscribe();
     expect(httpMock.expectOne(`${API_BASE_URL}/csrf`)).toBeTruthy();
+  });
+
+  it('clears the in-memory token when invalidated', () => {
+    service.ensureToken().subscribe();
+    httpMock.expectOne(`${API_BASE_URL}/csrf`).flush({ token: 'csrf-token' });
+
+    service.invalidate();
+
+    expect(service.getToken()).toBeNull();
   });
 });

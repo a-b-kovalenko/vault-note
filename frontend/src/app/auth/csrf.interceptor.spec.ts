@@ -29,15 +29,15 @@ describe('csrfInterceptor', () => {
     vi.restoreAllMocks();
   });
 
-  it('copies the readable CSRF cookie to unsafe backend requests', () => {
-    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf%20token');
-
+  it('bootstraps the CSRF token in memory before unsafe backend requests', () => {
     let response: unknown;
     httpMockClient()
       .post(`${API_BASE_URL}/api/v1/auth/login`, {})
       .subscribe((value) => {
         response = value;
       });
+
+    httpMock.expectOne(`${API_BASE_URL}/csrf`).flush({ token: 'csrf token' });
 
     const request = httpMock.expectOne(`${API_BASE_URL}/api/v1/auth/login`);
     expect(request.request.headers.get('X-XSRF-TOKEN')).toBe('csrf token');
@@ -47,9 +47,7 @@ describe('csrfInterceptor', () => {
     expect(response).toEqual({});
   });
 
-  it('does not copy the token to safe or external requests', () => {
-    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
-
+  it('does not add the token to safe or external requests', () => {
     httpMockClient().get(`${API_BASE_URL}/api/v1/users/me`).subscribe();
     const safeRequest = httpMock.expectOne(`${API_BASE_URL}/api/v1/users/me`);
     expect(safeRequest.request.headers.has('X-XSRF-TOKEN')).toBe(false);
@@ -59,6 +57,22 @@ describe('csrfInterceptor', () => {
     const externalRequest = httpMock.expectOne('https://example.test/api');
     expect(externalRequest.request.headers.has('X-XSRF-TOKEN')).toBe(false);
     externalRequest.flush({});
+  });
+
+  it('refreshes the in-memory token once after a CSRF rejection', () => {
+    httpMockClient().post(`${API_BASE_URL}/api/v1/users/me`, {}).subscribe();
+
+    httpMock.expectOne(`${API_BASE_URL}/csrf`).flush({ token: 'expired-token' });
+
+    const initialRequest = httpMock.expectOne(`${API_BASE_URL}/api/v1/users/me`);
+    expect(initialRequest.request.headers.get('X-XSRF-TOKEN')).toBe('expired-token');
+    initialRequest.flush({ code: 'CSRF_TOKEN_INVALID' }, { status: 403, statusText: 'Forbidden' });
+
+    httpMock.expectOne(`${API_BASE_URL}/csrf`).flush({ token: 'fresh-token' });
+
+    const retryRequest = httpMock.expectOne(`${API_BASE_URL}/api/v1/users/me`);
+    expect(retryRequest.request.headers.get('X-XSRF-TOKEN')).toBe('fresh-token');
+    retryRequest.flush({});
   });
 
   function httpMockClient() {
