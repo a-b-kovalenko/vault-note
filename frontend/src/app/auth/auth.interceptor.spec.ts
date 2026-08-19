@@ -59,8 +59,44 @@ describe('authInterceptor', () => {
     request.flush({});
   });
 
+  it('refreshes before the first protected request when the tab has no access token', () => {
+    let response: unknown;
+    httpClient()
+      .get(`${API_BASE_URL}/api/v1/users/me`)
+      .subscribe((value) => (response = value));
+
+    expect(refresh).toHaveBeenCalledTimes(1);
+    const request = httpMock.expectOne(`${API_BASE_URL}/api/v1/users/me`);
+    expect(request.request.headers.get('Authorization')).toBe('Bearer refreshed-access-token');
+    expect(request.request.withCredentials).toBe(true);
+    request.flush({ user_id: 1 });
+
+    expect(response).toEqual({ user_id: 1 });
+  });
+
+  it('clears the session when initial session restoration fails', () => {
+    const refreshError = new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' });
+    let error: unknown;
+    refresh.mockReturnValue(throwError(() => refreshError));
+
+    httpClient()
+      .get(`${API_BASE_URL}/api/v1/users/me`)
+      .subscribe({ error: (value) => (error = value) });
+
+    httpMock.expectNone(`${API_BASE_URL}/api/v1/users/me`);
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(authState.isAuthenticated()).toBe(false);
+    expect(error).toBe(refreshError);
+  });
+
   it('refreshes once after a 401 and retries with the new access token', () => {
     let response: unknown;
+    authState.setSession({
+      accessToken: 'expired-access-token',
+      tokenType: 'Bearer',
+      expiresIn: 900,
+    });
+
     httpClient()
       .get(`${API_BASE_URL}/api/v1/users/me`)
       .subscribe((value) => (response = value));

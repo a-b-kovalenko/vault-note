@@ -1,6 +1,12 @@
-import { HttpErrorResponse, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
+import {
+  HttpErrorResponse,
+  HttpEvent,
+  HttpHandlerFn,
+  HttpInterceptorFn,
+  HttpRequest,
+} from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, switchMap, throwError } from 'rxjs';
+import { Observable, catchError, switchMap, throwError } from 'rxjs';
 
 import { API_BASE_URL } from '../api/api-config';
 import { AuthRefreshService } from './auth-refresh.service';
@@ -25,7 +31,13 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const authState = inject(AuthStateService);
   const authRefreshService = inject(AuthRefreshService);
   const requestPath = new URL(request.url, API_BASE_URL).pathname;
-  const accessToken = PUBLIC_AUTH_PATHS.has(requestPath) ? null : authState.accessToken();
+  const isPublicAuthRequest = PUBLIC_AUTH_PATHS.has(requestPath);
+  const accessToken = isPublicAuthRequest ? null : authState.accessToken();
+
+  if (!isPublicAuthRequest && !accessToken && !request.headers.has('Authorization')) {
+    return refreshAndSend(request, next, authRefreshService, authState);
+  }
+
   const requestWithAuth = addAuthentication(request, accessToken);
 
   return next(requestWithAuth).pipe(
@@ -34,27 +46,33 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
         return throwError(() => error);
       }
 
-      return authRefreshService.refresh().pipe(
-        catchError((refreshError: unknown) => {
-          authState.clearSession();
-          return throwError(() => refreshError);
-        }),
-        switchMap((session) => {
-          const retryRequest = request.clone({
-            withCredentials: true,
-            headers: request.headers.set('Authorization', `Bearer ${session.accessToken}`),
-          });
-
-          return next(retryRequest);
-        }),
-      );
+      return refreshAndSend(request, next, authRefreshService, authState);
     }),
   );
 };
 
-function addAuthentication(request: HttpRequest<unknown>, accessToken: string | null) {
+function refreshAndSend(
+  request: HttpRequest<unknown>,
+  next: HttpHandlerFn,
+  authRefreshService: AuthRefreshService,
+  authState: AuthStateService,
+): Observable<HttpEvent<unknown>> {
+  return authRefreshService.refresh().pipe(
+    catchError((refreshError: unknown) => {
+      authState.clearSession();
+      return throwError(() => refreshError);
+    }),
+    switchMap((session) => next(addAuthentication(request, session.accessToken, true))),
+  );
+}
+
+function addAuthentication(
+  request: HttpRequest<unknown>,
+  accessToken: string | null,
+  replaceExisting = false,
+) {
   const headers =
-    accessToken && !request.headers.has('Authorization')
+    accessToken && (replaceExisting || !request.headers.has('Authorization'))
       ? request.headers.set('Authorization', `Bearer ${accessToken}`)
       : request.headers;
 

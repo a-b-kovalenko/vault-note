@@ -34,6 +34,13 @@ authenticate the request using its cookie.
   family instead of silently extending it.
 * Pessimistic locking prevents concurrent refresh requests from both accepting
   the same active token.
+* Because the browser shares the `HttpOnly` refresh cookie across tabs, the SPA
+  must also serialize refresh attempts across same-origin tabs. This is a
+  client-coordination concern and does not replace server-side locking or reuse
+  detection.
+* Access JWTs are never broadcast between tabs. Logout synchronization is a
+  client-side notification; a JWT already issued by the server remains valid
+  until its normal expiry.
 * A client must log in again after reuse detection.
 * CSRF protection for cookie-backed requests is defined by ADR 013; rate
   limiting is defined by ADR 015, while audit events remain separate follow-up
