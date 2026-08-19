@@ -7,7 +7,7 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { AuthApiService } from '../auth/auth-api.service';
@@ -33,7 +33,6 @@ export class AdminUsersPage implements OnInit {
   private readonly adminUsersApiService = inject(AdminUsersApiService);
   private readonly authApiService = inject(AuthApiService);
   private readonly authState = inject(AuthStateService);
-  private readonly router = inject(Router);
 
   readonly users = signal<AdminUser[]>([]);
   readonly pageIndex = signal(0);
@@ -123,7 +122,6 @@ export class AdminUsersPage implements OnInit {
 
     if (error instanceof HttpErrorResponse && error.status === HttpStatusCode.Unauthorized) {
       this.authState.clearSession();
-      void this.router.navigate(['/login']);
       return;
     }
 

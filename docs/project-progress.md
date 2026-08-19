@@ -32,7 +32,11 @@ has been implemented and verified. Branch integration is tracked separately.
   bootstrap, bearer attachment, per-tab single-flight refresh, new-tab session
   restoration before protected requests, `/me`, logout, password visibility
   toggles, `/forgot-password`, `/reset-password`, and focused unit tests.
-  Cross-tab refresh coordination is still pending.
+  Cross-tab refresh rotation is serialized with Web Locks, and logout/session
+  invalidation is propagated through a same-origin `BroadcastChannel` without
+  sending token values. The authenticated shell clears the avatar state and
+  redirects to `/login` after invalidation or failed refresh, with duplicate
+  navigation suppressed.
 - The local browser flows were verified end to end: registration sends a
   display-name-personalized verification email, `/verify-email` confirms it,
   login redirects to `/me`, profile data is loaded, and logout revokes the
@@ -97,9 +101,11 @@ has been implemented and verified. Branch integration is tracked separately.
 - A production smoke test exposed a separate multi-tab session issue: a new tab
   has no in-memory access JWT. The frontend interceptor now restores the session
   through the shared refresh cookie before the first protected request and
-  retries it with the new Bearer token. Cross-tab refresh serialization with a
-  Web Lock, `BroadcastChannel` logout notification, and a dedicated redirect to
-  `/login` after a failed refresh remain planned.
+  retries it with the new Bearer token. Refresh rotation is now serialized with
+  a shared Web Lock, and logout/session invalidation is propagated through
+  `BroadcastChannel` without token values. The authenticated shell redirects to
+  `/login` after invalidation or failed refresh and suppresses duplicate
+  navigation for an already-ended session.
 
 ## Phase 0 — Foundation
 

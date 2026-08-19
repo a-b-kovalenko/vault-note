@@ -1,11 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 
 import { AvatarStateService } from '../avatar/avatar-state.service';
 import { AuthApiService } from './auth-api.service';
+import { AuthStateService } from './auth-state.service';
 import { UserProfile } from './auth.models';
 import { MePage } from './me-page';
 
@@ -15,7 +15,6 @@ describe('MePage', () => {
   let profileResponse: Observable<UserProfile>;
   let updateResponse: Observable<UserProfile>;
   let updateProfile: ReturnType<typeof vi.fn>;
-  let navigate: ReturnType<typeof vi.fn>;
   let avatarState: {
     avatarUrl: ReturnType<typeof signal<string | null>>;
     isLoading: ReturnType<typeof signal<boolean>>;
@@ -43,7 +42,6 @@ describe('MePage', () => {
       roles: ['USER'],
     });
     updateProfile = vi.fn(() => updateResponse);
-    navigate = vi.fn().mockResolvedValue(true);
     avatarState = {
       avatarUrl: signal<string | null>(null),
       isLoading: signal(false),
@@ -67,7 +65,6 @@ describe('MePage', () => {
       providers: [
         { provide: AuthApiService, useValue: authApiService },
         { provide: AvatarStateService, useValue: avatarState },
-        { provide: Router, useValue: { navigate } },
       ],
     }).compileComponents();
 
@@ -96,7 +93,6 @@ describe('MePage', () => {
     expect((fixture.nativeElement.querySelector('#email') as HTMLInputElement).readOnly).toBe(true);
     expect(fixture.nativeElement.textContent).toContain('USER');
     expect(fixture.nativeElement.querySelector('.edit-profile-button')).not.toBeNull();
-    expect(navigate).not.toHaveBeenCalled();
   });
 
   it('uploads a supported avatar file from the profile screen', () => {
@@ -228,7 +224,7 @@ describe('MePage', () => {
     expect(fixture.nativeElement.textContent).toContain('Display name is invalid.');
   });
 
-  it('redirects to login when the current session is unauthorized', () => {
+  it('clears the session when the current user is unauthorized', () => {
     profileResponse = throwError(
       () => new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' }),
     );
@@ -236,6 +232,6 @@ describe('MePage', () => {
     fixture.detectChanges();
 
     expect(page.isLoading()).toBe(false);
-    expect(navigate).toHaveBeenCalledWith(['/login']);
+    expect(TestBed.inject(AuthStateService).isAuthenticated()).toBe(false);
   });
 });

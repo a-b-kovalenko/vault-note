@@ -2,6 +2,7 @@ import { HttpErrorResponse, HttpStatusCode } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
   ElementRef,
   HostListener,
@@ -9,6 +10,7 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { finalize } from 'rxjs';
 
@@ -30,6 +32,7 @@ export class AuthenticatedShell implements OnInit {
   private readonly authApiService = inject(AuthApiService);
   private readonly authState = inject(AuthStateService);
   private readonly avatarState = inject(AvatarStateService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly elementRef = inject(ElementRef<HTMLElement>);
 
@@ -41,8 +44,13 @@ export class AuthenticatedShell implements OnInit {
   readonly avatarUrl = this.avatarState.avatarUrl;
   readonly isAdmin = computed(() => this.profile()?.roles.includes('ADMIN') ?? false);
   readonly initials = computed(() => getInitials(this.profile()));
+  private loginNavigationStarted = false;
 
   ngOnInit(): void {
+    this.authState.startSessionSynchronization();
+    this.authState.sessionInvalidated$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.redirectToLogin());
     this.avatarState.load().subscribe({ error: () => undefined });
 
     this.authState
@@ -76,9 +84,8 @@ export class AuthenticatedShell implements OnInit {
       .logout()
       .pipe(
         finalize(() => {
-          this.avatarState.clear();
           this.authState.clearSession();
-          void this.router.navigate(['/login']);
+          this.redirectToLogin();
         }),
       )
       .subscribe({ error: () => undefined });
@@ -100,12 +107,21 @@ export class AuthenticatedShell implements OnInit {
     this.isProfileLoading.set(false);
 
     if (error instanceof HttpErrorResponse && error.status === HttpStatusCode.Unauthorized) {
-      this.avatarState.clear();
       this.authState.clearSession();
-      void this.router.navigate(['/login']);
+      this.redirectToLogin();
       return;
     }
 
     this.profileError.set(GENERIC_PROFILE_ERROR);
+  }
+
+  private redirectToLogin(): void {
+    if (this.loginNavigationStarted || this.router.url === '/login') {
+      return;
+    }
+
+    this.loginNavigationStarted = true;
+    this.avatarState.clear();
+    void this.router.navigate(['/login']);
   }
 }
