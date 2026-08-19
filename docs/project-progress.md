@@ -24,12 +24,15 @@ has been implemented and verified. Branch integration is tracked separately.
   implemented and verified.
 - Current-session logout and refresh-cookie clearing are implemented and
   verified.
-- CORS and SPA-compatible CSRF protection are implemented and verified.
+- CORS and stateless SPA-compatible CSRF protection are implemented and
+  verified: `/csrf` returns a short-lived token in JSON, Angular keeps it in
+  memory, and the backend no longer creates or reads an `XSRF-TOKEN` cookie.
 - The Angular authentication slice is implemented: generated auth models,
   `/login`, `/register`, `/verify-email`, in-memory access-token state, CSRF
-  bootstrap, bearer attachment, single-flight refresh, `/me`, logout, password
-  visibility toggles, `/forgot-password`, `/reset-password`, and focused unit
-  tests.
+  bootstrap, bearer attachment, per-tab single-flight refresh, new-tab session
+  restoration before protected requests, `/me`, logout, password visibility
+  toggles, `/forgot-password`, `/reset-password`, and focused unit tests.
+  Cross-tab refresh coordination is still pending.
 - The local browser flows were verified end to end: registration sends a
   display-name-personalized verification email, `/verify-email` confirms it,
   login redirects to `/me`, profile data is loaded, and logout revokes the
@@ -91,6 +94,12 @@ has been implemented and verified. Branch integration is tracked separately.
   persistence, missing-picture fallback, and no-replacement behavior. The
   local Google login and avatar import were also manually verified through the
   IDE/browser flow.
+- A production smoke test exposed a separate multi-tab session issue: a new tab
+  has no in-memory access JWT. The frontend interceptor now restores the session
+  through the shared refresh cookie before the first protected request and
+  retries it with the new Bearer token. Cross-tab refresh serialization with a
+  Web Lock, `BroadcastChannel` logout notification, and a dedicated redirect to
+  `/login` after a failed refresh remain planned.
 
 ## Phase 0 — Foundation
 
@@ -155,8 +164,8 @@ has been implemented and verified. Branch integration is tracked separately.
     behavior against PostgreSQL.
 - [x] Add CORS and SPA-compatible CSRF protection.
   - [x] Configure an explicit Angular-origin allowlist with credentials.
-  - [x] Expose `/csrf` with the `XSRF-TOKEN` cookie and
-    `X-XSRF-TOKEN` header contract.
+  - [x] Expose `/csrf` with a short-lived JSON token and the `X-XSRF-TOKEN`
+    header contract; do not create or read an `XSRF-TOKEN` cookie.
   - [x] Require the token for login, refresh, and logout requests.
   - [x] Verify token issuance, rejection, CORS preflight, and unknown-origin
     behavior with PostgreSQL-backed integration tests.

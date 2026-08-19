@@ -128,13 +128,21 @@ Implement these flows:
 5. When a rotated refresh token is reused, revoke every active token in the
    affected token family and record the security event.
 
-Implement Spring Security's SPA-compatible CSRF protection with
-`CookieCsrfTokenRepository`: expose `GET /csrf`, deliver the raw token in the
-`XSRF-TOKEN` cookie, and require it in the `X-XSRF-TOKEN` header for login,
-refresh, logout, and other state-changing requests. Keep registration and
-email verification explicitly excluded until the public form flow has its own
-CSRF integration. Configure CORS as an explicit, environment-driven allowlist
-with credentials enabled; never use a wildcard origin with cookies.
+6. Keep the access JWT only in Angular memory. When a new browser tab has no
+   access token, restore the session through the `HttpOnly` refresh cookie before
+   loading protected resources. Serialize refresh rotation across same-origin
+   tabs with the Web Locks API, and use a same-origin `BroadcastChannel` only
+   for logout/session-invalidated notifications; never broadcast access or
+   refresh token values.
+
+Implement stateless Spring Security CSRF protection: expose `GET /csrf`, return
+a short-lived signed token in JSON, keep it only in Angular memory, and require
+it in the `X-XSRF-TOKEN` header for login, refresh, logout, and other
+state-changing requests. Do not create or read an `XSRF-TOKEN` cookie. Keep
+registration and email verification explicitly excluded until the public form
+flow has its own CSRF integration. Configure CORS as an explicit,
+environment-driven allowlist with credentials enabled for the refresh cookie;
+never use a wildcard origin with credentials.
 
 Distinguish stateless access authentication from application state. The
 backend must not use `HttpSession` or a server-side login session as the source
@@ -238,6 +246,17 @@ access authentication with a stateful rotating refresh session: no
 `HttpSession`, a per-request `SecurityContext`, an access JWT in Angular
 memory, and a hashed refresh session in PostgreSQL behind an `HttpOnly` cookie.
 Do not add Notes, profile editing, administrator, or Markdown screens yet.
+
+The remaining browser-session hardening is tracked separately from the initial
+login screen:
+
+- [x] Restore the session in a new tab by refreshing before the first protected
+  profile request when no access JWT exists in that tab's memory.
+- [ ] Serialize refresh-token rotation across tabs with a shared Web Lock.
+- [ ] Broadcast logout/session invalidation to other same-origin tabs without
+  sharing token values.
+- [ ] Cover new-tab restore, concurrent refresh, failed refresh, logout
+  propagation, and the already-logged-out case with focused frontend tests.
 
 ## Phase 4 — Password management prerequisite
 
@@ -452,15 +471,18 @@ The deployment preparation is implemented for project `vaultnote-505715`.
 Cloud Run and Firebase Hosting rewrites use `europe-north1 (Finland)`, the
 closest region supported by Firebase Hosting. The existing Artifact Registry
 repository remains in `europe-north2 (Stockholm)`. The Firebase Hosting site is
-`vaultnote-505715.web.app`; the first successful frontend deployment remains
-pending.
+`vaultnote-505715.web.app`; the initial backend and frontend deployments are
+complete, while the remaining refresh/CSRF and multi-tab session checks are
+still pending.
 
 - Host the built Angular application on Firebase Hosting in the same Google
   Cloud project. Select it over raw Cloud Storage because SPA fallback and
   managed HTTPS require less deployment wiring.
 - Route `/api/**`, `/csrf`, `/oauth2/**`, and `/login/oauth2/**` from Firebase
   Hosting to Cloud Run. Angular uses the current browser origin in production,
-  while local hostnames continue to use `http://localhost:8080`.
+  while local hostnames continue to use `http://localhost:8080`. CSRF is a
+  short-lived header token returned as JSON; only the refresh and OAuth
+  authorization cookies require Firebase's special `__session` handling.
 - Build the Spring Boot backend as a container and run it on Cloud Run.
 - Use Supabase Free only as an external PostgreSQL database for the demo. Do
   not use Supabase Auth, Supabase API, or Supabase Storage; VaultNote remains
@@ -510,17 +532,15 @@ See the current [Supabase Free plan](https://supabase.com/pricing) limits.
    `vaultnote` Artifact Registry repository and create or update Cloud Run
    service `vault-note` with `vaultnote-runtime`. The initial settings are
    512 MiB, one CPU, 20 concurrent requests, zero minimum instances, and one
-   maximum instance. The first backend workflow succeeded in the unsupported
-   `europe-north2` region; the corrected `europe-north1` deployment remains
-   pending.
+   maximum instance. The first workflow used the unsupported `europe-north2`
+   region; the corrected `europe-north1` deployment is complete.
 
 5. **Deploy the Angular SPA.**
    `firebase.json`, `.firebaserc`, the same-origin API configuration, and the
    frontend GitHub Actions workflow are ready. The workflow will build
    `frontend/dist/frontend/browser` and publish it to Firebase Hosting with an
-   SPA fallback. The first frontend deployment is still pending. The access
-   JWT remains in Angular memory; the refresh token remains in the `HttpOnly`
-   cookie.
+   SPA fallback. The frontend deployment is complete. The access JWT remains in
+   Angular memory; the refresh token remains in the `HttpOnly` cookie.
 
 6. **Align browser and OAuth security settings.**
    The GitHub repository variable
@@ -529,8 +549,9 @@ See the current [Supabase Free plan](https://supabase.com/pricing) limits.
    `https://vaultnote-505715.web.app/login/oauth2/code/google` in addition to
    the local redirect URI. The cloud profile explicitly sets this value through
    `VAULTNOTE_OAUTH2_REDIRECT_URI`, and Firebase rewrites the callback to Cloud
-   Run. The deployed CSRF, cookie, OAuth, and browser flow verification remains
-   pending.
+   Run. Google OAuth callback and Google avatar import are verified in
+   production. The deployed stateless CSRF, refresh-cookie, new-tab restore,
+   and cross-tab rotation checks remain pending.
 
 7. **Apply and verify the database schema.**
    Liquibase has already run successfully against the empty Supabase database.
@@ -545,12 +566,14 @@ See the current [Supabase Free plan](https://supabase.com/pricing) limits.
    do not present the deployment as a complete public registration service.
 
 9. **Verify operations and rollback.**
-   Check health, registration or seeded login, refresh, logout, CSRF, CORS,
-   Google OAuth callback, profile, avatar, and notes flows from the deployed
-   Angular origin. Inspect Cloud Run logs, test a new revision rollback, run a
-   database-size query, and export the demo database before destructive
-   changes. Document how to resume a paused Supabase project and how to move
-   the database to Cloud SQL later.
+   Check health, seeded login, refresh, logout, stateless CSRF, CORS, Google
+   OAuth callback, profile, avatar, and notes flows from the deployed Angular
+   origin. Open `/me` in a second tab and verify the refresh-before-profile
+   sequence. Run two refreshes concurrently to verify client-side locking, then
+   log out in one tab and verify session invalidation in the other. Inspect
+   Cloud Run logs, test a new revision rollback, run a database-size query, and
+   export the demo database before destructive changes. Document how to resume
+   a paused Supabase project and how to move the database to Cloud SQL later.
 
 ### Phase boundary
 

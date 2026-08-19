@@ -83,6 +83,13 @@ verification state, and roles. `Profile` in the Bruno collection can be used to
 verify the request after copying the access token
 from a successful `Login` response into the local environment.
 
+The access JWT exists only in the Angular tab memory. A new tab therefore has
+the refresh cookie but no access token. The auth interceptor now refreshes the
+access token before the first protected request in that tab and then retries
+the request with the new Bearer token. The remaining browser hardening is to
+coordinate rotation with a same-origin Web Lock and notify other tabs about
+logout through `BroadcastChannel` without sharing token values.
+
 == Access token
 
 `AccessTokenGenerator` creates a signed JWT with these claims:
@@ -185,10 +192,11 @@ The frontend obtains an Angular-compatible CSRF token from `GET /csrf`:
 GET /csrf
 ----
 
-The response contains the token and sets a non-`HttpOnly` `XSRF-TOKEN` cookie.
-Angular reads that cookie and sends the same value in the `X-XSRF-TOKEN`
-header. `CsrfConfiguration` uses the cookie repository and a plain token
-request handler so the cookie value and header value are directly comparable.
+The response contains a short-lived signed token in JSON. Angular keeps that
+value only in the current tab's memory and sends it in the `X-XSRF-TOKEN`
+header. No `XSRF-TOKEN` cookie is created or read. `CsrfConfiguration` uses
+`StatelessCsrfTokenRepository`, which validates the token signature and expiry
+without a cookie or server-side token storage.
 
 Spring Security protects state-changing requests by default. Registration and
 email verification are explicitly excluded while those public flows remain
@@ -197,9 +205,9 @@ require the CSRF header even though they are `permitAll` with respect to Bearer
 authentication.
 
 The browser must also pass the CORS preflight. The configured origin is allowed
-with credentials, while an unknown origin is rejected. `CsrfCorsIntegrationTest`
-covers token issuance, missing-token rejection, allowed preflight, and
-unknown-origin rejection.
+with credentials for the refresh cookie, while an unknown origin is rejected.
+`CsrfCorsIntegrationTest` covers token issuance, missing-token rejection,
+allowed preflight, and unknown-origin rejection.
 
 == Public registration and email verification
 

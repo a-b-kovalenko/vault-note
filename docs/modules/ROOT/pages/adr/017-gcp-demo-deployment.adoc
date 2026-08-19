@@ -44,6 +44,11 @@ Use the following demo deployment boundary:
   `https://vaultnote-505715.web.app/login/oauth2/code/google`; the local
   callback remains configured as well. Firebase rewrites the callback to
   Cloud Run, which redirects the completed flow to `/oauth/callback`.
+* CSRF is stateless in the deployed application: `/csrf` returns a short-lived
+  signed token in JSON and Angular sends it in `X-XSRF-TOKEN`. Firebase cookie
+  forwarding is needed only for the `HttpOnly` refresh cookie and OAuth state
+  cookie, which use the special production name `__session` with different
+  paths.
 * Cloud Run is publicly reachable at the network boundary because the browser
   must reach it through Hosting. Spring Security remains responsible for
   application authentication and authorization.
@@ -58,9 +63,10 @@ security guarantee.
 * Local PostgreSQL and the `local` profile remain available for IDE
   development; `local-supabase` can be used explicitly when testing against
   the remote database.
-* Firebase Hosting gives the SPA and API one browser origin in the demo, so
-  cookie and CSRF behavior is simpler than a separately hosted frontend and
-  API. Direct Cloud Run access remains subject to the explicit CORS policy.
+* Firebase Hosting gives the SPA and API one browser origin in the demo. The
+  refresh and OAuth cookies still depend on Firebase's `__session` rewrite
+  rule, while the stateless CSRF header does not depend on cookie forwarding.
+  Direct Cloud Run access remains subject to the explicit CORS policy.
 * GitHub Actions can repeat deployments without storing a GCP private key, but
   the initial Google Cloud, Firebase, OAuth, IAM, and Secret Manager setup is
   still manual.
@@ -72,6 +78,7 @@ security guarantee.
 
 == Status
 
-Accepted for the first demo deployment. The workflows and cloud resources are
-prepared; the first automated deployment and deployed browser verification are
-still pending.
+Accepted for the first demo deployment. GitHub Actions deployments are working,
+Cloud Run and Firebase Hosting are available, and Google OAuth callback/avatar
+import are verified. Refresh-before-profile in a new tab, cross-tab refresh
+rotation/logout coordination, and the full deployed smoke test remain pending.
