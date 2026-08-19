@@ -1,9 +1,11 @@
-import { finalize, Observable, shareReplay, tap } from 'rxjs';
 import { inject, Injectable } from '@angular/core';
+import { defer, finalize, firstValueFrom, from, Observable, shareReplay, tap } from 'rxjs';
 
 import { LoginResponse } from './auth.models';
 import { AuthApiService } from './auth-api.service';
 import { AuthStateService } from './auth-state.service';
+
+const AUTH_REFRESH_LOCK_NAME = 'vaultnote-auth-refresh';
 
 @Injectable({ providedIn: 'root' })
 export class AuthRefreshService {
@@ -14,7 +16,7 @@ export class AuthRefreshService {
 
   refresh(): Observable<LoginResponse> {
     if (!this.refreshRequest$) {
-      this.refreshRequest$ = this.authApiService.refresh().pipe(
+      this.refreshRequest$ = this.refreshWithSharedLock().pipe(
         tap((session) => this.authState.setSession(session)),
         finalize(() => (this.refreshRequest$ = null)),
         shareReplay({ bufferSize: 1, refCount: false }),
@@ -23,4 +25,27 @@ export class AuthRefreshService {
 
     return this.refreshRequest$;
   }
+
+  private refreshWithSharedLock(): Observable<LoginResponse> {
+    const lockManager = getLockManager();
+    if (!lockManager) {
+      return this.authApiService.refresh();
+    }
+
+    return defer(() =>
+      from(
+        lockManager.request(AUTH_REFRESH_LOCK_NAME, () =>
+          firstValueFrom(this.authApiService.refresh()),
+        ),
+      ),
+    );
+  }
+}
+
+function getLockManager(): LockManager | null {
+  if (typeof navigator === 'undefined' || !navigator.locks) {
+    return null;
+  }
+
+  return navigator.locks;
 }

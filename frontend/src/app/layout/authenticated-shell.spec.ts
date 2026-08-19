@@ -134,4 +134,22 @@ describe('AuthenticatedShell', () => {
 
     expect(navigate).toHaveBeenCalledWith(['/login']);
   });
+
+  it('redirects once when the session is invalidated after the shell is open', () => {
+    const authState = TestBed.inject(AuthStateService);
+
+    fixture.detectChanges();
+    authState.setSession({
+      accessToken: 'access-token',
+      tokenType: 'Bearer',
+      expiresIn: 900,
+    });
+
+    authState.clearSession();
+    authState.clearSession();
+
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith(['/login']);
+    expect(avatarState.clear).toHaveBeenCalledOnce();
+  });
 });

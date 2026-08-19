@@ -86,9 +86,14 @@ from a successful `Login` response into the local environment.
 The access JWT exists only in the Angular tab memory. A new tab therefore has
 the refresh cookie but no access token. The auth interceptor now refreshes the
 access token before the first protected request in that tab and then retries
-the request with the new Bearer token. The remaining browser hardening is to
-coordinate rotation with a same-origin Web Lock and notify other tabs about
-logout through `BroadcastChannel` without sharing token values.
+the request with the new Bearer token. Refresh rotation is serialized across
+same-origin tabs with the `vaultnote-auth-refresh` Web Lock. `AuthStateService`
+also uses a same-origin `BroadcastChannel` to notify other tabs about logout or
+session invalidation. The message contains only an event type; it never carries
+an access JWT or refresh token. A receiving tab clears its in-memory session
+without echoing the message. The authenticated shell clears the local avatar
+state and redirects an already open tab to `/login`; a navigation guard avoids
+repeating the redirect for an already-ended session.
 
 == Access token
 

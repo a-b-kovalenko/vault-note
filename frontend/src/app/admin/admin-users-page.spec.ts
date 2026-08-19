@@ -1,9 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 
 import { AuthApiService } from '../auth/auth-api.service';
+import { AuthStateService } from '../auth/auth-state.service';
 import { UserProfile } from '../auth/auth.models';
 import {
   AdminUsersApiService,
@@ -15,8 +16,6 @@ describe('AdminUsersPage', () => {
   let fixture: ComponentFixture<AdminUsersPageComponent>;
   let profileResponse: Observable<UserProfile>;
   let adminUsersApiService: { list: ReturnType<typeof vi.fn> };
-  let router: Router;
-  let navigate: ReturnType<typeof vi.spyOn>;
 
   const firstPage: AdminUsersPageData = {
     content: [
@@ -57,8 +56,6 @@ describe('AdminUsersPage', () => {
       ],
     }).compileComponents();
 
-    router = TestBed.inject(Router);
-    navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
     fixture = TestBed.createComponent(AdminUsersPageComponent);
   });
 
@@ -121,16 +118,15 @@ describe('AdminUsersPage', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Access restricted');
-    expect(navigate).not.toHaveBeenCalled();
   });
 
-  it('redirects to login when the profile request is unauthorized', () => {
+  it('clears the session when the profile request is unauthorized', () => {
     profileResponse = throwError(
       () => new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' }),
     );
 
     fixture.detectChanges();
 
-    expect(navigate).toHaveBeenCalledWith(['/login']);
+    expect(TestBed.inject(AuthStateService).isAuthenticated()).toBe(false);
   });
 });

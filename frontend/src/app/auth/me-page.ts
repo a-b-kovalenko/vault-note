@@ -15,7 +15,6 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { AvatarStateService } from '../avatar/avatar-state.service';
@@ -41,7 +40,6 @@ export class MePage implements OnInit {
   private readonly authApiService = inject(AuthApiService);
   private readonly authState = inject(AuthStateService);
   private readonly avatarState = inject(AvatarStateService);
-  private readonly router = inject(Router);
 
   readonly profile = signal<UserProfile | null>(null);
   readonly isLoading = signal(true);
@@ -173,7 +171,7 @@ export class MePage implements OnInit {
     this.isLoading.set(false);
 
     if (error instanceof HttpErrorResponse && error.status === HttpStatusCode.Unauthorized) {
-      void this.router.navigate(['/login']);
+      this.authState.clearSession();
       return;
     }
 

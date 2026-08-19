@@ -252,11 +252,17 @@ login screen:
 
 - [x] Restore the session in a new tab by refreshing before the first protected
   profile request when no access JWT exists in that tab's memory.
-- [ ] Serialize refresh-token rotation across tabs with a shared Web Lock.
-- [ ] Broadcast logout/session invalidation to other same-origin tabs without
-  sharing token values.
-- [ ] Cover new-tab restore, concurrent refresh, failed refresh, logout
-  propagation, and the already-logged-out case with focused frontend tests.
+- [x] Serialize refresh-token rotation across tabs with a shared Web Lock.
+- [x] Broadcast logout/session invalidation to other same-origin tabs without
+  sharing token values. Receiving tabs clear their in-memory session without
+  echoing the message.
+- [x] Cover new-tab restore, concurrent refresh, missing refresh cookie, and
+  failed refresh with focused frontend tests.
+- [x] Cover logout propagation at the authentication-state level with focused
+  frontend tests.
+- [x] Cover the already-logged-out case and redirect an active tab to `/login`
+  after session invalidation or failed refresh. Repeated invalidation events do
+  not trigger duplicate navigation.
 
 ## Phase 4 — Password management prerequisite
 
