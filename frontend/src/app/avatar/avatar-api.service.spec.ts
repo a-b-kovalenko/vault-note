@@ -43,7 +43,6 @@ describe('AvatarApiService', () => {
   });
 
   it('bootstraps CSRF before uploading an avatar', () => {
-    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
     const file = new File(['avatar'], 'avatar.png', { type: 'image/png' });
     let response: { byte_size: number } | undefined;
 
@@ -63,7 +62,6 @@ describe('AvatarApiService', () => {
   });
 
   it('bootstraps CSRF before removing an avatar', () => {
-    vi.spyOn(document, 'cookie', 'get').mockReturnValue('XSRF-TOKEN=csrf-token');
     let completed = false;
 
     service.removeAvatar().subscribe({ complete: () => (completed = true) });
